@@ -82,6 +82,9 @@ def main():
             wait_for(path, 200)
             assert request(path + "/" + str(record["id"]))[1]["name"] == "retained"
             command("restart", name)
+            # Engines may assign a different ephemeral host port after restart.
+            address = command("port", name, "8080/tcp").splitlines()[0]
+            base = "http://" + address
             wait_for(path, 200)
             assert request(path + "/" + str(record["id"]))[1]["name"] == "retained"
             print("Container smoke passed: serving, unreachable sources, removal, re-addition, restart, retained data")

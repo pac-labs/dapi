@@ -184,6 +184,8 @@ The GitHub image workflow runs Python tests, including an ephemeral PostgreSQL s
 builds and exercises a native container, then builds AMD64 and ARM64 images.
 The Traefik smoke reads its request hostname from the deployed router's single literal Host matcher.
 It rejects missing/ambiguous matchers instead of falling back to a hardcoded hostname.
+Container smoke checks refresh the engine-reported published port after restart; ephemeral port
+assignments are not assumed stable across a stop/start cycle.
 Pull requests build without publishing; main/master pushes, version tags, and manual runs publish to GHCR.
 Publishing starts only when this source is put in GitHub and its workflow runs.
 The source repository is `https://github.com/pac-labs/dapi`; its image is `ghcr.io/pac-labs/dapi`.

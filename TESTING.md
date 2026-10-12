@@ -54,6 +54,8 @@ It also verifies published router examples use the placeholder hostname; private
 customizations belong outside the source checkout.
 This exercises HTTP routing; the production TLS certificate remains managed by the existing Traefik.
 CI runs it using Docker before publishing multi-platform images.
+The smoke rereads the published port after restart because ephemeral host ports may change.
+`tests/test_container_smoke.py` verifies the complete smoke sequence follows the new port.
 ARM64 image building is automated; a Raspberry Pi/Quadlet operator run remains a deployment check.
 Check `docs/quadlet.md` for the installation, persistence, and backup procedure.
 

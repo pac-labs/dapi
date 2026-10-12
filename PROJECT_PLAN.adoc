@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `5893c2c7381f39c61858e5d3621ad2d9ae75d17a60b612b5a21d5d177a22ead5`.
+Design SHA-256 (UTF-8/LF): `295ebd1feff754b20eecbfc64c8590def1d0f7be610652b0818775440d225f1f`.
 
 == Implemented candidate
 
@@ -26,14 +26,16 @@ Design SHA-256 (UTF-8/LF): `5893c2c7381f39c61858e5d3621ad2d9ae75d17a60b612b5a21d
 
 == Validation evidence
 
-Local Windows/Python 3.13: 64 tests passed; one PostgreSQL integration test skipped because
+Local Windows/Python 3.13: 65 tests passed; one PostgreSQL integration test skipped because
 no PostgreSQL service was configured. One upstream Starlette TestClient deprecation warning
 about httpx was emitted. Examples validate, Python compilation passes, and pip check passes.
 Browser preview verified management sign-in, component status/scopes, and key listing using disposable
 local data and a test-only token. Startup/rotation tests verify key output, hash retention, mounted-token
 precedence, disabled bootstrap, corrupt-state handling, and rejection of replaced keys.
 Podman is installed but has no configured VM; local image/Quadlet execution was not performed.
-The workflow has been authored but has not run on GitHub in this workspace.
+GitHub Actions run 38230962530 passed Python 3.12/3.13 tests including PostgreSQL and built the native image.
+Its container smoke timed out after restart; the smoke now refreshes the published ephemeral port.
+The follow-up workflow will verify container smoke, Traefik routing, and image publication.
 Initial publication was attempted: the connector returned HTTP 403 (integration cannot write contents),
 and local Git had no authenticated HTTPS credentials. The tested source is committed locally with
 origin set to https://github.com/pac-labs/dapi.git, ready to push after Git authentication is configured.
