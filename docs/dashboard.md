@@ -74,3 +74,7 @@ Unknown IDs return 404; malformed bodies return 422. Invalid saved overrides
 fail startup, and failed writes preserve the previous override.
 
 See [suggested next steps](roadmap.md) for audit history, traffic limits and shared identity.
+
+The **Files** workspace creates single-use terminal upload commands and shows unlisted
+download links after completion. Management listing/deletion remains private; files expire
+within 12 hours. See [temporary file transfers](files.md) for limits and the API contract.

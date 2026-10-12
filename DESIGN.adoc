@@ -265,3 +265,37 @@ Live Raspberry Pi/Quadlet behavior and ARM64 execution require deployment checks
 * https://docs.sqlalchemy.org/en/20/orm/session_basics.html[SQLAlchemy session concurrency].
 * https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html[Podman Quadlet].
 * https://github.com/docker/build-push-action[GitHub container build action].
+
+== Temporary file transfers
+
+The built-in Files workspace is independent of watched components and their schemas.
+Only a management-authenticated operator can create/list/delete invitations and files.
+An invitation contains a validated display filename and a random 256-bit single-use upload
+capability. The raw capability is returned once; only its SHA-256 hash is persisted.
+PUT of raw file bytes consumes the invitation, with no management key required by the sender.
+It accepts one stream, never a multipart collection. Failed/interrupted accepted uploads consume
+the invitation and discard partial bytes; quota rejection before claiming permits a later retry.
+A separate random 256-bit download identifier is disclosed to the uploader and panel only after
+completion. There is no anonymous listing or filename-based lookup. Downloads need no login,
+are attachments with application/octet-stream, no-store, nosniff, and sandbox headers.
+Deletion is authenticated and uses DELETE, never a side effect of visiting a URL.
+
+Files and invitations expire 12 hours after invitation creation (uploads do not extend this).
+Expired links are immediately denied on lookup. A 30-second sweeper removes expired bytes and
+metadata while the runtime is running; startup removes expired and interrupted upload data.
+Physical storage on a stopped host cannot be swept until restart. Persistent bytes and SQLAlchemy
+SQLite metadata live below the existing data volume at files/, independently of component databases.
+This operational store requires no PostgreSQL application role or component migration. Its v1 table
+is named files_v1; rollback to an older image leaves the directory untouched until a compatible image
+is restarted. Backups may retain copies independently of live retention and must be handled by operators.
+
+The one-worker runtime serializes claims/metadata changes. Uploads stream to disk outside the event
+loop, enforce a five-minute upload deadline, reserve their maximum size against total quota, and
+publish download readiness only after successful close and metadata commit. Restart never publishes
+partial files. Default limits are 100 MiB per file, 1 GiB reserved/ready bytes, and 128 live records.
+LOOPRD_FILE_MAX_BYTES and LOOPRD_FILE_QUOTA_BYTES configure host limits, without extending retention.
+Upload URLs are not placed in localStorage, diagnostics, or Looprd access logs. Operators must omit
+these capability paths from reverse-proxy access logs as they do WebSocket tickets.
+The panel constructs absolute commands/links from its current origin; JSON API URLs are same-origin
+relative paths, avoiding trust in forwarded hostname/scheme headers. Public Traefik examples include
+only upload/download prefixes, keeping listing and management private unless explicitly enabled.

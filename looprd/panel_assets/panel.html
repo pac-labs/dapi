@@ -15,7 +15,7 @@
 <main id="controls" hidden>
 <nav aria-label="Management sections" class="view-nav">
 <button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Components</button>
-<button data-view-button="access">Access keys</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
+<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
 <section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
 <div class="metrics">
@@ -45,9 +45,15 @@
 <label for="scopes">Granted scopes (comma separated)</label><input id="scopes" class="cds--text-input" required placeholder="items:read, events:read">
 <label for="expiry">Expires after seconds</label><input id="expiry" class="cds--text-input" type="number" min="1" max="31536000" value="2592000" required><button class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Create key</button></form>
 <section data-key-tab="issued" hidden><p class="muted small">A newly issued key is shown here once. Create a key first.</p><div id="issued" hidden><label for="new-key">New API key — copy now; shown only once</label><textarea id="new-key" class="cds--text-area" readonly rows="3" spellcheck="false"></textarea><button id="clear-key" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Clear key</button></div></section></div></section>
+<section data-view="files" class="view card" hidden><div class="section-heading"><h2>Temporary file transfers</h2><button id="refresh-files" class="cds--btn cds--btn--tertiary cds--layout--size-sm" data-action>Refresh files</button></div>
+<div class="page-list file-workspace"><p id="file-limits" class="muted small">One file per upload invitation. Files expire within 12 hours.</p>
+<form id="request-file"><label for="file-name">Filename</label><div class="toolbar"><input id="file-name" class="cds--text-input" required maxlength="180" placeholder="report.txt"><button class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Request upload URL</button></div></form>
+<div id="file-invitation" hidden><label for="file-command">Terminal command (Bash / POSIX shell)</label><textarea id="file-command" class="cds--text-area" readonly rows="3" spellcheck="false"></textarea><p id="file-expiry" class="muted small"></p><button id="copy-file-command" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Copy command</button></div>
+<p class="muted small">Downloads need no login. Only someone with the download link can retrieve a file; there is no public file browser. Delete a file or unused invitation below.</p><div id="file-list"></div></div></section>
 <section data-view="runtime" class="view card" hidden><div class="section-heading"><h2>Runtime &amp; reloads</h2><span id="reload-state" class="badge"></span></div><p class="muted small">Failed updates retain the last working generation. Removal stops serving but retains data. Operator blocks persist independently.</p><div id="runtime-facts" class="facts page-list"></div></section>
 <section data-view="diagnostics" class="view card" hidden><h2>Raw diagnostic snapshot</h2><div id="status" class="page-list mono"></div></section>
 </main><footer><span>Looprd management</span><span id="updated">Waiting for status</span></footer></div>
 <script nonce="NONCE">/* PANEL_CREDENTIALS */
 /* PANEL_NAV */
+/* PANEL_FILES */
 /* PANEL_JS */</script></body></html>

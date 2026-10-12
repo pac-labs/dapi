@@ -19,6 +19,8 @@ class Settings:
     bootstrap_admin: bool = True
     allow_python: bool = False
     allowed_origins: tuple[str, ...] = ()
+    file_max_bytes: int = 100 * 1024 * 1024
+    file_quota_bytes: int = 1024 * 1024 * 1024
 
     @classmethod
     def from_env(cls):
@@ -32,6 +34,8 @@ class Settings:
             bootstrap_admin=os.getenv("LOOPRD_BOOTSTRAP_ADMIN", "true").lower() == "true",
             allow_python=os.getenv("LOOPRD_ALLOW_PYTHON", "false").lower() == "true",
             allowed_origins=tuple(filter(None, os.getenv("LOOPRD_ORIGINS", "").split(","))),
+            file_max_bytes=max(1, int(os.getenv("LOOPRD_FILE_MAX_BYTES", str(cls.file_max_bytes)))),
+            file_quota_bytes=max(1, int(os.getenv("LOOPRD_FILE_QUOTA_BYTES", str(cls.file_quota_bytes)))),
         )
 
     def secret(self, reference: str) -> str:

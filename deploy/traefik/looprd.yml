@@ -3,7 +3,7 @@
 http:
   routers:
     looprd:
-      rule: Host(`api.example.com`) && (PathPrefix(`/looprd/`) || PathPrefix(`/dapi/`))
+      rule: Host(`api.example.com`) && (PathPrefix(`/looprd/`) || PathPrefix(`/dapi/`) || PathPrefix(`/_looprd/files/upload/`) || PathPrefix(`/_looprd/files/download/`))
       entryPoints: [websecure]
       # Must exceed any existing whole-domain/catch-all router's priority.
       priority: 1000

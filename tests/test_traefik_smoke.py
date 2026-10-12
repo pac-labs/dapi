@@ -59,6 +59,7 @@ def test_proxy_requests_follow_configured_hostname(tmp_path, monkeypatch):
 
     monkeypatch.setattr("scripts.traefik_smoke.urllib.request.urlopen", urlopen)
     monkeypatch.setattr("scripts.traefik_smoke.subprocess.run", lambda *args, **kwargs: None)
+    monkeypatch.setattr("scripts.traefik_smoke.smoke_files", lambda *args: None)
     check_proxy("podman", command, "test-looprd", tmp_path, root)
     assert set(requests) == {"custom.internal", "wrong.custom.internal"}
     content = (tmp_path / "dynamic/looprd.yml").read_text()

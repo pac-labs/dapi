@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `5f05f1d50849f0306dbe45755de78c48a47480574f72fc2677bb34f4c3c4f653`.
+Design SHA-256 (UTF-8/LF): `a60b2741b086f3694883159e2c95964864b4c429e5684e7a34252cc9d195650f`.
 
 == Implemented candidate
 
@@ -96,3 +96,16 @@ Two Node credential lifecycle tests passed. Fresh wheel includes navigation,
 credential handling, Carbon styles and its license. Browser checks passed for
 fixed desktop/mobile layout, contained scrolling, block/unblock, key issuance/
 revocation, remembered-key reload, Forget, and session-only reload behavior.
+
+
+== Temporary file transfers candidate
+
+Governing design: DESIGN.adoc, Temporary file transfers.
+Management creates one-use terminal upload invitations; raw curl PUT requires only the invitation.
+Completed files have unlisted anonymous download links. Operator-only listing and deletion,
+12-hour expiry from invitation creation, bounded storage, persistent metadata, and crash cleanup.
+The Carbon Files workspace displays the command then polls for the completed download URL.
+Local validation: 90 Python tests passed, one optional PostgreSQL test skipped; three Node tests passed.
+Fresh wheel imports and bundled Files assets verified. Disposable browser/curl checks passed for
+invitation creation, completion/download URL, fixed desktop/mobile layout, and no console errors.
+Container/proxy CI and node deployment are recorded separately.

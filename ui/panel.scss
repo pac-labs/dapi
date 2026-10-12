@@ -75,3 +75,5 @@ footer { display: flex; justify-content: space-between; gap: 16px; font-size: 12
 @media(max-height:580px) { .shell { gap: 4px; }.metrics { display: none; }.view { gap: 4px; }.page-heading h1 { display: none; }.card { padding: 8px; }.view-nav button,.subnav button { padding-block: 4px; } }
 
 @media(max-width:480px) { .topbar { padding: 0 8px; }.topbar .toolbar { gap: 0; }.topbar .cds--btn { padding-inline: 8px; }.brand { font-size: 12px; }.topbar .badge { font-size: 10px; } }
+
+.file-workspace { min-height: 0; overflow: auto; }.file-workspace>p,.file-row p { margin: 8px 0; }.file-row { padding: 16px 0; border-bottom: 1px solid var(--cds-border-subtle-01); overflow-wrap: anywhere; }.file-row strong { font-weight: 600; }.file-row input { margin: 8px 0; }.file-row button { margin: 4px 8px 0 0; }.file-link { color: var(--cds-link-primary); display: block; }#file-invitation { margin-top: 16px; }#file-invitation textarea { width: 100%; }

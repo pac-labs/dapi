@@ -76,3 +76,12 @@ and draining WebSocket closure, ticket invalidation, corrupt state, write failur
 and cancellation while persisting. Browser checks cover section navigation, contained scrolling, mobile layout, confirmation, and retained key workflows using local test data.
 `npm run test:ui` checks saved-key reconnection, opt-out, forgetting credentials,
 and denied browser storage. Browser checks additionally verify reload and Forget behavior.
+
+
+`tests/test_files.py` covers the DESIGN.adoc Temporary file transfers contract:
+private invitation/list/delete boundaries, raw single-use uploads, anonymous unlisted
+attachment downloads/ranges, restart persistence, immediate expiry and physical cleanup,
+filename/body limits, quota reservations, cancellation and crash recovery, and invitation caps.
+Node tests cover shell quoting. Container/Traefik smoke exercises a disposable file round trip
+through the shipped public upload/download rules and verifies management remains excluded.
+Browser checks use `.local/files-preview` with synthetic bytes and a test-only mounted token.

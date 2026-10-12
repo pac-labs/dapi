@@ -13,6 +13,8 @@ from .management import keys
 from .admin import announce, provision
 from .panel import panel
 from .control import availability
+from .file_routes import files_endpoint
+from .file_service import start_files
 
 
 def create_app(settings=None, runtime=None):
@@ -25,7 +27,11 @@ def create_app(settings=None, runtime=None):
             announce(provision(settings))
         await runtime.start()
         try:
-            yield
+            app.state.files = await start_files(settings)
+            try:
+                yield
+            finally:
+                await app.state.files.close()
         finally:
             await runtime.close()
 
@@ -34,6 +40,10 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/panel/", panel),
         Route("/_looprd/status", admin),
         Route("/_looprd/reconcile", admin, methods=["POST"]),
+        Route("/_looprd/files", files_endpoint, methods=["GET", "POST"]),
+        Route("/_looprd/files/upload/{token}", files_endpoint, methods=["PUT"]),
+        Route("/_looprd/files/download/{file_id}", files_endpoint, methods=["GET", "HEAD"]),
+        Route("/_looprd/files/{file_id}", files_endpoint, methods=["DELETE"]),
         Route("/_looprd/components/{component}/availability", availability, methods=["PUT"]),
         Route("/_looprd/components/{component}/keys", keys, methods=["GET", "POST"]),
         Route("/_looprd/components/{component}/keys/{key_id}", keys, methods=["DELETE"]),

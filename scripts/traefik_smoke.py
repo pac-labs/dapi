@@ -7,6 +7,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+if __package__:
+    from .files_smoke import smoke_files
+else:
+    from files_smoke import smoke_files
+
 
 def router_host(content):
     """Read the single literal Host matcher supported by this deployment smoke test."""
@@ -63,6 +68,8 @@ def check_proxy(engine, command, looprd_name, directory, root):
         assert status("/_looprd/status") == 404
         assert status("/looprdx/roboscope/v1/scans") == 404
         assert status("/") == 404
+        direct = "http://" + command("port", looprd_name, "8080/tcp").splitlines()[0]
+        smoke_files(direct, "http://" + address, configured_host)
         print("Traefik smoke passed: host/path routing, prefix preservation, management exclusion")
     except BaseException:
         subprocess.run([engine, "logs", proxy], check=False)
