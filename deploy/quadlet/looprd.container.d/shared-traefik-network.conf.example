@@ -1,0 +1,6 @@
+# Optional: copy as ~/.config/containers/systemd/looprd.container.d/traefik.conf
+# Replace traefik with the EXISTING Podman network used by the existing Traefik.
+# Networks named alike in Docker and Podman are not shared.
+[Container]
+Network=traefik
+NetworkAlias=looprd

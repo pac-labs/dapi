@@ -1,10 +1,17 @@
 """The proxy smoke adapts its Host header to deployment configuration."""
 
 import urllib.error
+from pathlib import Path
 
 import pytest
 
 from scripts.traefik_smoke import check_proxy, router_host
+
+
+def test_public_deployment_routers_use_placeholder_hostname():
+    root = Path(__file__).resolve().parents[1] / "deploy/traefik"
+    for filename in ("looprd.yml", "management.yml.example"):
+        assert router_host((root / filename).read_text()) == "api.example.com"
 
 
 @pytest.mark.parametrize("hostname", ["api.example.com", "custom.internal", "localhost"])

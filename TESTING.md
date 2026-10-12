@@ -50,6 +50,8 @@ then removes those resources. With `--traefik` it also checks the shipped Traefi
 using an isolated test proxy/network: correct host and prefixes route, other paths and management do not.
 The smoke reads its Host header from the deployed router rule, with no duplicated hostname.
 `tests/test_traefik_smoke.py` checks custom-host adaptation and rejects unsupported or ambiguous rules.
+It also verifies published router examples use the placeholder hostname; private deployment
+customizations belong outside the source checkout.
 This exercises HTTP routing; the production TLS certificate remains managed by the existing Traefik.
 CI runs it using Docker before publishing multi-platform images.
 ARM64 image building is automated; a Raspberry Pi/Quadlet operator run remains a deployment check.

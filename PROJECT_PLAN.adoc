@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `c77f477a51a3ab7d137996c3ee4e045be2e80170c720b732a6c688e3df2d0833`.
+Design SHA-256 (UTF-8/LF): `5893c2c7381f39c61858e5d3621ad2d9ae75d17a60b612b5a21d5d177a22ead5`.
 
 == Implemented candidate
 
@@ -16,7 +16,8 @@ Design SHA-256 (UTF-8/LF): `c77f477a51a3ab7d137996c3ee4e045be2e80170c720b732a6c6
 * GitHub AMD64/ARM64 image workflow, native container smoke, PostgreSQL CI service.
 * Rootless Podman Quadlet units and installation/backup instructions.
 * Existing Traefik routing for the configured API hostname and optional shared-Podman-network drop-in.
-* Traefik smoke derives its hostname from deployment configuration; general docs and test code contain no deployment hostname.
+* Traefik smoke derives its hostname from deployment configuration; all published files use placeholder hostnames.
+* Publication is based on the clean remote history, excluding earlier local commits containing private deployment values.
 * GitHub Contents API retrieval with mounted token-file rotation and same-commit private sources.
 * Component-local hashed API keys, explicit operation/handler/subscription scopes, and admin key management.
 * Persistent key expiry/revocation and live WebSocket identity revalidation, including outstanding tickets.
@@ -25,7 +26,7 @@ Design SHA-256 (UTF-8/LF): `c77f477a51a3ab7d137996c3ee4e045be2e80170c720b732a6c6
 
 == Validation evidence
 
-Local Windows/Python 3.13: 63 tests passed; one PostgreSQL integration test skipped because
+Local Windows/Python 3.13: 64 tests passed; one PostgreSQL integration test skipped because
 no PostgreSQL service was configured. One upstream Starlette TestClient deprecation warning
 about httpx was emitted. Examples validate, Python compilation passes, and pip check passes.
 Browser preview verified management sign-in, component status/scopes, and key listing using disposable

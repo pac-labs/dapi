@@ -1,0 +1,27 @@
+[Unit]
+Description=Looprd dynamic API companion
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=ghcr.io/pac-labs/dapi:latest
+ContainerName=looprd
+PublishPort=127.0.0.1:8080:8080
+UserNS=keep-id:uid=10001,gid=10001
+Volume=looprd-data.volume:/var/lib/looprd:U
+# Mount the directory so atomic host file replacements are visible inside.
+Volume=%h/.config/looprd:/etc/looprd:ro,Z
+EnvironmentFile=%h/.config/looprd/looprd.env
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=all
+Tmpfs=/tmp:rw,size=64m
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=300
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target

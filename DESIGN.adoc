@@ -30,6 +30,7 @@ SQLite files live in the persistent data volume. PostgreSQL is optionally an ext
 SQLAlchemy is the data access layer, not a database server.
 TLS and DNS belong to the existing reverse proxy/tunnel and host configuration.
 The HTTPS hostname is configured in deployment and owned by the existing shared Traefik instance.
+Public deployment examples use only `api.example.com`; private hostnames belong in operator-local copies.
 `deploy/traefik/looprd.yml` adds only path-specific Looprd routing, preserves prefixes,
 and reuses the existing TLS configuration. Backend addressing follows the host/container topology;
 `docs/traefik.md` covers localhost, shared Podman networks, and separate hosts/engines.

@@ -10,7 +10,9 @@ component is covered without adding a Traefik router per component.
 
 Copy [deploy/traefik/looprd.yml](../deploy/traefik/looprd.yml) into the **existing** Traefik
 dynamic configuration directory. Keep the entry point name aligned with the one serving
-443; the example uses `websecure`. Its priority of 1000 must exceed your existing
+443 and replace `api.example.com` in its `Host` rule with your hostname on the deployment host.
+Keep that customized copy outside the public source repository. The example uses
+`websecure`. Its priority of 1000 must exceed your existing
 whole-domain/catch-all router. Other paths keep their existing routes.
 
 Do not add StripPrefix: Looprd expects `/looprd/<component>/<version>` or `/dapi/...`.

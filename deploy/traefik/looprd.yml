@@ -1,0 +1,24 @@
+# Add to the existing Traefik file provider's dynamic directory.
+# Requires the existing HTTPS entry point to be named websecure; adjust if different.
+http:
+  routers:
+    looprd:
+      rule: Host(`api.example.com`) && (PathPrefix(`/looprd/`) || PathPrefix(`/dapi/`))
+      entryPoints: [websecure]
+      # Must exceed any existing whole-domain/catch-all router's priority.
+      priority: 1000
+      service: looprd
+      # Reuse the existing certificate/TLS configuration. No new resolver is created.
+      tls: {}
+  services:
+    looprd:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /_looprd/health
+          interval: 30s
+          timeout: 5s
+        servers:
+          # For Traefik running on the same host, outside a separate network namespace.
+          # For shared-container networking use http://looprd:8080 instead.
+          - url: http://127.0.0.1:8080

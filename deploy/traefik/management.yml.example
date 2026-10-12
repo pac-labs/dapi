@@ -1,0 +1,10 @@
+# OPTIONAL: copy into your existing Traefik dynamic directory to expose the panel
+# and bearer-authenticated management API. The normal looprd.yml excludes these paths.
+http:
+  routers:
+    looprd-management:
+      rule: Host(`api.example.com`) && PathPrefix(`/_looprd/`)
+      entryPoints: [websecure]
+      priority: 1001
+      service: looprd
+      tls: {}

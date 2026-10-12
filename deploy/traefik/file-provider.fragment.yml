@@ -1,0 +1,6 @@
+# MERGE this into the existing Traefik STATIC config only if no file provider exists.
+# If it already exists, use its current dynamic directory instead.
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true

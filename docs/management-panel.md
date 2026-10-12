@@ -29,6 +29,8 @@ For the existing HTTPS hostname, optionally copy
 [`management.yml.example`](../deploy/traefik/management.yml.example) into the existing
 Traefik dynamic configuration directory as `looprd-management.yml`. It uses the `looprd`
 service defined by `deploy/traefik/looprd.yml` and the existing `websecure` entry point/TLS.
+Replace `api.example.com` in both deployed router files with your hostname; keep those
+customized files outside the public source repository.
 Then open **https://api.example.com/_looprd/panel/**.
 This explicitly exposes the management API as well as the panel. The normal component
 router continues to exclude management. No deployment file is applied automatically.
