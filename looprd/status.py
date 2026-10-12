@@ -62,6 +62,7 @@ def snapshot(runtime):
             "schemaVersion": spec.database.schemaVersion if spec.database else None,
             "databaseBackend": spec.database.backend if spec.database else None,
             "authMode": spec.auth.mode, "scopes": spec.auth.scopes,
+            "blocked": key in runtime.availability.blocked,
             "error": runtime.errors.get(key), "loadedAt": value.loaded_at,
             "activeRequests": value.active_requests, "websocketConnections": len(value.sockets),
             "routes": routes(spec),
@@ -73,6 +74,7 @@ def snapshot(runtime):
     return {
         "sourcesError": runtime.sources_error, "components": components,
         "errors": dict(runtime.errors), "sources": dict(runtime.sources),
+        "blocked": sorted(runtime.availability.blocked),
         "runtime": {
             "startedAt": monitor.started_at, "uptimeSeconds": int(time.monotonic() - monitor.started),
             "pollSeconds": settings.poll_seconds, "drainSeconds": settings.drain_seconds,

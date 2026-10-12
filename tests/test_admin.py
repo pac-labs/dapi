@@ -71,7 +71,9 @@ def test_panel_shell_contains_no_credentials_and_management_stays_protected(setu
         assert panel.status_code == 200 and panel.headers["cache-control"] == "no-store"
         assert "frame-ancestors 'none'" in panel.headers["content-security-policy"]
         assert 'nonce="' in panel.text and 'nonce="NONCE"' not in panel.text
-        assert "localStorage" not in panel.text and "sessionStorage" not in panel.text
+        assert "localStorage" in panel.text and "sessionStorage" not in panel.text
+        assert "Remember on this browser" in panel.text and "Forget key" in panel.text
+        assert "localStorage.removeItem(credentialStorageKey)" in panel.text
         assert "test-token" not in panel.text
         assert client.get("/_looprd/status").status_code == 401
         assert client.post("/_looprd/reconcile").status_code == 401

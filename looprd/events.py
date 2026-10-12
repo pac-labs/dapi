@@ -52,3 +52,6 @@ class Tickets:
     def consume(self, ticket, generation):
         value = self.values.pop(ticket, None)
         return value if value and value[0] == generation and value[1] > time.monotonic() else None
+
+    def revoke(self, generation):
+        self.values = {key: value for key, value in self.values.items() if value[0] != generation}

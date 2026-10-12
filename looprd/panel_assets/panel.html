@@ -2,50 +2,52 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Looprd management</title><style nonce="NONCE">/* PANEL_CSS */</style></head>
 <body class="cds--layout--size-md">
-<header class="topbar cds--header" aria-label="Looprd"><a class="brand" href="#"><span class="brand-prefix">Looprd</span> / Management<span class="brand-note">Runtime console</span></a>
-<span id="connection" class="badge cds--tag cds--tag--gray">Disconnected</span></header>
+<header class="topbar cds--header" aria-label="Looprd"><a class="brand" href="#">Looprd / Management</a>
+<div class="toolbar"><span id="connection" class="badge cds--tag cds--tag--gray">Disconnected</span><button id="forget-key" class="cds--btn cds--btn--ghost cds--layout--size-sm" hidden>Forget key</button><button id="logout" class="cds--btn cds--btn--ghost cds--layout--size-sm" hidden>Disconnect</button></div></header>
 <div class="shell">
-<div class="page-heading"><div><p class="eyebrow">Runtime / Overview</p><h1>Service overview</h1>
-<p class="muted">See what is running, inspect its API, and keep track of specification updates.</p></div>
-<div class="toolbar" id="actions" hidden><label class="inline"><input id="auto" type="checkbox" checked>Auto-refresh · 10s</label>
-<button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="refresh" data-action>Refresh</button><button id="reconcile" class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Check sources now</button></div></div>
-<section class="card login-card"><form id="login"><div><label for="token">Management API key</label>
-<p class="muted small">Kept only in page memory. Reloading or disconnecting clears it.</p></div>
-<input class="cds--text-input" id="token" type="password" autocomplete="off" required placeholder="Paste your management key" aria-label="Management API key">
-<button class="cds--btn cds--btn--primary cds--layout--size-sm" id="connect" data-action>Connect</button><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" type="button" id="logout" hidden>Disconnect</button></form></section>
+<div class="page-heading"><h1 id="page-title">Service overview</h1><div class="toolbar" id="actions" hidden>
+<label class="inline"><input id="auto" type="checkbox" checked>Auto-refresh</label>
+<button id="refresh" class="cds--btn cds--btn--tertiary cds--layout--size-sm" data-action>Refresh</button><button id="reconcile" class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Check sources</button></div></div>
+<section class="card login-card" id="login-card"><form id="login"><h2>Connect to your runtime</h2><label for="token">Management API key</label>
+<input class="cds--text-input" id="token" type="password" autocomplete="off" required placeholder="Paste your management key">
+<label class="inline"><input id="remember" type="checkbox" checked>Remember on this browser</label><p class="muted small">Reconnect automatically on this browser. Forget key removes the saved key.</p><button id="connect" class="cds--btn cds--btn--primary" data-action>Connect</button></form></section>
 <p id="message" role="status" aria-live="polite">Connect to view your runtime.</p>
 <main id="controls" hidden>
+<nav aria-label="Management sections" class="view-nav">
+<button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Components</button>
+<button data-view-button="access">Access keys</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
+<section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
 <div class="metrics">
-<article class="card metric"><span class="eyebrow">ACTIVE COMPONENTS</span><strong id="metric-components">—</strong><span id="metric-configured" class="muted small"></span></article>
+<article class="card metric"><span class="eyebrow">SERVING APIs</span><strong id="metric-components">—</strong><span id="metric-configured" class="muted small"></span></article>
 <article class="card metric"><span class="eyebrow">NEEDS ATTENTION</span><strong id="metric-errors">—</strong><span class="muted small">Sources and component errors</span></article>
 <article class="card metric"><span class="eyebrow">OPEN WEBSOCKETS</span><strong id="metric-sockets">—</strong><span id="metric-requests" class="muted small"></span></article>
-<article class="card metric"><span class="eyebrow">LAST SOURCE CHECK</span><strong id="metric-check" class="time-value">—</strong><span id="metric-poll" class="muted small"></span></article>
-</div>
-<section id="components" class="workspace">
-<div class="card component-browser"><div class="section-heading"><h2>Components</h2><span id="component-count" class="badge cds--tag cds--tag--gray"></span></div>
-<label class="sr-only" for="search">Find a component</label><input class="cds--text-input" id="search" type="search" placeholder="Find a component…">
-<label class="sr-only" for="filter">Filter components</label><select class="cds--select-input" id="filter"><option value="all">All components</option><option value="active">Active</option><option value="attention">Needs attention</option><option value="disabled">Disabled</option></select>
-<div id="component-list" class="component-list"></div></div>
-<article class="card component-detail"><div id="detail-empty" class="empty">Select a component to inspect its API and storage.</div>
-<div id="detail" hidden><div class="section-heading"><div><p class="eyebrow">COMPONENT</p><h2 id="detail-name"></h2></div><span id="detail-state" class="badge cds--tag cds--tag--gray"></span></div>
-<p id="detail-error" class="notice warning" hidden></p><div id="detail-facts" class="facts"></div>
-<div class="endpoint"><code id="detail-endpoint"></code><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="copy-endpoint">Copy URL</button></div>
-<div class="section-heading route-heading"><h3>API routes</h3><span class="muted small">Paths relative to component URL</span></div>
-<div id="routes" class="route-list"></div><div id="socket-note" class="notice" hidden></div>
-<h3>Database models</h3><div id="models"></div></div></article>
-</section>
-<div class="bottom-grid">
-<section class="card"><div class="section-heading"><h2>Runtime &amp; reloads</h2><span id="reload-state" class="badge cds--tag cds--tag--gray"></span></div>
-<div id="runtime-facts" class="facts"></div><p class="muted small">A failed update keeps the previous working component. Only removal from a valid sources file stops it; stored data is retained.</p></section>
-<section class="card"><h2>Component API keys</h2><p id="key-empty" class="muted">No components use Looprd database authentication. Public and shared-bearer components manage access through their specification or application.</p>
-<div id="key-controls" hidden><label for="component">Component</label><div class="toolbar"><select class="cds--select-input" id="component"></select><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="list" data-action>Refresh keys</button></div>
-<p id="available" class="muted small"></p><form id="create"><label for="label">Key label</label><input class="cds--text-input" id="label" required maxlength="100" placeholder="e.g. read-only integration">
-<label for="scopes">Granted scopes (comma separated)</label><input class="cds--text-input" id="scopes" required placeholder="items:read, events:read">
-<label for="expiry">Expires after seconds</label><input class="cds--text-input" id="expiry" type="number" min="1" max="31536000" value="2592000" required><button class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Create key</button></form>
-<div id="issued" class="notice" hidden><label for="new-key">New API key — copy now; shown only once</label><textarea class="cds--text-area" id="new-key" readonly rows="3" spellcheck="false"></textarea><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="clear-key">Clear key</button></div>
-<ul id="keys" class="key-list"></ul></div></section>
-</div>
-<details class="card diagnostics"><summary>Raw diagnostic snapshot</summary><pre id="status"></pre></details>
-<footer><span>Looprd management</span><span id="updated">Waiting for status</span></footer>
-</main></div><script nonce="NONCE">/* PANEL_JS */</script></body></html>
+<article class="card metric"><span class="eyebrow">LAST SOURCE CHECK</span><strong id="metric-check" class="time-value">—</strong><span id="metric-poll" class="muted small"></span></article></div>
+<div class="card component-browser fill"><div class="section-heading"><h2>Components</h2><span id="component-count" class="badge cds--tag cds--tag--gray"></span></div>
+<div class="toolbar"><label class="sr-only" for="search">Find a component</label><input class="cds--text-input" id="search" type="search" placeholder="Find a component…">
+<label class="sr-only" for="filter">Filter components</label><select class="cds--select-input" id="filter"><option value="all">All components</option><option value="active">Serving</option><option value="blocked">Blocked</option><option value="attention">Needs attention</option><option value="disabled">Disabled</option></select></div>
+<div id="component-list" class="page-list"></div></div></section>
+<section data-view="components" class="view" hidden>
+<div class="toolbar component-picker"><label class="sr-only" for="component-picker">Inspect component</label><select id="component-picker" class="cds--select-input"></select>
+<button id="block-api" class="cds--btn cds--btn--danger--tertiary cds--layout--size-sm" data-action hidden>Block API</button></div>
+<div id="detail-empty" class="card empty">Select a component from Overview to inspect its API and storage.</div>
+<article id="detail" class="card fill" hidden><div class="section-heading"><h2 id="detail-name"></h2><span id="detail-state" class="badge"></span></div>
+<p id="detail-error" class="notice warning" hidden></p><nav class="subnav" aria-label="Component details"><button data-tab-button="summary">Summary</button><button data-tab-button="routes">API routes</button><button data-tab-button="storage">Database models</button></nav>
+<section data-detail-tab="summary" class="fill"><div class="endpoint"><code id="detail-endpoint"></code><button id="copy-endpoint" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Copy URL</button></div>
+<div id="detail-facts" class="facts page-list"></div></section>
+<section data-detail-tab="routes" class="fill" hidden><p id="socket-note" class="muted small" hidden></p><div id="routes" class="route-list page-list"></div></section>
+<section data-detail-tab="storage" class="fill" hidden><label class="sr-only" for="model-picker">Database model</label><select id="model-picker" class="cds--select-input"></select><div id="models" class="fill"></div></section></article></section>
+<section data-view="access" class="view card" hidden><h2>Component API keys</h2><p id="key-empty" class="muted">No components use Looprd database authentication. Public and shared-bearer components manage their own application access.</p>
+<div id="key-controls" class="fill" hidden><div class="toolbar"><label class="sr-only" for="component">Component</label><select id="component" class="cds--select-input"></select><button id="list" class="cds--btn cds--btn--tertiary cds--layout--size-sm" data-action>Refresh keys</button></div><p id="available" class="muted small"></p>
+<nav class="subnav" aria-label="Key management"><button data-key-button="list">Issued keys</button><button data-key-button="create">Create key</button><button data-key-button="issued">Copy new key</button></nav>
+<section data-key-tab="list" class="fill"><ul id="keys" class="key-list page-list"></ul></section>
+<form id="create" data-key-tab="create" hidden><label for="label">Key label</label><input id="label" class="cds--text-input" required maxlength="100" placeholder="e.g. read-only integration">
+<label for="scopes">Granted scopes (comma separated)</label><input id="scopes" class="cds--text-input" required placeholder="items:read, events:read">
+<label for="expiry">Expires after seconds</label><input id="expiry" class="cds--text-input" type="number" min="1" max="31536000" value="2592000" required><button class="cds--btn cds--btn--primary cds--layout--size-sm" data-action>Create key</button></form>
+<section data-key-tab="issued" hidden><p class="muted small">A newly issued key is shown here once. Create a key first.</p><div id="issued" hidden><label for="new-key">New API key — copy now; shown only once</label><textarea id="new-key" class="cds--text-area" readonly rows="3" spellcheck="false"></textarea><button id="clear-key" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Clear key</button></div></section></div></section>
+<section data-view="runtime" class="view card" hidden><div class="section-heading"><h2>Runtime &amp; reloads</h2><span id="reload-state" class="badge"></span></div><p class="muted small">Failed updates retain the last working generation. Removal stops serving but retains data. Operator blocks persist independently.</p><div id="runtime-facts" class="facts page-list"></div></section>
+<section data-view="diagnostics" class="view card" hidden><h2>Raw diagnostic snapshot</h2><div id="status" class="page-list mono"></div></section>
+</main><footer><span>Looprd management</span><span id="updated">Waiting for status</span></footer></div>
+<script nonce="NONCE">/* PANEL_CREDENTIALS */
+/* PANEL_NAV */
+/* PANEL_JS */</script></body></html>

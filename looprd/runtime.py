@@ -12,6 +12,7 @@ from .events import EventBus, Tickets
 from .sources import SourceReader
 from .spec import Specification
 from .status import Monitor, snapshot
+from .availability import Availability
 
 log = logging.getLogger("looprd")
 
@@ -32,7 +33,36 @@ class Runtime:
         self.retiring = set()
         self.poll_task = None
         settings.data.mkdir(parents=True, exist_ok=True)
+        self.availability = Availability(settings.data)
+        self.sockets = {}
         self.checkpoint = settings.data / "active.json"
+
+    async def set_blocked(self, component, blocked):
+        async with self.lock:
+            known = set(self.active) | set(self.sources) | set(self.errors) | set(self.availability.blocked)
+            if component not in known:
+                raise KeyError(component)
+            desired = set(self.availability.blocked)
+            desired.add(component) if blocked else desired.discard(component)
+            write = asyncio.create_task(asyncio.to_thread(self.availability.save, desired))
+            try:
+                await asyncio.shield(write)
+            except asyncio.CancelledError:
+                # A cancelled request cannot leave durable state ahead of the live gate.
+                await write
+                self.availability.blocked = frozenset(desired)
+                raise
+            self.availability.blocked = frozenset(desired)
+            if blocked:
+                generation = self.active.get(component)
+                if generation:
+                    self.tickets.revoke(generation.key)
+                for socket, owner in tuple(self.sockets.items()):
+                    if owner == component:
+                        try:
+                            await socket.close(code=1008)
+                        except (RuntimeError, OSError):
+                            pass
 
     async def restore(self):
         if not self.checkpoint.exists():

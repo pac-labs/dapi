@@ -12,6 +12,7 @@ from .web import admin, dispatch, health, websocket
 from .management import keys
 from .admin import announce, provision
 from .panel import panel
+from .control import availability
 
 
 def create_app(settings=None, runtime=None):
@@ -33,6 +34,7 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/panel/", panel),
         Route("/_looprd/status", admin),
         Route("/_looprd/reconcile", admin, methods=["POST"]),
+        Route("/_looprd/components/{component}/availability", availability, methods=["PUT"]),
         Route("/_looprd/components/{component}/keys", keys, methods=["GET", "POST"]),
         Route("/_looprd/components/{component}/keys/{key_id}", keys, methods=["DELETE"]),
     ]

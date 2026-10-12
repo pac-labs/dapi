@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `f7b5b4fbfe5e5d99b2eb25b28ca43d5c638e8bd2dc17cad57e4eb71b40ba3974`.
+Design SHA-256 (UTF-8/LF): `5f05f1d50849f0306dbe45755de78c48a47480574f72fc2677bb34f4c3c4f653`.
 
 == Implemented candidate
 
@@ -79,3 +79,20 @@ Management behavior and credential boundaries remain unchanged.
 Local validation: 69 tests passed; one optional PostgreSQL test skipped. Wheel includes
 compiled Carbon CSS and license, with no external asset URLs. Desktop and 390px mobile
 browser checks passed; no horizontal overflow or console errors were observed.
+
+== Workspace navigation and operator blocking candidate
+
+Governing design: DESIGN.adoc, Operator API blocking.
+Fixed workspace sections and component/key tabs replace the stacked dashboard.
+Contained scrolling keeps lists, model fields and raw diagnostics within a fixed document.
+Optional remembered browser credentials reconnect on reload, with explicit Forget and
+session-only access. Dedicated Node tests cover storage denial and credential lifecycle.
+Persistent management-only API blocks survive watcher updates and restarts, preserve
+data/keys, and close live/draining WebSockets. Explicit unblocking is independent
+of sources enablement. Shared identity and other dashboard proposals are documented
+in docs/roadmap.md; they are not enabled by this candidate.
+Local validation: 75 Python tests passed; one optional PostgreSQL test skipped.
+Two Node credential lifecycle tests passed. Fresh wheel includes navigation,
+credential handling, Carbon styles and its license. Browser checks passed for
+fixed desktop/mobile layout, contained scrolling, block/unblock, key issuance/
+revocation, remembered-key reload, Forget, and session-only reload behavior.

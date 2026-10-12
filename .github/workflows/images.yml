@@ -37,6 +37,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build:ui
+      - run: npm run test:ui
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}

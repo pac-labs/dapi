@@ -165,7 +165,13 @@ key without a restart. Mounted credentials must instead be rotated on the host.
 `/_looprd/panel/` serves a public login shell for same-origin bearer-authenticated management calls.
 The panel displays component status, reconciles sources, and creates/lists/revokes component keys.
 It does not edit sources, deploy containers, or provision PostgreSQL. Credentials remain in page
-memory with no cookies/browser storage; disconnect/reload clears them. Untrusted metadata renders
+memory unless Remember on this browser is selected (enabled by default at operator request).
+That option saves the raw management key in same-origin localStorage and reconnects on reload.
+Disconnect ends the live session while retaining the saved key; Forget key removes it and disconnects.
+Unchecking Remember removes a previously saved key and uses session memory only. Rejected saved
+credentials are removed. Storage failures preserve session access and are reported; failed removal
+requires clearing site data. No cookies are used, and server responses never embed credentials.
+Untrusted metadata renders
 as text, with a nonce-based Content Security Policy, frame restrictions, and no-store responses.
 Status additionally reports auth modes and declared scopes, never credential values.
 The dashboard shows active, disabled and failed components, live request/socket counts,
@@ -192,6 +198,26 @@ First-start bootstrap and explicit key-generation commands are the deliberate cr
 container journals/logs containing that output must be treated as secrets. Restarts never reprint the key.
 HTTP access logs are disabled to avoid logging ticket query strings.
 Status reports active revisions, spec digests, schema versions, and failures.
+
+== Operator API blocking
+
+An authenticated PUT to `/_looprd/components/<id>/availability` with a strict
+`{"blocked": true|false}` body sets a node-local override. Blocking gates both URL aliases,
+all versions, documentation and ticket issuance with HTTP 503, rejects new WebSockets,
+and closes existing connections with code 1008. Requests already executing may finish.
+It retains loaded specifications, databases and keys; reconciliation can still update the
+loaded generation. Blocking is distinct from removing or disabling a sources entry.
+The override survives reload, restart and removal/re-addition and only explicit unblock clears it.
+Unblocking never resurrects a removed/disabled component. Management stays available.
+The versioned `availability.json` in the data volume is validated at startup and atomically
+written before the override takes effect. Invalid stored state fails startup; write failure
+preserves the previous override. Status exposes blocked IDs, including removed entries.
+
+The Carbon panel has a fixed workspace with navigation between overview, components,
+routes, models, access keys and runtime diagnostics. Long content scrolls inside contained
+panels while the document remains fixed. Lists, model fields and diagnostic lines stay inside
+the available viewport. Remembered credential lifecycle has dedicated Node tests in CI.
+An explicit confirmation precedes blocking; production components are not blocked during deployment checks.
 
 == Container delivery and Podman
 

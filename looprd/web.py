@@ -47,6 +47,9 @@ async def health(request):
 
 async def dispatch(request):
     runtime = request.app.state.runtime
+    if request.path_params["component"] in runtime.availability.blocked:
+        return JSONResponse({"error": "component API blocked by operator"}, status_code=503,
+                            headers={"Cache-Control": "no-store"})
     generation = find_generation(runtime, request.scope)
     if not generation:
         return JSONResponse({"error": "component not found"}, status_code=404)
@@ -89,6 +92,10 @@ async def dispatch(request):
 
 async def websocket(socket):
     runtime = socket.app.state.runtime
+    component = socket.path_params["component"]
+    if component in runtime.availability.blocked:
+        await socket.close(code=1008)
+        return
     generation = find_generation(runtime, socket.scope)
     path = "/" + socket.path_params.get("path", "").strip("/")
     if not generation or not generation.spec.websocket or path != generation.spec.websocket.path.rstrip("/"):
@@ -112,19 +119,24 @@ async def websocket(socket):
         principal = None
     finally:
         generation.active_requests -= 1
-    if principal is None or generation not in runtime.active.values():
+    if principal is None or generation not in runtime.active.values() or component in runtime.availability.blocked:
         await socket.close(code=1008)
         return
     await socket.accept()
     generation.sockets.add(socket)
+    runtime.sockets[socket] = component
     subscriber = generation.bus.subscribe()
     try:
-        await subscriptions(socket, generation, subscriber, principal)
+        if component in runtime.availability.blocked:
+            await socket.close(code=1008)
+        else:
+            await subscriptions(socket, generation, subscriber, principal)
     except (WebSocketDisconnect, RuntimeError, OSError):
         pass
     finally:
         generation.bus.subscribers.discard(subscriber)
         generation.sockets.discard(socket)
+        runtime.sockets.pop(socket, None)
 
 
 async def subscriptions(socket, generation, subscriber, principal):
@@ -133,6 +145,9 @@ async def subscriptions(socket, generation, subscriber, principal):
     try:
         while True:
             done, _ = await asyncio.wait({receive, event}, timeout=1, return_when=asyncio.FIRST_COMPLETED)
+            if generation.spec.component in socket.app.state.runtime.availability.blocked:
+                await socket.close(code=1008)
+                return
             try:
                 async with asyncio.timeout(generation.settings.request_seconds):
                     principal = await generation.refresh_identity(principal)

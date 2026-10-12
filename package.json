@@ -2,6 +2,7 @@
   "name": "looprd-panel",
   "private": true,
   "scripts": {
+    "test:ui": "node --test tests/ui/*.test.mjs",
     "build:ui": "sass --quiet-deps --no-source-map --style=compressed --load-path=node_modules ui/panel.scss looprd/panel_assets/panel.css"
   },
   "devDependencies": {

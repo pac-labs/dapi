@@ -8,6 +8,8 @@ from starlette.responses import HTMLResponse
 ASSETS = files("looprd").joinpath("panel_assets")
 PAGE = (ASSETS.joinpath("panel.html").read_text(encoding="utf-8")
         .replace("/* PANEL_CSS */", ASSETS.joinpath("panel.css").read_text(encoding="utf-8"))
+        .replace("/* PANEL_NAV */", ASSETS.joinpath("navigation.js").read_text(encoding="utf-8"))
+        .replace("/* PANEL_CREDENTIALS */", ASSETS.joinpath("credentials.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_JS */", ASSETS.joinpath("panel.js").read_text(encoding="utf-8")))
 
 

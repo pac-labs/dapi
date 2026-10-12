@@ -7,11 +7,13 @@ companion; it does not modify the parent ZipRunner application.
 ```sh
 npm ci --ignore-scripts
 npm run build:ui
+npm run test:ui
 python -m pip install -r requirements.lock -e '.[test]'
 python -m pytest -q tests/test_specs.py tests/test_runtime.py
 python -m pytest -q tests/test_database_auth.py tests/test_websocket.py tests/test_http.py
 python -m pytest -q tests/test_admin.py
 python -m pytest -q tests/test_dashboard.py
+python -m pytest -q tests/test_availability.py
 python -m pytest -q
 python -m looprd validate examples/looprd.yaml
 python -m looprd validate --sources examples/sources.yaml
@@ -67,3 +69,10 @@ Check `docs/quadlet.md` for the installation, persistence, and backup procedure.
 
 Generated schemas can be refreshed with `python -m looprd schema` and
 `python -m looprd schema --sources`; save the UTF-8 JSON output into `schemas/`.
+
+`tests/test_availability.py` covers protected strict blocking, both URL aliases,
+retained records, reload/restart/removal behavior, other-component isolation, live
+and draining WebSocket closure, ticket invalidation, corrupt state, write failures
+and cancellation while persisting. Browser checks cover section navigation, contained scrolling, mobile layout, confirmation, and retained key workflows using local test data.
+`npm run test:ui` checks saved-key reconnection, opt-out, forgetting credentials,
+and denied browser storage. Browser checks additionally verify reload and Forget behavior.
