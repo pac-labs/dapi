@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Looprd management</title><style nonce="NONCE">/* PANEL_CSS */</style></head>
+<body>
+<header class="topbar"><a class="brand" href="#"><span class="mark" aria-hidden="true">↻</span>Looprd<span class="brand-note">CONTROL ROOM</span></a>
+<span id="connection" class="badge">Disconnected</span></header>
+<div class="shell">
+<div class="page-heading"><div><p class="eyebrow">YOUR SERVICES, ONE RUNTIME</p><h1>Service overview</h1>
+<p class="muted">See what is running, inspect its API, and keep track of specification updates.</p></div>
+<div class="toolbar" id="actions" hidden><label class="inline"><input id="auto" type="checkbox" checked>Auto-refresh · 10s</label>
+<button id="refresh" data-action>Refresh</button><button id="reconcile" class="primary" data-action>Check sources now</button></div></div>
+<section class="card login-card"><form id="login"><div><label for="token">Management API key</label>
+<p class="muted small">Kept only in page memory. Reloading or disconnecting clears it.</p></div>
+<input id="token" type="password" autocomplete="off" required placeholder="Paste your management key" aria-label="Management API key">
+<button class="primary" id="connect" data-action>Connect</button><button type="button" id="logout" hidden>Disconnect</button></form></section>
+<p id="message" role="status" aria-live="polite">Connect to view your runtime.</p>
+<main id="controls" hidden>
+<div id="source-error" class="notice warning" hidden></div>
+<div class="metrics">
+<article class="card metric"><span class="eyebrow">ACTIVE COMPONENTS</span><strong id="metric-components">—</strong><span id="metric-configured" class="muted small"></span></article>
+<article class="card metric"><span class="eyebrow">NEEDS ATTENTION</span><strong id="metric-errors">—</strong><span class="muted small">Sources and component errors</span></article>
+<article class="card metric"><span class="eyebrow">OPEN WEBSOCKETS</span><strong id="metric-sockets">—</strong><span id="metric-requests" class="muted small"></span></article>
+<article class="card metric"><span class="eyebrow">LAST SOURCE CHECK</span><strong id="metric-check" class="time-value">—</strong><span id="metric-poll" class="muted small"></span></article>
+</div>
+<section id="components" class="workspace">
+<div class="card component-browser"><div class="section-heading"><h2>Components</h2><span id="component-count" class="badge"></span></div>
+<label class="sr-only" for="search">Find a component</label><input id="search" type="search" placeholder="Find a component…">
+<label class="sr-only" for="filter">Filter components</label><select id="filter"><option value="all">All components</option><option value="active">Active</option><option value="attention">Needs attention</option><option value="disabled">Disabled</option></select>
+<div id="component-list" class="component-list"></div></div>
+<article class="card component-detail"><div id="detail-empty" class="empty">Select a component to inspect its API and storage.</div>
+<div id="detail" hidden><div class="section-heading"><div><p class="eyebrow">COMPONENT</p><h2 id="detail-name"></h2></div><span id="detail-state" class="badge"></span></div>
+<p id="detail-error" class="notice warning" hidden></p><div id="detail-facts" class="facts"></div>
+<div class="endpoint"><code id="detail-endpoint"></code><button id="copy-endpoint">Copy URL</button></div>
+<div class="section-heading route-heading"><h3>API routes</h3><span class="muted small">Paths relative to component URL</span></div>
+<div id="routes" class="route-list"></div><div id="socket-note" class="notice" hidden></div>
+<h3>Database models</h3><div id="models"></div></div></article>
+</section>
+<div class="bottom-grid">
+<section class="card"><div class="section-heading"><h2>Runtime &amp; reloads</h2><span id="reload-state" class="badge"></span></div>
+<div id="runtime-facts" class="facts"></div><p class="muted small">A failed update keeps the previous working component. Only removal from a valid sources file stops it; stored data is retained.</p></section>
+<section class="card"><h2>Component API keys</h2><p id="key-empty" class="muted">No components use Looprd database authentication. Public and shared-bearer components manage access through their specification or application.</p>
+<div id="key-controls" hidden><label for="component">Component</label><div class="toolbar"><select id="component"></select><button id="list" data-action>Refresh keys</button></div>
+<p id="available" class="muted small"></p><form id="create"><label for="label">Key label</label><input id="label" required maxlength="100" placeholder="e.g. read-only integration">
+<label for="scopes">Granted scopes (comma separated)</label><input id="scopes" required placeholder="items:read, events:read">
+<label for="expiry">Expires after seconds</label><input id="expiry" type="number" min="1" max="31536000" value="2592000" required><button class="primary" data-action>Create key</button></form>
+<div id="issued" class="notice" hidden><label for="new-key">New API key — copy now; shown only once</label><textarea id="new-key" readonly rows="3" spellcheck="false"></textarea><button id="clear-key">Clear key</button></div>
+<ul id="keys" class="key-list"></ul></div></section>
+</div>
+<details class="card diagnostics"><summary>Raw diagnostic snapshot</summary><pre id="status"></pre></details>
+<footer><span>Looprd management</span><span id="updated">Waiting for status</span></footer>
+</main></div><script nonce="NONCE">/* PANEL_JS */</script></body></html>

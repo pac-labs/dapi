@@ -11,6 +11,7 @@ from .component import Generation
 from .events import EventBus, Tickets
 from .sources import SourceReader
 from .spec import Specification
+from .status import Monitor, snapshot
 
 log = logging.getLogger("looprd")
 
@@ -23,6 +24,8 @@ class Runtime:
         self.revisions = {}
         self.errors = {}
         self.sources_error = None
+        self.sources = {}
+        self.monitor = Monitor()
         self.buses = {}
         self.tickets = Tickets()
         self.lock = asyncio.Lock()
@@ -62,46 +65,58 @@ class Runtime:
 
     async def reconcile(self):
         async with self.lock:
+            self.monitor.begin()
+            success = False
             try:
-                sources = await self.reader.sources()
-            except Exception as error:
-                self.sources_error = f"sources unavailable or invalid: {type(error).__name__}"
-                return False
-            desired = {entry.id: entry for entry in sources.components if entry.enabled}
-            candidates, revisions = {}, dict(self.revisions)
-            for component, entry in desired.items():
-                try:
-                    spec, revision = await self.reader.component(entry)
-                    current = self.active.get(component)
-                    if current and current.spec == spec:
-                        revisions[component] = revision
-                    else:
-                        candidates[component] = await self.build(spec)
-                        revisions[component] = revision
-                    self.errors.pop(component, None)
-                except Exception as error:
-                    self.report(component, "load", error)
-            next_active = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
-            next_active.update(candidates)
-            revisions = {key: revisions[key] for key in next_active}
+                success = await self._reconcile()
+                return success
+            finally:
+                self.monitor.finish(success)
+
+    async def _reconcile(self):
+        try:
+            sources = await self.reader.sources()
+        except Exception as error:
+            self.sources_error = f"sources unavailable or invalid: {type(error).__name__}"
+            return False
+        self.sources = {entry.id: {"enabled": entry.enabled, "repository": entry.repository,
+                                   "ref": entry.ref if entry.repository else None}
+                        for entry in sources.components}
+        desired = {entry.id: entry for entry in sources.components if entry.enabled}
+        candidates, revisions = {}, dict(self.revisions)
+        for component, entry in desired.items():
             try:
-                await asyncio.to_thread(self.save, next_active, revisions)
+                spec, revision = await self.reader.component(entry)
+                current = self.active.get(component)
+                if current and current.spec == spec:
+                    revisions[component] = revision
+                else:
+                    candidates[component] = await self.build(spec)
+                    revisions[component] = revision
+                self.errors.pop(component, None)
             except Exception as error:
-                self.sources_error = f"state persistence failed: {type(error).__name__}"
-                for candidate in candidates.values():
-                    await run_in_threadpool(candidate.close)
-                return False
-            # No awaits between dispatcher replacement and marking old generations for retirement.
-            old = self.active
-            self.active, self.revisions = next_active, revisions
-            for key, generation in old.items():
-                if next_active.get(key) is not generation:
-                    task = asyncio.create_task(self.retire(generation))
-                    self.retiring.add(task)
-                    task.add_done_callback(self.retiring.discard)
-            self.errors = {k: v for k, v in self.errors.items() if k in desired}
-            self.sources_error = None
-            return True
+                self.report(component, "load", error)
+        next_active = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
+        next_active.update(candidates)
+        revisions = {key: revisions[key] for key in next_active}
+        try:
+            await asyncio.to_thread(self.save, next_active, revisions)
+        except Exception as error:
+            self.sources_error = f"state persistence failed: {type(error).__name__}"
+            for candidate in candidates.values():
+                await run_in_threadpool(candidate.close)
+            return False
+        # No awaits between dispatcher replacement and marking old generations for retirement.
+        old = self.active
+        self.active, self.revisions = next_active, revisions
+        for key, generation in old.items():
+            if next_active.get(key) is not generation:
+                task = asyncio.create_task(self.retire(generation))
+                self.retiring.add(task)
+                task.add_done_callback(self.retiring.discard)
+        self.errors = {k: v for k, v in self.errors.items() if k in desired}
+        self.sources_error = None
+        return True
 
     def save(self, active, revisions):
         state = {"version": 1, "components": {
@@ -130,17 +145,7 @@ class Runtime:
             await run_in_threadpool(generation.close)
 
     def status(self):
-        return {
-            "sourcesError": self.sources_error,
-            "components": {key: {
-                "release": value.spec.release, "revision": self.revisions[key],
-                "digest": value.digest, "prefix": value.prefix,
-                "schemaVersion": value.spec.database.schemaVersion if value.spec.database else None,
-                "authMode": value.spec.auth.mode, "scopes": value.spec.auth.scopes,
-                "error": self.errors.get(key),
-            } for key, value in self.active.items()},
-            "errors": self.errors,
-        }
+        return snapshot(self)
 
     async def poll(self):
         while True:

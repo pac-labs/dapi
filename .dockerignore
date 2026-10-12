@@ -1,4 +1,6 @@
 .git
+.local
+.test-tmp*
 .venv
 __pycache__
 **/__pycache__

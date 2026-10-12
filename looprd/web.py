@@ -36,8 +36,9 @@ async def admin(request):
     runtime = request.app.state.runtime
     if request.method == "POST":
         success = await runtime.reconcile()
-        return JSONResponse({"reconciled": success, **runtime.status()}, status_code=200 if success else 503)
-    return JSONResponse(runtime.status())
+        return JSONResponse({"reconciled": success, **runtime.status()}, status_code=200 if success else 503,
+                            headers={"Cache-Control": "no-store"})
+    return JSONResponse(runtime.status(), headers={"Cache-Control": "no-store"})
 
 
 async def health(request):

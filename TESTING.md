@@ -9,6 +9,7 @@ python -m pip install -r requirements.lock -e '.[test]'
 python -m pytest -q tests/test_specs.py tests/test_runtime.py
 python -m pytest -q tests/test_database_auth.py tests/test_websocket.py tests/test_http.py
 python -m pytest -q tests/test_admin.py
+python -m pytest -q tests/test_dashboard.py
 python -m pytest -q
 python -m looprd validate examples/looprd.yaml
 python -m looprd validate --sources examples/sources.yaml
@@ -37,6 +38,9 @@ and verifies revocation. Local runs skip that check unless a disposable PostgreS
 mounted-token precedence, opt-out, invalid-state handling, CLI rotation, old-key rejection, and
 the public panel shell versus protected management routes. Browser checks use a disposable local
 preview instance with a test-only mounted token; never use production credentials for UI tests.
+
+`tests/test_dashboard.py` covers safe route/model diagnostics, live socket counts,
+source failure timestamps, disabled/unloaded components, and omission of handler code and credentials.
 
 Build and test a container on a machine with a running Docker/Podman engine:
 

@@ -168,6 +168,16 @@ It does not edit sources, deploy containers, or provision PostgreSQL. Credential
 memory with no cookies/browser storage; disconnect/reload clears them. Untrusted metadata renders
 as text, with a nonce-based Content Security Policy, frame restrictions, and no-store responses.
 Status additionally reports auth modes and declared scopes, never credential values.
+The dashboard shows active, disabled and failed components, live request/socket counts,
+route/model metadata, database backend, process-local load time, repository/ref and active revision.
+It reports process uptime, source-check start/finish and last completed reconciliation,
+draining generation count, browser origins and trusted Python policy. These are process-local
+observations, not historical metrics or container resource/health probes. A completed reconciliation
+can include failed components, reported separately. Source failures retain the last success timestamp
+and last valid source summary. Specification URLs, credential references, handler source and response
+bodies are excluded. Source summaries contain only validated repository URLs, refs and enabled flags.
+The panel refreshes every ten seconds while connected and visible, with search/filter and an explicit
+source check. Its HTML/CSS/JavaScript are bundled in the package as one nonce-protected page.
 The default Traefik router excludes management; an optional management.yml.example explicitly
 routes `/_looprd/` on the existing HTTPS hostname/service for panel use. Localhost/SSH access also works.
 

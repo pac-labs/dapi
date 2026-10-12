@@ -12,11 +12,13 @@ from starlette.responses import JSONResponse, Response
 
 from .database import Storage
 from .auth import Principal
+from .status import timestamp
 
 
 class Generation:
     def __init__(self, spec, settings, bus):
         self.spec, self.settings, self.bus = spec, settings, bus
+        self.loaded_at = timestamp()
         self.digest = hashlib.sha256(spec.model_dump_json().encode()).hexdigest()
         self.key = f"{spec.component}:{self.digest}"
         self.prefix = f"/looprd/{spec.component}/{spec.api.version}"

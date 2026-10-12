@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `295ebd1feff754b20eecbfc64c8590def1d0f7be610652b0818775440d225f1f`.
+Design SHA-256 (UTF-8/LF): `4310708724086f653f15da12dbeaccdca32e4b07abdc03051abb753dc2c93bf6`.
 
 == Implemented candidate
 
@@ -56,3 +56,16 @@ origin set to https://github.com/pac-labs/dapi.git, ready to push after Git auth
 
 The candidate is ready for operator review; this document does not mark deployment Done.
 Direct ZipRunner UI/project.zr integration remains separate from the implemented companion API.
+
+
+== Operational dashboard candidate
+
+Governing design: DESIGN.adoc, Authentication and management.
+Component browser with active/error/disabled states, search/filter, routes and models,
+release/revision/source metadata, process uptime/reload timestamps and live connections.
+Database-auth key workflows remain available; other auth modes have a useful empty state.
+Ten-second visible-page refresh, explicit source reconciliation, and collapsed raw diagnostics.
+No sources editing, application row inspection or container administration is introduced.
+Local validation: 69 tests passed; one optional PostgreSQL check skipped. Python wheel built;
+bundled dashboard assets verified. Disposable browser checks cover sign-in, component details,
+key issuance, and responsive layout; CI and node deployment are recorded separately.

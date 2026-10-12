@@ -62,6 +62,7 @@ No component container build is necessary.
 - [Specification contract, custom handlers, and migrations](docs/specification.md)
 - [Database-backed API keys, operation scopes, and revocation](docs/authentication.md)
 - [First-start management key and web panel](docs/management-panel.md)
+- [Operational dashboard, routes, models and reload diagnostics](docs/dashboard.md)
 - [Sources example](examples/sources.yaml)
 - [Generated JSON schemas](schemas)
 - [Podman Quadlet installation on a Raspberry Pi](docs/quadlet.md)
