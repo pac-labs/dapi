@@ -1,5 +1,9 @@
 # Management dashboard
 
+The panel uses IBM Carbon v11 styles with the Gray 100 theme. Its styles are bundled
+in the container; no CDN or external font requests are required. For source builds,
+see [panel development](../ui/README.md).
+
 Open `/_looprd/panel/` on your Looprd host and connect with the management key.
 The dashboard refreshes every ten seconds while connected and visible. Turn off
 auto-refresh to pause it; **Refresh** requests a new snapshot without checking

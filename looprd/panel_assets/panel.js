@@ -3,7 +3,7 @@ const el=id=>document.getElementById(id);
 let token='',snapshot=null,selectedId='',busy=false,session=0;
 const text=(id,value)=>{el(id).textContent=value;};
 function node(tag,value,cls){const n=document.createElement(tag);if(value!==undefined)n.textContent=value;if(cls)n.className=cls;return n;}
-function badge(target,label,state=''){target.textContent=label;target.className='badge '+state;}
+function badge(target,label,state=''){target.textContent=label;target.className='badge cds--tag cds--tag--gray '+state;}
 function date(value){return value?new Date(value).toLocaleString(): 'Not yet';}
 function duration(seconds){if(seconds<60)return seconds+'s';if(seconds<3600)return Math.floor(seconds/60)+'m';return Math.floor(seconds/3600)+'h '+Math.floor(seconds%3600/60)+'m';}
 function fact(target,label,value,mono=false){const dl=node('dl',undefined,'fact');dl.append(node('dt',label),node('dd',value??'—',mono?'mono':''));target.append(dl);}
@@ -60,7 +60,7 @@ function renderModels(item){
  for(const [name,fields] of Object.entries(item.models||{})){
   const details=node('details',undefined,'model');details.dataset.model=name;details.open=opened.has(name);
   details.append(node('summary',name+' · '+Object.keys(fields).length+' fields'));
-  const wrap=node('div',undefined,'table-wrap'),table=node('table'),head=node('thead'),header=node('tr');
+  const wrap=node('div',undefined,'table-wrap'),table=node('table',undefined,'cds--data-table cds--layout--size-sm'),head=node('thead'),header=node('tr');
   for(const value of ['FIELD','TYPE','CONSTRAINTS'])header.append(node('th',value));head.append(header);table.append(head);
   const body=node('tbody');for(const [field,column] of Object.entries(fields)){
    const constraints=[column.primaryKey?'primary key':'',column.generated?'generated':'',column.required||column.primaryKey?'required':'nullable',column.unique?'unique':''].filter(Boolean).join(' · ');
@@ -132,7 +132,7 @@ async function list(){
  for(const key of result.keys){const li=node('li'),state=key.revokedAt?'Revoked':key.expiresAt&&key.expiresAt*1000<=Date.now()?'Expired':'Active';
   li.append(node('strong',key.label),node('p',state+' · '+key.scopes.join(', '),'small muted'),node('p',key.id,'mono'),
    node('p','Created '+date(key.createdAt*1000)+' · Expires '+(key.expiresAt?date(key.expiresAt*1000):'never'),'small muted'));
-  if(!key.revokedAt){const button=node('button','Revoke');button.onclick=()=>{
+  if(!key.revokedAt){const button=node('button','Revoke','cds--btn cds--btn--danger--tertiary cds--layout--size-sm');button.onclick=()=>{
    if(button.dataset.confirm!=='yes'){button.dataset.confirm='yes';button.textContent='Confirm revoke · clients will lose access';return;}
    run(async()=>{await api('components/'+component+'/keys/'+encodeURIComponent(key.id),'DELETE');clearKey();if(component===selected())await list();});};li.append(button);}
   el('keys').append(li);

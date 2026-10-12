@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `4310708724086f653f15da12dbeaccdca32e4b07abdc03051abb753dc2c93bf6`.
+Design SHA-256 (UTF-8/LF): `f7b5b4fbfe5e5d99b2eb25b28ca43d5c638e8bd2dc17cad57e4eb71b40ba3974`.
 
 == Implemented candidate
 
@@ -69,3 +69,13 @@ No sources editing, application row inspection or container administration is in
 Local validation: 69 tests passed; one optional PostgreSQL check skipped. Python wheel built;
 bundled dashboard assets verified. Disposable browser checks cover sign-in, component details,
 key issuance, and responsive layout; CI and node deployment are recorded separately.
+
+== Carbon dashboard styling candidate
+
+Governing design: DESIGN.adoc, Authentication and management.
+Official Carbon v11 Sass components and Gray 100 theme replace the custom styling.
+Pinned Node dependencies build the stylesheet in CI and a separate container stage.
+Management behavior and credential boundaries remain unchanged.
+Local validation: 69 tests passed; one optional PostgreSQL test skipped. Wheel includes
+compiled Carbon CSS and license, with no external asset URLs. Desktop and 390px mobile
+browser checks passed; no horizontal overflow or console errors were observed.

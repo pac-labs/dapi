@@ -1,3 +1,10 @@
+FROM --platform=$BUILDPLATFORM node:24-slim AS panel-build
+WORKDIR /ui
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY ui ./ui
+RUN npm run build:ui
+
 FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     LOOPRD_DATA=/var/lib/looprd LOOPRD_SECRETS=/etc/looprd/secrets \
@@ -5,6 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
 WORKDIR /app
 COPY pyproject.toml requirements.lock ./
 COPY looprd ./looprd
+COPY --from=panel-build /ui/looprd/panel_assets/panel.css ./looprd/panel_assets/panel.css
 RUN pip install --no-cache-dir -r requirements.lock && pip install --no-cache-dir --no-deps . \
     && useradd --uid 10001 --create-home looprd \
     && mkdir -p /var/lib/looprd /etc/looprd/secrets \

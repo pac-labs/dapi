@@ -19,6 +19,8 @@ Python 3.12 or newer:
 ```sh
 python -m venv .venv
 . .venv/bin/activate
+npm ci --ignore-scripts
+npm run build:ui
 python -m pip install -r requirements.lock -e '.[test]'
 mkdir -p secrets/roboscope
 umask 077

@@ -23,7 +23,7 @@ looprd = "looprd.__main__:main"
 include = ["looprd*"]
 
 [tool.setuptools.package-data]
-looprd = ["panel_assets/*.html", "panel_assets/*.css", "panel_assets/*.js"]
+looprd = ["panel_assets/*.html", "panel_assets/*.css", "panel_assets/*.js", "panel_assets/*.txt"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

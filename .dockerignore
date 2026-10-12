@@ -16,4 +16,6 @@ secrets
 .env.*
 build
 dist
+node_modules
+looprd/panel_assets/panel.css
 

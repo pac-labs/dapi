@@ -1,0 +1,11 @@
+{
+  "name": "looprd-panel",
+  "private": true,
+  "scripts": {
+    "build:ui": "sass --quiet-deps --no-source-map --style=compressed --load-path=node_modules ui/panel.scss looprd/panel_assets/panel.css"
+  },
+  "devDependencies": {
+    "@carbon/styles": "1.117.0",
+    "sass": "1.105.1"
+  }
+}

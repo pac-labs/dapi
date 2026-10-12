@@ -5,6 +5,8 @@ Governing design: `DESIGN.adoc`, sections “Sources and shutdown semantics”,
 companion; it does not modify the parent ZipRunner application.
 
 ```sh
+npm ci --ignore-scripts
+npm run build:ui
 python -m pip install -r requirements.lock -e '.[test]'
 python -m pytest -q tests/test_specs.py tests/test_runtime.py
 python -m pytest -q tests/test_database_auth.py tests/test_websocket.py tests/test_http.py
