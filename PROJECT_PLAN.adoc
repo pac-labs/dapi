@@ -19,6 +19,7 @@ Design SHA-256 (UTF-8/LF): `295ebd1feff754b20eecbfc64c8590def1d0f7be610652b08187
 * Traefik smoke derives its hostname from deployment configuration; all published files use placeholder hostnames.
 * Publication is based on the clean remote history, excluding earlier local commits containing private deployment values.
 * GitHub Contents API retrieval with mounted token-file rotation and same-commit private sources.
+* Separate private sources repository and ignored node-local environment configuration; node credentials stay outside Git.
 * Component-local hashed API keys, explicit operation/handler/subscription scopes, and admin key management.
 * Persistent key expiry/revocation and live WebSocket identity revalidation, including outstanding tickets.
 * First-start management key output with retained hash, explicit CLI rotation, and mounted-token compatibility.
@@ -35,7 +36,7 @@ precedence, disabled bootstrap, corrupt-state handling, and rejection of replace
 Podman is installed but has no configured VM; local image/Quadlet execution was not performed.
 GitHub Actions run 38230962530 passed Python 3.12/3.13 tests including PostgreSQL and built the native image.
 Its container smoke timed out after restart; the smoke now refreshes the published ephemeral port.
-The follow-up workflow will verify container smoke, Traefik routing, and image publication.
+Follow-up run 38231466706 passed container smoke, Traefik routing, and AMD64/ARM64 image publication.
 Initial publication was attempted: the connector returned HTTP 403 (integration cannot write contents),
 and local Git had no authenticated HTTPS credentials. The tested source is committed locally with
 origin set to https://github.com/pac-labs/dapi.git, ready to push after Git authentication is configured.
