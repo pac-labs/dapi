@@ -1,0 +1,51 @@
+"""ASGI application factory: one worker, many reloadable components."""
+
+from contextlib import asynccontextmanager
+
+from starlette.applications import Starlette
+from starlette.middleware.cors import CORSMiddleware
+from starlette.routing import Route, WebSocketRoute
+
+from .config import Settings
+from .runtime import Runtime
+from .web import admin, dispatch, health, websocket
+from .management import keys
+from .admin import announce, provision
+from .panel import panel
+
+
+def create_app(settings=None, runtime=None):
+    settings = settings or Settings.from_env()
+    runtime = runtime or Runtime(settings)
+
+    @asynccontextmanager
+    async def lifespan(app):
+        if settings.bootstrap_admin:
+            announce(provision(settings))
+        await runtime.start()
+        try:
+            yield
+        finally:
+            await runtime.close()
+
+    routes = [
+        Route("/_looprd/health", health),
+        Route("/_looprd/panel/", panel),
+        Route("/_looprd/status", admin),
+        Route("/_looprd/reconcile", admin, methods=["POST"]),
+        Route("/_looprd/components/{component}/keys", keys, methods=["GET", "POST"]),
+        Route("/_looprd/components/{component}/keys/{key_id}", keys, methods=["DELETE"]),
+    ]
+    for prefix in ("/looprd", "/dapi"):
+        # /dapi remains a URL alias for projects using the original draft path.
+        for suffix in ("", "/{path:path}"):
+            path = prefix + "/{component}/{version}" + suffix
+            routes.append(Route(path, dispatch, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]))
+            routes.append(WebSocketRoute(path, websocket))
+    app = Starlette(routes=routes, lifespan=lifespan)
+    app.state.runtime = runtime
+    if settings.allowed_origins:
+        app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
+                           allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+                           allow_headers=["Authorization", "Content-Type"])
+    return app

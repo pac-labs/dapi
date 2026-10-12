@@ -1,0 +1,19 @@
+apiVersion: looprd/v1
+component: calculator
+release: 0.1.0
+api:
+  version: v1
+auth:
+  mode: bearer
+  secretRef: calculator/api-token
+handlers:
+  - path: /double
+    method: POST
+    kind: python
+    # Trusted code; requires LOOPRD_ALLOW_PYTHON=true on the host.
+    source: |
+      async def handle(ctx):
+          value = ctx.body.get("value")
+          if not isinstance(value, (int, float)) or isinstance(value, bool):
+              return {"error": "value must be a number"}
+          return {"value": value * 2}

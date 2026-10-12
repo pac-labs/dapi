@@ -1,0 +1,433 @@
+{
+  "$defs": {
+    "API": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "pattern": "^v[1-9][0-9]*$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "title": "API",
+      "type": "object"
+    },
+    "Auth": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "public",
+            "bearer",
+            "database"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "secretRef": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secretref"
+        },
+        "scopes": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Scopes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "title": "Auth",
+      "type": "object"
+    },
+    "Column": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "integer",
+            "string",
+            "boolean",
+            "float",
+            "datetime",
+            "json"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "primaryKey": {
+          "default": false,
+          "title": "Primarykey",
+          "type": "boolean"
+        },
+        "generated": {
+          "default": false,
+          "title": "Generated",
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "title": "Unique",
+          "type": "boolean"
+        },
+        "maxLength": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 65536,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxlength"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Column",
+      "type": "object"
+    },
+    "Database": {
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "default": "sqlite",
+          "enum": [
+            "sqlite",
+            "postgresql"
+          ],
+          "title": "Backend",
+          "type": "string"
+        },
+        "schemaVersion": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Schemaversion",
+          "type": "integer"
+        },
+        "connectionSecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connectionsecret"
+        },
+        "migrations": {
+          "items": {
+            "$ref": "#/$defs/Migration"
+          },
+          "title": "Migrations",
+          "type": "array"
+        }
+      },
+      "title": "Database",
+      "type": "object"
+    },
+    "Handler": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "pattern": "^/(?:[a-zA-Z0-9_-]+/?)*$",
+          "title": "Path",
+          "type": "string"
+        },
+        "method": {
+          "default": "GET",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "kind": {
+          "default": "response",
+          "enum": [
+            "response",
+            "python"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "response": {
+          "default": null,
+          "title": "Response"
+        },
+        "status": {
+          "default": 200,
+          "maximum": 599,
+          "minimum": 200,
+          "title": "Status",
+          "type": "integer"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "scopes": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Scopes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "Handler",
+      "type": "object"
+    },
+    "Migration": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "minimum": 2,
+          "title": "Version",
+          "type": "integer"
+        },
+        "statements": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Statements",
+          "type": "array"
+        }
+      },
+      "required": [
+        "version",
+        "statements"
+      ],
+      "title": "Migration",
+      "type": "object"
+    },
+    "Model": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "minProperties": 1,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]{0,63}$": {
+              "$ref": "#/$defs/Column"
+            }
+          },
+          "title": "Fields",
+          "type": "object"
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "title": "Model",
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Model",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^/(?:[a-zA-Z0-9_-]+/?)*$",
+          "title": "Path",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "enum": [
+              "list",
+              "get",
+              "create",
+              "update",
+              "delete"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Operations",
+          "type": "array"
+        },
+        "permissions": {
+          "additionalProperties": {
+            "items": {
+              "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Permissions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "model",
+        "path",
+        "operations"
+      ],
+      "title": "Resource",
+      "type": "object"
+    },
+    "WebSocket": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "default": "/events",
+          "pattern": "^/(?:[a-zA-Z0-9_-]+/?)*$",
+          "title": "Path",
+          "type": "string"
+        },
+        "resources": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9-]{0,47}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Resources",
+          "type": "array"
+        },
+        "permissions": {
+          "patternProperties": {
+            "^[a-z][a-z0-9-]{0,47}$": {
+              "items": {
+                "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "title": "Permissions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "resources"
+      ],
+      "title": "WebSocket",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "looprd/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "component": {
+      "pattern": "^[a-z][a-z0-9-]{0,47}$",
+      "title": "Component",
+      "type": "string"
+    },
+    "release": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Release",
+      "type": "string"
+    },
+    "api": {
+      "$ref": "#/$defs/API"
+    },
+    "auth": {
+      "$ref": "#/$defs/Auth"
+    },
+    "database": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Database"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "models": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]{0,63}$": {
+          "$ref": "#/$defs/Model"
+        }
+      },
+      "title": "Models",
+      "type": "object"
+    },
+    "resources": {
+      "patternProperties": {
+        "^[a-z][a-z0-9-]{0,47}$": {
+          "$ref": "#/$defs/Resource"
+        }
+      },
+      "title": "Resources",
+      "type": "object"
+    },
+    "websocket": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WebSocket"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "handlers": {
+      "items": {
+        "$ref": "#/$defs/Handler"
+      },
+      "title": "Handlers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "component",
+    "release",
+    "api",
+    "auth"
+  ],
+  "title": "Specification",
+  "type": "object"
+}

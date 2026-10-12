@@ -1,0 +1,17 @@
+.git
+.venv
+__pycache__
+**/__pycache__
+.pytest_cache
+.test-tmp
+.test-tmp-native
+.tmp
+*.egg-info
+state
+secrets
+**/secrets
+.env
+.env.*
+build
+dist
+

@@ -1,0 +1,67 @@
+{
+  "$defs": {
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "specification": {
+          "default": "looprd.yaml",
+          "title": "Specification",
+          "type": "string"
+        },
+        "repository": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repository"
+        },
+        "ref": {
+          "default": "main",
+          "title": "Ref",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Source",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "looprd/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "title": "Components",
+      "type": "array"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "components"
+  ],
+  "title": "Sources",
+  "type": "object"
+}

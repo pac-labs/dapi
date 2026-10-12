@@ -1,0 +1,45 @@
+# This single document contains the component's models, API, events, and logic.
+# Credentials are references to files under LOOPRD_SECRETS, never literal values.
+apiVersion: looprd/v1
+component: roboscope
+release: 0.1.0
+api:
+  version: v1
+auth:
+  mode: bearer
+  secretRef: roboscope/api-token
+database:
+  backend: sqlite
+  schemaVersion: 1
+models:
+  Scan:
+    fields:
+      id:
+        type: integer
+        primaryKey: true
+        generated: true
+      name:
+        type: string
+        maxLength: 200
+        required: true
+      status:
+        type: string
+        maxLength: 40
+        required: true
+      result:
+        type: json
+resources:
+  scans:
+    model: Scan
+    path: /scans
+    operations: [list, get, create, update, delete]
+websocket:
+  path: /events
+  resources: [scans]
+handlers:
+  - path: /info
+    method: GET
+    kind: response
+    response:
+      service: roboscope
+      description: Shared scan storage and events

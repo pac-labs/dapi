@@ -1,0 +1,222 @@
+= Looprd: specification-driven companion server
+:doctype: article
+:toc:
+:revnumber: 0.1.0
+
+== Purpose
+
+Looprd is one Python server hosting multiple small logical servers for ZipRunner projects.
+Each project provides one self-contained specification containing its routes, models, authentication
+policy, WebSocket subscriptions, optional inline handlers, and migration history.
+The sources file connects these specifications to the runtime.
+Adding a logical server requires no component container, process, listening port, or image build.
+The shared runtime can run as one companion container on a Raspberry Pi.
+
+== Implemented architecture
+
+----
+Local/HTTPS sources file -> watcher -> local/HTTPS/GitHub component specification
+                                         |
+                                  validated generation
+                                         |
+HTTPS entry point -> one ASGI dispatcher -> HTTP resources / inline handlers
+                                         -> WebSocket resource events
+                                         -> SQLAlchemy -> SQLite or PostgreSQL
+----
+
+Starlette handles ASGI, Pydantic validates specifications and CRUD input, and SQLAlchemy manages storage.
+One ASGI worker owns the generation map and in-memory events/tickets. Do not run multiple workers.
+SQLite files live in the persistent data volume. PostgreSQL is optionally an external/shared server;
+SQLAlchemy is the data access layer, not a database server.
+TLS and DNS belong to the existing reverse proxy/tunnel and host configuration.
+The HTTPS hostname is configured in deployment and owned by the existing shared Traefik instance.
+`deploy/traefik/looprd.yml` adds only path-specific Looprd routing, preserves prefixes,
+and reuses the existing TLS configuration. Backend addressing follows the host/container topology;
+`docs/traefik.md` covers localhost, shared Podman networks, and separate hosts/engines.
+
+Runtime dependencies are locked in `requirements.lock`. Component specifications do not install dependencies.
+The package/CLI is `looprd`; the default component filename is `looprd.yaml`.
+The specification contract is `looprd/v1`. Public prefixes are `/looprd/<component>/<version>`.
+`/dapi` remains a compatibility URL alias, not a second specification format.
+
+== Specification authority
+
+`looprd/spec.py` is the executable contract. Generated JSON schemas are in `schemas/`.
+`docs/specification.md` describes fields, operations, authentication, extensions, and migrations.
+`examples/looprd.yaml` is a complete declarative component. `examples/python-handler.yaml`
+shows custom logic embedded in the same file. No separate component source checkout is required.
+Secrets are local references so specifications remain retrievable without embedding credentials.
+
+== Sources and shutdown semantics
+
+The sources location is configured through `LOOPRD_SOURCES` and may be a local file, HTTPS URL,
+or `github://OWNER/REPO/path?ref=BRANCH_OR_COMMIT` location.
+A valid sources document explicitly contains `apiVersion: looprd/v1` and `components: [...]`.
+Each entry has a unique ID, specification location, and enabled flag. GitHub entries additionally
+name a repository and ref. The reader resolves the ref to a commit and retrieves the spec at that commit.
+Local paths resolve relative to the local sources file; remote relative paths resolve relative to its URL.
+GitHub-relative specs resolve at the same immutable commit as the GitHub sources snapshot.
+GitHub repository specs are retrieved through the authenticated Contents API using its raw media type.
+`LOOPRD_GITHUB_TOKEN_FILE` supplies a mounted, read-only, fine-grained token and takes precedence
+over `LOOPRD_GITHUB_TOKEN`. The file is reread for rotation. A missing configured file fails closed.
+Credentials are sent only to GitHub HTTPS API/raw-content hosts on the default port; redirects are rejected.
+One credential must cover the private index and all referenced private repositories under its resource owner.
+`docs/private-sources.md` records setup and permission requirements.
+
+Only a completely fetched and validated sources document is authoritative for removal.
+An absent entry, `enabled: false`, or explicit empty components list stops new traffic to those servers.
+The runtime drains existing work and closes WebSockets; it keeps databases and local secret files.
+Successfully persisted removal is reflected in the startup checkpoint, so restart does not resurrect it.
+
+An unreachable sources file, HTTP 404, timeout, invalid YAML, null/missing components list,
+or any invalid source entry leaves the previous active set intact.
+An unreachable or invalid individual component spec preserves that component's working generation.
+Neither failure is treated as removal. Valid updates to other components can still proceed.
+A new invalid component remains unavailable and is reported in management status.
+
+== Generation reload
+
+The watcher polls every 60 seconds by default. Reconciliation is serialized.
+It compiles changed specs off the request path, validates secrets and database compatibility,
+initializes candidate storage, and persists the next successful snapshot with atomic replacement.
+Only then does it atomically replace dispatcher entries. Unchanged components keep their generation.
+A failed candidate or checkpoint write preserves the existing dispatcher.
+
+In-flight HTTP requests retain their original generation, bounded by the request deadline.
+New requests use the new generation. Old WebSockets drain for 30 seconds by default and close with 1012.
+After references drain, the old generation disposes its storage resources.
+Components share an event bus across reload so old subscriptions can receive events while draining.
+Events are bounded and best effort; clients must fetch current state after reconnecting.
+
+Generation replacement does not use importlib.reload. Inline handler source is compiled into a new
+namespace per generation. Inline Python is trusted code, disabled unless explicitly enabled on the host.
+It must not have top-level external side effects or unmanaged background tasks.
+Shared dependencies require companion image updates; no live pip installs occur.
+Component token files are loaded on generation construction; restart or change the spec to rotate a token.
+The management token is read per management request.
+
+== Database lifecycle
+
+Every component has separate SQLAlchemy metadata, engine, and session factory.
+Every CRUD operation runs in its own transaction; independent tasks do not share sessions.
+SQLite gets a persistent component-derived file with foreign keys and bounded lock waiting.
+PostgreSQL requires an operator-provisioned dedicated database/role and connection secret.
+A persistent identity record prevents accidental backend/connection-reference changes across reloads.
+
+New databases create the latest declared schema. Existing model changes require an increased schemaVersion
+and explicit inline migration statements. Migrations are ordered and recorded transactionally.
+Automatic changes are limited to additive DDL; destructive SQL and downgrades are rejected.
+Column names, type affinity, string lengths, nullability, primary keys, and required unique constraints
+are checked before activation. The runtime never infers ALTER statements from model changes.
+
+Migrations must remain compatible with old requests during draining. Failed SQLite migrations roll back
+including DDL through explicit BEGIN IMMEDIATE; PostgreSQL uses transactional DDL.
+A committed migration cannot be reversed by restoring a previous application generation.
+A subsequent checkpoint failure can therefore leave the database ahead of the cached application spec;
+restore matching data/state or repair deliberately before restart. Backups are an operator responsibility.
+Removing a component never removes its database. Re-addition uses its retained identity and data.
+
+== Authentication and management
+
+Components explicitly choose public, shared bearer, or database API-key authentication.
+Public/shared bearer modes retain component-wide access. Database mode requires a database,
+an explicit scope vocabulary, permissions for every exposed resource operation and WebSocket resource,
+and scopes on every custom handler. All listed scopes are required; incomplete or unknown policies
+reject the specification. Generated OpenAPI carries scope requirements as vendor extensions.
+There are no user accounts, passwords/login sessions, roles, row permissions, or implicit cross-component access.
+Custom Python receives the authenticated principal for application-specific ownership checks.
+
+Database mode adds a runtime-owned `_looprd_api_keys` table alongside application models in a transaction.
+This table is outside the application schema fingerprint and version, so existing components can opt in
+without changing their models. Application models/migrations must not touch runtime-owned tables.
+Keys contain a random 256-bit secret and a lookup ID. Only a SHA-256 digest, granted scopes, label,
+and creation/expiry/revocation timestamps are stored; the raw key is returned once on creation.
+The existing admin token protects POST/GET `/_looprd/components/<id>/keys` and
+DELETE `/_looprd/components/<id>/keys/<key-id>`. Creation validates declared scopes and defaults to
+30-day expiry; explicit null permits non-expiring keys. These routes stay outside the public Traefik router.
+No component client can provision its own keys. Key records are retained across reload/removal/restart,
+and mode rollback retains the table. Re-enabling database mode restores retained keys and revocations.
+Management list responses omit hashes and raw credentials. The GitHub source token remains separate.
+
+HTTP authentication queries the component database on each request, failing closed on invalid,
+expired, or revoked keys (401); insufficient operation scopes return 403 before executing handlers/CRUD.
+In-flight requests authenticated before revocation may finish; there is no retroactive transaction rollback.
+WebSocket subscriptions check resource scopes; outgoing events and one-second idle polling revalidate keys.
+Revocation/expiry or a failed database check closes the connection with 1008. Database latency adds to
+the polling interval. Event payloads include complete records, so event scopes grant access to those records.
+WebSockets accept bearer headers or short-lived single-use browser tickets scoped to the generation
+and authenticated identity. Database keys must permit a subscription to mint a ticket; redemption
+revalidates the original key so outstanding tickets do not bypass expiry/revocation.
+Browser origins must be explicitly allowed. HTTP CORS uses the same configured origin list.
+Body sizes, pagination, request duration, and event queues are bounded.
+
+`/_looprd/health` is public process liveness. `/_looprd/status` and POST `/_looprd/reconcile`
+require the management key. On first startup without a mounted admin-token, Looprd generates
+a random 256-bit key, prints it once to stdout, and retains only its SHA-256 hash in
+`admin-key.json` under the persistent data directory. The file is owner-only; initial publication
+is exclusive and atomic. Existing mounted admin-token files take precedence and are never printed
+or overwritten. `LOOPRD_BOOTSTRAP_ADMIN=false` disables automatic provisioning; absent credentials
+leave management disabled. Invalid persisted credentials fail startup instead of resetting access.
+`python -m looprd admin-key --rotate` atomically replaces the generated hash and prints a replacement
+to the command's terminal. Requests read the credential each time, so rotation invalidates the old
+key without a restart. Mounted credentials must instead be rotated on the host.
+
+`/_looprd/panel/` serves a public login shell for same-origin bearer-authenticated management calls.
+The panel displays component status, reconciles sources, and creates/lists/revokes component keys.
+It does not edit sources, deploy containers, or provision PostgreSQL. Credentials remain in page
+memory with no cookies/browser storage; disconnect/reload clears them. Untrusted metadata renders
+as text, with a nonce-based Content Security Policy, frame restrictions, and no-store responses.
+Status additionally reports auth modes and declared scopes, never credential values.
+The default Traefik router excludes management; an optional management.yml.example explicitly
+routes `/_looprd/` on the existing HTTPS hostname/service for panel use. Localhost/SSH access also works.
+
+Normal logs expose component ID and error stage/type, never exception strings, SQL, tokens, or spec code.
+First-start bootstrap and explicit key-generation commands are the deliberate credential-output exception;
+container journals/logs containing that output must be treated as secrets. Restarts never reprint the key.
+HTTP access logs are disabled to avoid logging ticket query strings.
+Status reports active revisions, spec digests, schema versions, and failures.
+
+== Container delivery and Podman
+
+The Containerfile runs as UID 10001, with data under `/var/lib/looprd` and config under `/etc/looprd`.
+The GitHub image workflow runs Python tests, including an ephemeral PostgreSQL service,
+builds and exercises a native container, then builds AMD64 and ARM64 images.
+The Traefik smoke reads its request hostname from the deployed router's single literal Host matcher.
+It rejects missing/ambiguous matchers instead of falling back to a hardcoded hostname.
+Pull requests build without publishing; main/master pushes, version tags, and manual runs publish to GHCR.
+Publishing starts only when this source is put in GitHub and its workflow runs.
+The source repository is `https://github.com/pac-labs/dapi`; its image is `ghcr.io/pac-labs/dapi`.
+
+Rootless Quadlet units in `deploy/quadlet` configure one runtime container and a retained named volume.
+The config directory is mounted read-only so atomic host replacements remain visible.
+The container root filesystem is read-only and host port 8080 binds only to localhost.
+`docs/quadlet.md` gives installation, image update, reverse proxy, and backup instructions.
+No automatic container update is configured; component specs still reload automatically.
+
+== ZipRunner integration boundary
+
+Looprd is intended as a ZipRunner companion, conceptually alongside RoboScope.
+The supplied sources/spec files and authenticated status/reconciliation API form its integration boundary.
+This change does not invent or modify parent project.zr fields or alter the ZipRunner application.
+A future ZipRunner UI can register project specifications and display Looprd status through that API.
+Keep the executable runtime contract and generated schemas here. A ziprunner-spec repository may
+hold shared integration documentation and deployment/component sources without duplicating that contract.
+
+== Validation and limitations
+
+See `TESTING.md` for focused, full, PostgreSQL, and container smoke commands.
+Acceptance includes multiple components in one process, independent reload, authoritative removal,
+unreachable-source preservation, retained data, offline restart, and WebSocket reconnection.
+
+Trusted Python extensions share the interpreter and can affect the whole runtime.
+No hard per-component resource isolation, durable event replay, multi-worker coordination,
+background job scheduler, database account provisioning, or destructive migration automation is provided.
+Live Raspberry Pi/Quadlet behavior and ARM64 execution require deployment checks on Linux hardware.
+
+== Technical references
+
+* https://www.starlette.io/routing/[Starlette HTTP/WebSocket routing].
+* https://docs.sqlalchemy.org/en/20/core/metadata.html[SQLAlchemy metadata and migrations].
+* https://docs.sqlalchemy.org/en/20/orm/session_basics.html[SQLAlchemy session concurrency].
+* https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html[Podman Quadlet].
+* https://github.com/docker/build-push-action[GitHub container build action].

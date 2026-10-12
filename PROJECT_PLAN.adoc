@@ -1,0 +1,54 @@
+= Looprd implementation status
+:doctype: article
+
+== Governing design
+
+Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
+Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
+Design SHA-256 (UTF-8/LF): `c77f477a51a3ab7d137996c3ee4e045be2e80170c720b732a6c688e3df2d0833`.
+
+== Implemented candidate
+
+* Self-contained Looprd specification and generated JSON schemas.
+* Shared Python ASGI runtime, CRUD, inline handlers, authentication, WebSocket events/tickets.
+* SQLAlchemy SQLite/PostgreSQL storage, explicit additive migrations, retained data.
+* Sources polling, validated reload, authoritative removal, and offline restart recovery.
+* GitHub AMD64/ARM64 image workflow, native container smoke, PostgreSQL CI service.
+* Rootless Podman Quadlet units and installation/backup instructions.
+* Existing Traefik routing for the configured API hostname and optional shared-Podman-network drop-in.
+* Traefik smoke derives its hostname from deployment configuration; general docs and test code contain no deployment hostname.
+* GitHub Contents API retrieval with mounted token-file rotation and same-commit private sources.
+* Component-local hashed API keys, explicit operation/handler/subscription scopes, and admin key management.
+* Persistent key expiry/revocation and live WebSocket identity revalidation, including outstanding tickets.
+* First-start management key output with retained hash, explicit CLI rotation, and mounted-token compatibility.
+* Same-origin web panel for component status/reconciliation and component-key management, plus optional Traefik router.
+
+== Validation evidence
+
+Local Windows/Python 3.13: 63 tests passed; one PostgreSQL integration test skipped because
+no PostgreSQL service was configured. One upstream Starlette TestClient deprecation warning
+about httpx was emitted. Examples validate, Python compilation passes, and pip check passes.
+Browser preview verified management sign-in, component status/scopes, and key listing using disposable
+local data and a test-only token. Startup/rotation tests verify key output, hash retention, mounted-token
+precedence, disabled bootstrap, corrupt-state handling, and rejection of replaced keys.
+Podman is installed but has no configured VM; local image/Quadlet execution was not performed.
+The workflow has been authored but has not run on GitHub in this workspace.
+Initial publication was attempted: the connector returned HTTP 403 (integration cannot write contents),
+and local Git had no authenticated HTTPS credentials. The tested source is committed locally with
+origin set to https://github.com/pac-labs/dapi.git, ready to push after Git authentication is configured.
+
+== Operator checks remaining
+
+* Publish the source to pac-labs/dapi and confirm workflow/test/image jobs succeed.
+* Run the supplied ghcr.io/pac-labs/dapi Quadlet on a Linux host/Raspberry Pi.
+* Select the backend address/network reachable from the existing Traefik instance.
+* Configure domain/TLS, browser origins, source repositories, and local credentials.
+* Verify component removal preserves data and re-addition exposes the retained records.
+* Exercise backup restoration on the deployment host.
+* Capture the first-start key from the container logs and sign in to the panel. If HTTPS panel access
+  is wanted, install the optional Traefik management router, then verify rotation invalidates old access.
+* Enable the database-auth example, provision read/write/event keys privately, and verify scope rejection
+  and revoked-key socket disconnection through the deployed proxy. User login/accounts remain future work.
+
+The candidate is ready for operator review; this document does not mark deployment Done.
+Direct ZipRunner UI/project.zr integration remains separate from the implemented companion API.

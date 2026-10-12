@@ -1,0 +1,12 @@
+apiVersion: looprd/v1
+components:
+  - id: roboscope
+    # Local paths resolve relative to this sources file.
+    specification: looprd.yaml
+    enabled: true
+  # Repository example: this does not need a container build in the project.
+  # - id: another-project
+  #   repository: https://github.com/OWNER/PROJECT.git
+  #   ref: main
+  #   specification: looprd.yaml
+  #   enabled: true

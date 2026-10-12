@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "looprd"
+version = "0.1.0"
+description = "Specification-driven HTTP and WebSocket servers in one Python runtime"
+requires-python = ">=3.12"
+dependencies = [
+  "starlette>=1.7,<2", "uvicorn>=0.35,<1", "websockets>=13,<18",
+  "SQLAlchemy>=2.0.43,<2.1", "pydantic>=2.11,<3",
+  "PyYAML>=6.0.2,<7", "httpx>=0.28,<1", "psycopg[binary]>=3.2,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.4,<10", "pytest-asyncio>=1.1,<2"]
+
+[project.scripts]
+looprd = "looprd.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["looprd*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+

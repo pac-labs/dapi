@@ -1,0 +1,60 @@
+apiVersion: looprd/v1
+component: demo
+release: 1.0.0
+api:
+  version: v1
+auth:
+  mode: database
+  scopes:
+  - items:read
+  - items:write
+  - events:read
+database:
+  backend: sqlite
+  schemaVersion: 1
+models:
+  Item:
+    fields:
+      id:
+        type: integer
+        primaryKey: true
+        generated: true
+      name:
+        type: string
+        maxLength: 100
+        required: true
+resources:
+  items:
+    model: Item
+    path: /items
+    operations:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    permissions:
+      list:
+      - items:read
+      get:
+      - items:read
+      create:
+      - items:write
+      update:
+      - items:write
+      delete:
+      - items:write
+websocket:
+  path: /events
+  resources:
+  - items
+  permissions:
+    items:
+    - events:read
+handlers:
+- path: /info
+  kind: response
+  scopes:
+  - items:read
+  response:
+    service: demo
