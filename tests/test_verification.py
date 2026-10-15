@@ -101,6 +101,16 @@ def test_membership_rechecked_for_replay_and_live(setup_project, spec_data):
             session.execute(storage.tables["Membership"].delete())
         assert client.get(BASE + "/items", headers=HEADERS).json() == []
         assert client.get(BASE + "/_events/items", headers=HEADERS, params={"after": cursor}).json()["events"] == []
+        with client.websocket_connect(BASE + "/events", headers=HEADERS) as socket:
+            socket.send_json({"subscribe": "items"})
+            assert socket.receive_json()["subscribed"] == "items"
+            with storage.events.transaction() as session:
+                record = dict(session.execute(storage.tables["Item"].select()).mappings().one())
+                storage.events.emit(session, {"resource": "items", "action": "private", "data": record}, record)
+            # Allow one SQL catch-up cycle, then establish a response barrier.
+            time.sleep(1.1)
+            socket.send_json({"subscribe": "not-a-resource"})
+            assert socket.receive_json() == {"error": "invalid subscription"}
 
 
 def test_plugin_requires_trusted_python_opt_in(setup_project, spec_data):

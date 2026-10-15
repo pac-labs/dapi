@@ -140,3 +140,10 @@ Local regression evidence and remote PostgreSQL/Redis/image checks follow below.
 Local verification: 109 Python tests passed; three disposable real-server checks
 skipped locally and required by CI. Three Node lifecycle/escaping tests passed;
 new platform descriptor validates and bundled JavaScript syntax checks pass.
+
+Disposable browser verification: protected Operations content loads with Carbon
+styling and a fixed 1280x720 document; internal content remains contained. Additional
+membership regression verifies a revoked principal receives no private live event.
+Real-server CI caught an INCR helper/ACL mismatch; use explicit INCR rather than
+widening the documented command permissions. Container publication remains gated
+on successful real PostgreSQL/Redis and compiled-image smoke checks.
