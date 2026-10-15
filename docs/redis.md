@@ -22,7 +22,8 @@ the descriptor. Query parameters and fragments are rejected. An absent/invalid
 secret rejects the new generation and preserves the working one.
 
 Omitting `realtime` preserves the in-memory bus. Explicit `backend: memory` is also
-accepted, without a connectionSecret. Only best-effort delivery is supported.
+accepted, without a connectionSecret. This guide describes best-effort delivery;
+SQL-backed `delivery: durable` is documented in [durable events](durable-events.md).
 `ctx.publish(event)` remains synchronous; WebSocket subscribe messages and event
 payloads remain unchanged. Existing resource permissions, key revocation checks,
 origin checks, tickets, and API blocks still apply. Redis clients are infrastructure

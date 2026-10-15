@@ -4,3 +4,5 @@ After=looprd-postgres.service
 
 [Container]
 Network=looprd-database.network
+# Preserve outbound GitHub access when the existing unit uses Podman's default network.
+Network=podman
