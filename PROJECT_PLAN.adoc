@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `c0e47905c1e242a859e390622cc7c676f7e6d6720485165cd5dd7a40512c434f`.
+Design SHA-256 (UTF-8/LF): `225078e3a8093df2f579af5cce2a6a99cec85c8e9b4c719f64e806f7e9ca4f39`.
 
 == Implemented candidate
 
@@ -147,3 +147,15 @@ membership regression verifies a revoked principal receives no private live even
 Real-server CI caught an INCR helper/ACL mismatch; use explicit INCR rather than
 widening the documented command permissions. Container publication remains gated
 on successful real PostgreSQL/Redis and compiled-image smoke checks.
+
+
+== Container metrics candidate
+
+Governing design: Host container metrics. Fixed-allowlist host sampler, authenticated
+snapshot ingestion and Carbon Operations resource cards; optional PostgreSQL Quadlets.
+No extra monitoring container or socket access. Missing memory controller on the Pi
+is reported as unavailable; existing host kernel and companion containers are preserved.
+
+Local verification: 113 Python tests passed, three disposable real-server checks
+skipped locally; three Node tests passed. Host sampler ran successfully on the Pi.
+Browser checks show all three cards, explicit stale state and unavailable memory.

@@ -1,0 +1,21 @@
+[Unit]
+Description=Optional Looprd PostgreSQL companion
+
+[Container]
+Image=docker.io/library/postgres:17
+ContainerName=looprd-postgres
+Network=looprd-database.network
+NetworkAlias=looprd-postgres
+Volume=looprd-postgres-data.volume:/var/lib/postgresql/data
+Volume=%h/.config/looprd/secrets/postgres-password:/run/secrets/postgres-password:ro,Z
+EnvironmentFile=%h/.config/looprd/postgres.env
+# No published port. Retain this named volume when retiring components.
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=300
+TimeoutStopSec=90
+
+[Install]
+WantedBy=default.target

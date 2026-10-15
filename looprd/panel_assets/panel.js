@@ -152,7 +152,7 @@ el('create').onsubmit=event=>{event.preventDefault();run(async()=>{
  if(component!==selected())throw Error('Component changed while creating the key. Revoke the unused key from its component.');
  el('new-key').value=key.apiKey;el('issued').hidden=false;showKeyTab('issued');await list();
  });};
-setInterval(()=>{if(token&&el('auto').checked&&!document.hidden)run(async()=>{await status();if(currentView==='files')await listFiles();},true);},10000);
+setInterval(()=>{if(token&&el('auto').checked&&!document.hidden)run(async()=>{await status();if(currentView==='files')await listFiles();if(currentView==='operations')await loadOperations();},true);},10000);
 window.addEventListener('pagehide',disconnect);
 
 initNavigation();

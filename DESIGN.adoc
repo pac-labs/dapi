@@ -377,3 +377,17 @@ not a security sandbox. Inline execution remains cooperative and trusted. Histor
 metrics/audit are bounded best-effort metadata, omit payloads and credentials, and are exposed
 only through authenticated management. Operational guarantees and rollback limits are specified
 in docs/platform-reference.md; production components opt in independently.
+
+
+== Host container metrics
+
+An optional host-owned sampler observes only the fixed Looprd/PostgreSQL/Redis
+container allowlist through read-only Podman CLI calls. It atomically writes a
+sanitized snapshot into the existing read-only configuration-directory mount.
+The runtime has no container-control socket, host command execution or write access.
+Authenticated Operations reads bounded, validated snapshots with explicit stale,
+disabled and unavailable states. CPU uses sampled deltas; unsupported memory remains
+unknown. Environment, credentials, addresses and unrelated container data are excluded.
+The sampler is a systemd timer, not an additional container or telemetry service.
+Existing services/networks and kernel configuration remain unchanged. Optional public
+PostgreSQL Quadlets fill the deployment template gap without replacing existing units.

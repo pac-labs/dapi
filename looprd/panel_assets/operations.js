@@ -1,6 +1,7 @@
 // Metadata-only operations; panel content uses text nodes, never HTML interpolation.
 async function loadOperations(){
  const result=await api('ops'),target=el('operations-content');target.replaceChildren();
+ renderContainerMetrics(target,result.containers);
  for(const [id,value] of Object.entries(result.components)){
   const card=node('article',undefined,'card');card.append(node('h3',id));
   card.append(node('p',value.httpInFlight+' requests in flight · '+value.webSockets+' sockets'));
@@ -25,4 +26,31 @@ async function loadOperations(){
  target.append(node('p','Showing up to 1,000 recent minute records. Telemetry dropped: '+result.dropped,'muted small'));
  target.append(node('h3','Recent management activity'));
  for(const row of result.audit)target.append(node('p',new Date(row.at*1000).toLocaleString()+' · '+row.component+' · '+row.action+' · HTTP '+row.status,'small'));
+}
+
+function metricBytes(value){
+ if(value===null||value===undefined)return 'Not available';
+ const units=['B','KiB','MiB','GiB','TiB'];let index=0;
+ while(value>=1024&&index<units.length-1){value/=1024;index++;}
+ return value.toFixed(index?1:0)+' '+units[index];
+}
+function renderContainerMetrics(target,snapshot){
+ target.append(node('h3','Runtime containers'));
+ if(!snapshot||snapshot.state==='disabled'){
+  target.append(node('p','Host container metrics are not configured.','muted small'));return;
+ }
+ const fresh=snapshot.state==='available';
+ target.append(node('p',fresh?'Sampled '+snapshot.ageSeconds+' seconds ago':snapshot.state==='stale'?'Metrics are stale · last sample '+snapshot.ageSeconds+' seconds ago':'Host metrics are unavailable',fresh?'muted small':'error'));
+ if(snapshot.memorySupported===false)target.append(node('p','Container memory accounting is unavailable on this host.','muted small'));
+ for(const item of snapshot.containers){
+  const card=node('article',undefined,'card');card.append(node('h4',item.name));
+  card.append(node('p',item.state+' · restarts '+(item.restarts??'Not available')+(fresh?'':' · last known values')));
+  const cpu=item.cpuPercent===null||item.cpuPercent===undefined?'Not available':item.cpuPercent.toFixed(1)+'%';
+  card.append(node('p','CPU '+cpu+' · memory '+metricBytes(item.memoryBytes)+' · processes '+(item.pids??'Not available')));
+  card.append(node('p','Network received '+metricBytes(item.networkRxBytes)+' · sent '+metricBytes(item.networkTxBytes),'small'));
+  card.append(node('p','Disk read '+metricBytes(item.blockReadBytes)+' · written '+metricBytes(item.blockWriteBytes),'small'));
+  if(item.error)card.append(node('p','Some measurements are unavailable.','error'));
+  target.append(card);
+ }
+ target.append(node('p','CPU: 100% represents one core. I/O totals cover the current container lifetime.','muted small'));
 }

@@ -106,3 +106,6 @@ See the [platform reference](docs/platform-reference.md) for verified principals
 private record policies, data/query/service contracts, limits, jobs and operations;
 and [durable events](docs/durable-events.md) for replay. No external identity
 provider is required. Application accounts and domain behavior stay in components.
+
+See [container metrics and backing services](docs/container-metrics.md) for the
+optional host sampler, Operations resource cards and PostgreSQL companion templates.

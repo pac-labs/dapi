@@ -1,0 +1,8 @@
+[Unit]
+Description=Sample only Looprd companion container metrics
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/libexec/looprd-collect-metrics.py --output %h/.config/looprd/metrics/containers.json
+TimeoutStartSec=40
+UMask=0022

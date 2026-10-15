@@ -26,6 +26,7 @@ class Settings:
     trusted_components: tuple[str, ...] | None = None
     worker_memory_mb: int = 256
     worker_concurrency: int = 2
+    container_metrics_file: Path | None = None
 
     def __post_init__(self):
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", self.event_namespace):
@@ -53,6 +54,7 @@ class Settings:
             trusted_components=tuple(value.strip() for value in os.environ["LOOPRD_TRUSTED_COMPONENTS"].split(",") if value.strip()) if "LOOPRD_TRUSTED_COMPONENTS" in os.environ else None,
             worker_memory_mb=int(os.getenv("LOOPRD_WORKER_MEMORY_MB", "256")),
             worker_concurrency=int(os.getenv("LOOPRD_WORKER_CONCURRENCY", "2")),
+            container_metrics_file=Path(os.environ["LOOPRD_CONTAINER_METRICS_FILE"]) if os.getenv("LOOPRD_CONTAINER_METRICS_FILE") else None,
         )
 
     def secret(self, reference: str) -> str:

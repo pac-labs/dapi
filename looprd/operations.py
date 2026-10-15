@@ -129,6 +129,8 @@ async def endpoint(request):
     except Exception:
         return JSONResponse({"error": "operations storage unavailable"}, status_code=503)
     runtime = request.app.state.runtime
+    from .container_metrics import read
+    result["containers"] = await run_in_threadpool(read, runtime.settings)
     result["components"] = {name: {"httpInFlight": generation.http_inflight,
         "webSockets": len(generation.sockets), "rateLimitError": generation.limiter.error,
         "jobError": generation.job_error, "relayError": generation.relay_error}
