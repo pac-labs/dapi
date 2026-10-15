@@ -53,7 +53,7 @@
 <p class="muted small">Downloads need no login. Only someone with the download link can retrieve a file; there is no public file browser. Delete a file or unused invitation below.</p><div id="file-list"></div></div></section>
 <section data-view="runtime" class="view card" hidden><div class="section-heading"><h2>Runtime &amp; reloads</h2><span id="reload-state" class="badge"></span></div><p class="muted small">Failed updates retain the last working generation. Removal stops serving but retains data. Operator blocks persist independently.</p><div id="runtime-facts" class="facts page-list"></div></section>
 <section data-view="diagnostics" class="view card" hidden><h2>Diagnostics &amp; agent access</h2>
-<div class="page-list"><p>Create a read-only JSON link for an agent. Anyone with the link can read sanitized service health and failure history until it expires or you revoke it. Application records and credentials are excluded.</p>
+<div class="page-list diagnostic-workspace"><p>Create a read-only JSON link for an agent. Anyone with the link can read sanitized service health and failure history until it expires or you revoke it. Application records and credentials are excluded.</p>
 <label>Scope <select class="cds--select-input" id="diagnostic-component"><option value="">All components</option></select></label>
 <label>Lifetime <select class="cds--select-input" id="diagnostic-expiry"><option value="3600">1 hour</option><option value="900">15 minutes</option><option value="43200">12 hours</option></select></label>
 <div><button id="create-diagnostic" data-action class="cds--btn cds--btn--primary">Create diagnostic URL</button><button id="refresh-diagnostics" data-action class="cds--btn cds--btn--secondary">Refresh diagnostics</button></div>
