@@ -8,6 +8,13 @@ from sqlalchemy.exc import DBAPIError
 
 
 KNOWN = {
+    "remote document exceeds size limit": ("document_too_large", "A fetched document exceeds Looprd's 1 MiB input limit.", "Check the fetched document size and reduce its content where possible, then retry reconciliation."),
+    "local document exceeds size limit": ("document_too_large", "A local document exceeds Looprd's 1 MiB input limit.", "Reduce the document size, then retry reconciliation."),
+    "document exceeds 1 MiB": ("document_too_large", "The specification exceeds Looprd's 1 MiB document limit.", "Reduce the specification size or split functionality into separate components, then retry reconciliation."),
+    "specification component differs from source ID": ("component_identity_mismatch", "The specification component does not match its sources entry.", "Make the sources entry ID and specification component agree."),
+    "duplicate YAML key": ("duplicate_document_key", "The specification contains duplicate YAML keys.", "Remove duplicate keys and publish a corrected specification."),
+    "empty secret": ("secret_empty", "A referenced host secret is empty.", "Populate the mounted secret file and retry reconciliation."),
+    "invalid secret reference": ("secret_reference_invalid", "A secret reference points outside the permitted secrets directory.", "Use a reference relative to the mounted secrets directory."),
     "service dependency incompatible": ("dependency_incompatible", "A required service contract is unavailable or incompatible.", "Check declared dependencies against the loaded service versions and permissions."),
     "schema downgrade is not supported": ("schema_downgrade", "The declared schema version is older than the stored database.", "Restore the current schema version; downgrades require an explicit data migration."),
     "models changed without a schema version increase": ("schema_version_required", "Models changed without increasing the schema version.", "Increase database.schemaVersion and provide migrations for existing data."),
@@ -74,6 +81,12 @@ def explain(error):
     # Only exact matches against server-authored constants may reveal exception messages.
     if isinstance(error, ValueError) and str(error) in KNOWN:
         result["code"], result["message"], result["action"] = KNOWN[str(error)]
+        if result["code"] == "document_too_large":
+            result["details"]["maxDocumentBytes"] = 1048576
+            if getattr(error, "looprd_document_kind", None) == "revision_metadata":
+                result["details"]["documentKind"] = "revision_metadata"
+                result["message"] = "GitHub revision metadata exceeds Looprd's 1 MiB input limit."
+                result["action"] = "Pin an immutable commit SHA in the sources entry to bypass branch resolution, or update the revision resolver."
     if isinstance(error, ValidationError):
         result.update(code="specification_invalid", message="The specification failed validation.",
                       action="Correct the indicated specification fields and publish a new revision.")

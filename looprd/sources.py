@@ -80,7 +80,12 @@ class SourceReader:
     async def resolve_revision(self, repository, ref):
         if re.fullmatch(r"[0-9a-f]{40}", ref):
             return ref
-        info = await self.read(f"https://api.github.com/repos/{repository}/commits/{quote(ref, safe='')}")
+        try:
+            info = await self.read(f"https://api.github.com/repos/{repository}/commits/{quote(ref, safe='')}")
+        except ValueError as error:
+            if str(error) == "remote document exceeds size limit":
+                error.looprd_document_kind = "revision_metadata"
+            raise
         revision = json.loads(info)["sha"]
         if not re.fullmatch(r"[0-9a-f]{40}", revision):
             raise ValueError("invalid resolved GitHub revision")

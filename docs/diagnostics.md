@@ -23,6 +23,14 @@ show structural field paths and types; arbitrary names/extra keys become `*`.
 Unknown exceptions receive generic guidance. No tracebacks or automatic repairs
 are exposed. Existing management status error strings remain compatible.
 
+`document_too_large` identifies fetched/local documents exceeding the 1 MiB input
+limit and reports `details.maxDocumentBytes`. Oversized GitHub revision metadata
+is distinguished with `details.documentKind: revision_metadata`; this does not
+mean the specification itself is too large. Pinning an immutable commit SHA
+bypasses branch resolution. A failed reload preserves the last working generation.
+Identity mismatches, duplicate YAML keys and empty/invalid secret references also
+have specific safe explanations.
+
 History lives in `diagnostics.sqlite3` in the data directory for seven days,
 bounded to 500 distinct records. Repeats update last-seen time. Reads return the
 latest 100 records in scope. History writes are best effort; storage failures do

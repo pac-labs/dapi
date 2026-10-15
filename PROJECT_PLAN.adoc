@@ -169,6 +169,10 @@ Operator checks: mint a scoped link, read JSON, revoke it and observe 404; inspe
 a migration failure for its statement coordinate and retained working generation.
 Application data remains behind its existing API authentication.
 
-Validation: 120 local tests passed, 3 external-service tests skipped; 3 UI checks
+Validation: 122 local tests passed, 3 external-service tests skipped; 3 UI checks
 passed. Fresh wheel imports/assets, privacy scan and design fingerprint verified.
 Isolated browser checks confirmed URL creation/revocation and failure guidance.
+
+Follow-up: oversized source documents and GitHub revision metadata have specific
+safe failure codes/guidance. Revision-fetch annotations preserve existing loader
+behavior and limits; no application code or schemas are changed.

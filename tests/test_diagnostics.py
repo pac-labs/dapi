@@ -9,6 +9,7 @@ from looprd.app import create_app
 from looprd.diagnostic_contract import Snapshot
 from looprd.diagnostics import Diagnostics
 from looprd.failures import explain
+from looprd.sources import SourceReader, MAX_DOCUMENT
 
 ADMIN = {"Authorization": "Bearer admin"}
 
@@ -136,3 +137,36 @@ def test_diagnostic_store_failure_does_not_stop_components(setup_project):
         assert client.post("/_looprd/diagnostics", headers=ADMIN, json={}).status_code == 503
         client.app.state.runtime.report("demo", "request", RuntimeError("secret"))
         assert client.get("/_looprd/status", headers=ADMIN).json()["errors"]["demo"] == "request: RuntimeError"
+
+
+def test_oversized_source_explained_without_replacing_active_generation(setup_project):
+    settings, _, _ = setup_project
+    with TestClient(create_app(settings)) as client:
+        async def oversized(_):
+            raise ValueError("remote document exceeds size limit")
+        runtime = client.app.state.runtime
+        runtime.reader.component = oversized
+        client.post("/_looprd/reconcile", headers=ADMIN)
+        result = client.get("/_looprd/diagnostics", headers=ADMIN).json()["snapshot"]
+        failure = result["failures"][0]
+        assert failure["code"] == "document_too_large"
+        assert failure["details"]["maxDocumentBytes"] == 1048576
+        assert result["components"][0]["lastWorkingRetained"]
+
+
+async def test_oversized_revision_metadata_identified_without_exposing_content():
+    reader = SourceReader("unused")
+    await reader.client.aclose()
+    reader.client = httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, text="private_metadata" * (MAX_DOCUMENT // 8))))
+    try:
+        import pytest
+        with pytest.raises(ValueError) as failure:
+            await reader.resolve_revision("example/demo", "main")
+        result = explain(failure.value)
+        assert result["code"] == "document_too_large"
+        assert result["details"]["documentKind"] == "revision_metadata"
+        assert "immutable commit SHA" in result["action"]
+        assert "private_metadata" not in json.dumps(result)
+    finally:
+        await reader.close()
