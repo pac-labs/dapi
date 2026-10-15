@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `225078e3a8093df2f579af5cce2a6a99cec85c8e9b4c719f64e806f7e9ca4f39`.
+Design SHA-256 (UTF-8/LF): `41c729cd9b2d46fd06aa0d4d4d1c246d1b2fa874d2d3e47e7502039d14f243b6`.
 
 == Implemented candidate
 
@@ -159,3 +159,16 @@ is reported as unavailable; existing host kernel and companion containers are pr
 Local verification: 113 Python tests passed, three disposable real-server checks
 skipped locally; three Node tests passed. Host sampler ran successfully on the Pi.
 Browser checks show all three cards, explicit stale state and unavailable memory.
+
+== Agent diagnostics candidate
+
+Governing section: DESIGN.adoc, Agent diagnostics and failure history.
+Read-only expiring capability URLs, scoped machine JSON, safe migration/validation
+explanations, persistent bounded history and Carbon management controls are added.
+Operator checks: mint a scoped link, read JSON, revoke it and observe 404; inspect
+a migration failure for its statement coordinate and retained working generation.
+Application data remains behind its existing API authentication.
+
+Validation: 120 local tests passed, 3 external-service tests skipped; 3 UI checks
+passed. Fresh wheel imports/assets, privacy scan and design fingerprint verified.
+Isolated browser checks confirmed URL creation/revocation and failure guidance.

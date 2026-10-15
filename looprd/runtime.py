@@ -15,6 +15,7 @@ from .spec import Specification
 from .status import Monitor, snapshot
 from .availability import Availability
 from .runtime_guard import RuntimeGuard
+from .diagnostics import Diagnostics
 
 log = logging.getLogger("looprd")
 
@@ -37,6 +38,7 @@ class Runtime:
         self.poll_task = None
         settings.data.mkdir(parents=True, exist_ok=True)
         self.guard = RuntimeGuard(settings.data)
+        self.diagnostics = Diagnostics(settings.data)
         self.worker_slots = asyncio.Semaphore(settings.worker_concurrency)
         self.availability = Availability(settings.data)
         self.sockets = {}
@@ -88,6 +90,7 @@ class Runtime:
                     self.report(component, "restore", error)
         except Exception as error:
             self.sources_error = f"cache: {type(error).__name__}"
+            self.report_sources("restore", error)
 
     async def build(self, spec):
         bus = self.event_hub.acquire(spec)
@@ -108,6 +111,13 @@ class Runtime:
         # Exception strings can contain URLs, SQL, handler source, or credentials.
         self.errors[component] = f"{stage}: {type(error).__name__}"
         log.warning("component=%s stage=%s error=%s", component, stage, type(error).__name__)
+        self.record_failure(component, stage, error)
+
+    def record_failure(self, component, stage, error):
+        try:
+            self.diagnostics.record(component, stage, error)
+        except Exception:
+            log.warning("diagnostic history unavailable")
 
     async def reconcile(self):
         self.guard.acquire()
@@ -125,6 +135,7 @@ class Runtime:
             sources = await self.reader.sources()
         except Exception as error:
             self.sources_error = f"sources unavailable or invalid: {type(error).__name__}"
+            self.report_sources("sources", error)
             return False
         self.sources = {entry.id: {"enabled": entry.enabled, "repository": entry.repository,
                                    "ref": entry.ref if entry.repository else None}
@@ -158,6 +169,7 @@ class Runtime:
                 await candidate.shutdown()
                 await self.event_hub.release(candidate.bus)
                 self.errors[component] = "load: service dependency incompatible"
+                self.report_dependency(component)
                 if component in self.revisions:
                     revisions[component] = self.revisions[component]
                 else:
@@ -167,6 +179,7 @@ class Runtime:
             failures = dependency_errors(prospective)
         for component in failures:
             self.errors[component] = "dependency: required contract unavailable"
+            self.report_dependency(component)
         next_active = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
         next_active.update(candidates)
         revisions = {key: revisions[key] for key in next_active}
@@ -174,6 +187,7 @@ class Runtime:
             await asyncio.to_thread(self.save, next_active, revisions)
         except Exception as error:
             self.sources_error = f"state persistence failed: {type(error).__name__}"
+            self.report_sources("checkpoint", error)
             for candidate in candidates.values():
                 await candidate.shutdown()
                 await self.event_hub.release(candidate.bus)
@@ -225,6 +239,12 @@ class Runtime:
     def status(self):
         return snapshot(self)
 
+    def report_sources(self, stage, error):
+        self.record_failure(None, stage, error)
+
+    def report_dependency(self, component):
+        self.record_failure(component, "dependency", ValueError("service dependency incompatible"))
+
     async def poll(self):
         while True:
             await asyncio.sleep(self.settings.poll_seconds)
@@ -232,6 +252,7 @@ class Runtime:
                 await self.reconcile()
             except Exception as error:
                 self.sources_error = f"poll failure: {type(error).__name__}"
+                self.report_sources("poll", error)
 
     async def start(self):
         self.guard.acquire()

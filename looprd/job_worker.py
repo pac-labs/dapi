@@ -41,8 +41,10 @@ async def worker(generation):
                         await execute(generation, job)
                     except Exception as failure:
                         error = type(failure).__name__
+                        generation.runtime.record_failure(generation.spec.component, "job execution", failure)
                     await run_in_threadpool(store.finish, job, identity, error)
             generation.job_error = None
         except Exception as error:
             generation.job_error = type(error).__name__
+            generation.runtime.record_failure(generation.spec.component, "job worker", error)
         await asyncio.sleep(1)

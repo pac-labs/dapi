@@ -109,3 +109,6 @@ provider is required. Application accounts and domain behavior stay in component
 
 See [container metrics and backing services](docs/container-metrics.md) for the
 optional host sampler, Operations resource cards and PostgreSQL companion templates.
+
+See [agent diagnostics](docs/diagnostics.md) for expiring read-only diagnostic URLs,
+machine-readable health/failure reports and safe migration error explanations.

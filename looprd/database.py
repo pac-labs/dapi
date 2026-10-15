@@ -149,10 +149,18 @@ class Storage:
                 raise ValueError("schema downgrade is not supported")
             if target == previous["version"] and fingerprint != previous["fingerprint"]:
                 raise ValueError("models changed without a schema version increase")
-            for migration in self.spec.database.migrations:
+            for migration_index, migration in enumerate(self.spec.database.migrations):
                 if previous["version"] < migration.version <= target:
-                    for statement in migration.statements:
-                        connection.exec_driver_sql(statement)
+                    for statement_index, statement in enumerate(migration.statements):
+                        try:
+                            connection.exec_driver_sql(statement)
+                        except Exception as error:
+                            error.looprd_migration = {
+                                "previousSchemaVersion": previous["version"], "targetSchemaVersion": target,
+                                "migrationVersion": migration.version, "statementIndex": statement_index,
+                                "path": ["database", "migrations", migration_index, "statements", statement_index],
+                            }
+                            raise
         # Detect missing/mismatched columns before activation, including incomplete migrations.
         inspector = sa.inspect(connection)
         for name, table in self.tables.items():

@@ -3,6 +3,26 @@
 :toc:
 :revnumber: 0.1.0
 
+== Agent diagnostics and failure history
+
+Management can mint expiring, revocable, read-only capability URLs scoped to one
+component or all components. Default lifetime is one hour, maximum twelve hours,
+with at most 100 active links. Only token hashes persist in a separate versioned
+local SQLite store. Capabilities never grant management or application access.
+Machine-readable snapshots expose allowlisted health and structured failures,
+with a public static OpenAPI reader contract. Raw status, repository addresses,
+credentials, SQL, source code, application records and tracebacks are excluded.
+Migration failures carry version/statement coordinates and safe database codes;
+validation paths redact arbitrary names. Unknown errors remain generic. Failure
+history is best effort, deduplicated, seven days/500 records, with at most 100
+returned in scope. Historical failures remain distinct from current error state.
+Existing status strings and specification/authentication contracts are unchanged.
+Management UI retains Carbon styling and contained scrolling. Proxy operators
+must redact capability paths in access logs. Backups preserve grants/revocations;
+restoring an old backup can restore an old grant until its original expiry.
+No new containers or component database migrations are required. See
+docs/diagnostics.md for endpoint, retention and rollback contracts.
+
 == Purpose
 
 Looprd is one Python server hosting multiple small logical servers for ZipRunner projects.

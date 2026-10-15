@@ -18,4 +18,5 @@ async def relay(generation):
             generation.relay_error = None
         except (SQLAlchemyError, RedisError, OSError, ValueError) as error:
             generation.relay_error = type(error).__name__
+            generation.runtime.record_failure(generation.spec.component, "event relay", error)
         await asyncio.sleep(1)
