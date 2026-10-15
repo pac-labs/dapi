@@ -30,7 +30,8 @@ class RateLimiter:
             key = self.settings.event_namespace + ":limits:" + self.spec.component + ":" + key
             try:
                 async with self.client.pipeline(transaction=True) as pipeline:
-                    pipeline.incr(key)
+                    # redis-py's incr helper emits INCRBY; keep the documented narrow INCR ACL.
+                    pipeline.execute_command("INCR", key)
                     pipeline.expire(key, period, nx=True)
                     count = (await pipeline.execute())[0]
                 self.error = None
