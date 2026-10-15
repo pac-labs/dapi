@@ -70,6 +70,12 @@ Secrets are local references so specifications remain retrievable without embedd
 
 == Sources and shutdown semantics
 
+Branch/tag resolution requests GitHub's `application/vnd.github.sha` media type,
+validates the returned 40-character commit hash, and fetches specification contents
+at that immutable revision. It does not download commit diffs or file lists.
+Pinned full commit hashes bypass lookup. Existing document-size bounds, token
+containment and failed-fetch retention remain in force.
+
 The sources location is configured through `LOOPRD_SOURCES` and may be a local file, HTTPS URL,
 or `github://OWNER/REPO/path?ref=BRANCH_OR_COMMIT` location.
 A valid sources document explicitly contains `apiVersion: looprd/v1` and `components: [...]`.

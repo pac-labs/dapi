@@ -28,6 +28,9 @@ limit and reports `details.maxDocumentBytes`. Oversized GitHub revision metadata
 is distinguished with `details.documentKind: revision_metadata`; this does not
 mean the specification itself is too large. Pinning an immutable commit SHA
 bypasses branch resolution. A failed reload preserves the last working generation.
+The current resolver requests GitHub's SHA-only media type to avoid downloading
+large commit metadata. Historical oversized-metadata failures remain in history
+after the next successful reload.
 Identity mismatches, duplicate YAML keys and empty/invalid secret references also
 have specific safe explanations.
 

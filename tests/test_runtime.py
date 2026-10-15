@@ -123,7 +123,8 @@ async def test_github_fetches_spec_at_resolved_revision():
     def respond(request):
         calls.append(str(request.url))
         if "/commits/" in str(request.url):
-            return httpx.Response(200, json={"sha": sha})
+            assert request.headers["accept"] == "application/vnd.github.sha"
+            return httpx.Response(200, text=sha)
         return httpx.Response(200, text="apiVersion: looprd/v1\ncomponent: demo\nrelease: '1'\napi: {version: v1}\nauth: {mode: public}")
 
     await reader.client.aclose()

@@ -1,7 +1,6 @@
 """Bounded file/HTTPS reads; fetching failure is never an empty sources list."""
 
 import asyncio
-import json
 import os
 import re
 from pathlib import Path
@@ -20,7 +19,7 @@ class SourceReader:
         self.base = sources_location
         self.client = httpx.AsyncClient(timeout=15, follow_redirects=False)
 
-    async def read(self, location):
+    async def read(self, location, *, github_sha=False):
         if location.startswith("github://"):
             content, _ = await self.github_file(location)
             return content
@@ -36,6 +35,8 @@ class SourceReader:
                 if url.hostname == "api.github.com":
                     headers["X-GitHub-Api-Version"] = "2022-11-28"
                     headers["Accept"] = "application/vnd.github.raw+json" if "/contents/" in url.path else "application/vnd.github+json"
+                    if github_sha:
+                        headers["Accept"] = "application/vnd.github.sha"
             async with self.client.stream("GET", location, headers=headers) as response:
                 response.raise_for_status()
                 chunks, total = [], 0
@@ -81,12 +82,12 @@ class SourceReader:
         if re.fullmatch(r"[0-9a-f]{40}", ref):
             return ref
         try:
-            info = await self.read(f"https://api.github.com/repos/{repository}/commits/{quote(ref, safe='')}")
+            info = await self.read(f"https://api.github.com/repos/{repository}/commits/{quote(ref, safe='')}", github_sha=True)
         except ValueError as error:
             if str(error) == "remote document exceeds size limit":
                 error.looprd_document_kind = "revision_metadata"
             raise
-        revision = json.loads(info)["sha"]
+        revision = info.strip()
         if not re.fullmatch(r"[0-9a-f]{40}", revision):
             raise ValueError("invalid resolved GitHub revision")
         return revision

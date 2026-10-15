@@ -27,7 +27,8 @@ async def test_private_index_and_referenced_repository_use_token_file(tmp_path, 
         assert request.headers["authorization"] == "Bearer first-token"
         if "/commits/" in request.url.path:
             sha = index_sha if "/config/" in request.url.path else component_sha
-            return httpx.Response(200, json={"sha": sha})
+            assert request.headers["accept"] == "application/vnd.github.sha"
+            return httpx.Response(200, text=sha)
         assert request.headers["accept"] == "application/vnd.github.raw+json"
         if request.url.path.endswith("sources.yaml"):
             assert request.url.params["ref"] == index_sha
@@ -59,7 +60,8 @@ async def test_relative_spec_uses_same_index_commit():
     def respond(request):
         calls.append(request)
         if "/commits/" in request.url.path:
-            return httpx.Response(200, json={"sha": sha})
+            assert request.headers["accept"] == "application/vnd.github.sha"
+            return httpx.Response(200, text=sha)
         assert request.url.params["ref"] == sha
         if request.url.path.endswith("sources.yaml"):
             return httpx.Response(200, text="apiVersion: looprd/v1\ncomponents: [{id: demo, specification: demo.yaml}]")
