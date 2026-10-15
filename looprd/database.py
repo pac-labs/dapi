@@ -12,7 +12,7 @@ from .spec import Specification
 from .auth import KeyStore
 from .outbox import Outbox
 from .access_policy import AccessPolicies
-from .schema_contract import model_signature, validate_constraints
+from .schema_contract import model_signature, validate_constraints, unique_keys
 from .queries import Queries
 from .limits import RowQuota
 from .jobs import Jobs
@@ -178,11 +178,7 @@ class Storage:
             expected_pk = [column.name for column in table.primary_key.columns]
             if inspector.get_pk_constraint(name)["constrained_columns"] != expected_pk:
                 raise ValueError("database primary key does not match model")
-            unique_columns = {
-                tuple(constraint["column_names"]) for constraint in inspector.get_unique_constraints(name)
-            } | {
-                tuple(index["column_names"]) for index in inspector.get_indexes(name) if index["unique"]
-            }
+            unique_columns = unique_keys(connection, name, inspector)
             for column in table.columns:
                 if column.unique and (column.name,) not in unique_columns:
                     raise ValueError("declared unique constraint is missing from database")

@@ -124,6 +124,15 @@ The management token is read per management request.
 
 == Database lifecycle
 
+SQLite column/composite uniqueness is verified against `PRAGMA index_list` and
+`PRAGMA index_info`, including implicit indexes created by inline constraints.
+DDL-text reflection alone may miss valid constraints on sized string columns.
+Only full indexes of the declared columns qualify; partial/expression indexes
+cannot substitute for whole-column uniqueness, and partial indexes do not match
+declared full named indexes. PostgreSQL retains constraint/index reflection with
+the same partial-index exclusion. This validation repair neither rewrites models
+nor changes stored schema fingerprints; application migrations remain explicit.
+
 Every component has separate SQLAlchemy metadata, engine, and session factory.
 Every CRUD operation runs in its own transaction; independent tasks do not share sessions.
 SQLite gets a persistent component-derived file with foreign keys and bounded lock waiting.

@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `32f1c2f0e8075f1011d79af70b78c52a47170e4b699ac09e5127e582c92b2806`.
+Design SHA-256 (UTF-8/LF): `7681ff2500ae640a1d37dee460d0a82c0acde390b5f583eee2d5de35ced056f2`.
 
 == Implemented candidate
 
@@ -190,3 +190,18 @@ Operator authorized deployment and the declared Life/Social schema-version-2 mig
 Validation: 129 local tests passed, 3 external-service tests skipped. Focused
 resolver/private-source/runtime/diagnostic tests, fresh package import, privacy
 scan and design fingerprint checks passed.
+
+== SQLite uniqueness reflection repair
+
+Governing section: DESIGN.adoc, Database lifecycle.
+Inline uniqueness on sized string columns was enforced by SQLite but omitted by
+SQLAlchemy's DDL parser, causing false schema-contract failures. Both column and
+composite validation now use SQLite index metadata. Partial/expression indexes
+remain insufficient for full-column uniqueness; partial named indexes are rejected.
+No application-specific schema edits, constraint bypasses or fingerprint changes.
+Regression coverage includes retained data/restarts, composite constraints, quoted
+identifiers, weaker-index rejection and PostgreSQL partial-index enforcement.
+Social's current specification and migrations passed a dry run on a temporary copy
+of its installed database with this repair.
+Validation: 137 local tests passed, 4 external-service tests skipped. Focused
+SQLite/platform/runtime tests and fresh-package/privacy/fingerprint checks passed.

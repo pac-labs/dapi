@@ -46,6 +46,13 @@ deletes restrict references; there are no automatic cascades. Structural changes
 need explicit additive migrations and schemaVersion increases. SQLite table rebuilds
 remain operator-managed. Failed candidate schemas retain the working generation.
 
+SQLite uniqueness validation reads the database's index metadata, including implicit
+indexes created by inline `UNIQUE` declarations on `VARCHAR(n)` columns. This avoids
+false reload failures from DDL-text reflection. Partial and expression indexes do
+not satisfy full-column/composite uniqueness; partial indexes do not satisfy a
+declared full named index. No application-table rewrite or fingerprint change is
+needed for this validation repair.
+
 Resource `query.filters` maps scalar fields to allowed eq/ne/lt/le/gt/ge/in/prefix
 operators; `query.sort` lists allowed non-null scalar fields. Requests use
 `filter.name.prefix=report`, `filter.id.in=[1,2]`, `sort=-id`, and limit 1–100.
