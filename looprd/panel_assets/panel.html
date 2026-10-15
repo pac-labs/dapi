@@ -15,7 +15,8 @@
 <main id="controls" hidden>
 <nav aria-label="Management sections" class="view-nav">
 <button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Components</button>
-<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
+<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="operations">Operations</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
+<section data-view="operations" class="view card" hidden><div class="section-heading"><h2>Operations</h2><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="refresh-operations">Refresh</button></div><div id="operations-content" class="page-list"></div></section>
 <section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
 <div class="metrics">
@@ -56,4 +57,5 @@
 <script nonce="NONCE">/* PANEL_CREDENTIALS */
 /* PANEL_NAV */
 /* PANEL_FILES */
+/* PANEL_OPS */
 /* PANEL_JS */</script></body></html>

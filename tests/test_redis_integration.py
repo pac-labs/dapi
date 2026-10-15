@@ -55,6 +55,23 @@ async def test_real_redis_fanout_acl_and_no_echo(setup_project, spec_data):
         await connected(restricted)
         restricted.publish({"resource": "items", "data": "acl"})
         assert (await asyncio.wait_for(subscribers[1].queue.get(), 5))["data"] == "acl"
+        # Counter permissions are optional and scoped to this namespace's limit keys.
+        await admin.execute_command("ACL", "SETUSER", username,
+            "~" + settings.event_namespace + ":limits:*", "+multi", "+exec", "+discard", "+incr", "+expire")
+        from looprd.limits import RateLimiter
+        from looprd.outbox import EventError
+        spec.limits.backend = "redis"
+        spec.limits.connectionSecret = "redis-restricted"
+        spec.limits.requestsPerMinute = 1
+        limiters = [RateLimiter(spec, settings), RateLimiter(spec, settings)]
+        try:
+            await limiters[0].check("same-principal")
+            with pytest.raises(EventError) as exceeded:
+                await limiters[1].check("same-principal")
+            assert exceeded.value.status == 429
+        finally:
+            for limiter in limiters:
+                await limiter.close()
     finally:
         if restricted_hub:
             await restricted_hub.close()

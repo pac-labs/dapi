@@ -11,6 +11,7 @@ class Subscriber:
     queue: asyncio.Queue
     resources: set[str] = field(default_factory=set)
     overflow: bool = False
+    cursors: dict[str, str] = field(default_factory=dict)
 
 
 class EventBus:

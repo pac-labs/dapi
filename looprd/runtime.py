@@ -14,6 +14,7 @@ from .sources import SourceReader
 from .spec import Specification
 from .status import Monitor, snapshot
 from .availability import Availability
+from .runtime_guard import RuntimeGuard
 
 log = logging.getLogger("looprd")
 
@@ -35,6 +36,8 @@ class Runtime:
         self.retiring = set()
         self.poll_task = None
         settings.data.mkdir(parents=True, exist_ok=True)
+        self.guard = RuntimeGuard(settings.data)
+        self.worker_slots = asyncio.Semaphore(settings.worker_concurrency)
         self.availability = Availability(settings.data)
         self.sockets = {}
         self.checkpoint = settings.data / "active.json"
@@ -88,9 +91,16 @@ class Runtime:
 
     async def build(self, spec):
         bus = self.event_hub.acquire(spec)
+        generation = None
         try:
-            return await run_in_threadpool(Generation, spec, self.settings, bus)
+            generation = await run_in_threadpool(Generation, spec, self.settings, bus)
+            generation.runtime = self
+            for dependency in spec.dependencies:
+                self.settings.secret(dependency.credentialSecret)
+            return generation
         except BaseException:
+            if generation:
+                await generation.shutdown()
             await self.event_hub.release(bus)
             raise
 
@@ -100,6 +110,7 @@ class Runtime:
         log.warning("component=%s stage=%s error=%s", component, stage, type(error).__name__)
 
     async def reconcile(self):
+        self.guard.acquire()
         async with self.lock:
             self.monitor.begin()
             success = False
@@ -132,6 +143,30 @@ class Runtime:
                 self.errors.pop(component, None)
             except Exception as error:
                 self.report(component, "load", error)
+        from .services import dependency_errors
+        prospective = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
+        prospective.update(candidates)
+        failures = dependency_errors(prospective)
+        while failures and candidates:
+            rejected = set(failures) & candidates.keys()
+            for client in set(failures) - rejected:
+                rejected.update(item.component for item in prospective[client].spec.dependencies if item.component in candidates)
+            if not rejected:
+                break
+            for component in rejected:
+                candidate = candidates.pop(component)
+                await candidate.shutdown()
+                await self.event_hub.release(candidate.bus)
+                self.errors[component] = "load: service dependency incompatible"
+                if component in self.revisions:
+                    revisions[component] = self.revisions[component]
+                else:
+                    revisions.pop(component, None)
+            prospective = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
+            prospective.update(candidates)
+            failures = dependency_errors(prospective)
+        for component in failures:
+            self.errors[component] = "dependency: required contract unavailable"
         next_active = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
         next_active.update(candidates)
         revisions = {key: revisions[key] for key in next_active}
@@ -140,12 +175,14 @@ class Runtime:
         except Exception as error:
             self.sources_error = f"state persistence failed: {type(error).__name__}"
             for candidate in candidates.values():
-                await run_in_threadpool(candidate.close)
+                await candidate.shutdown()
                 await self.event_hub.release(candidate.bus)
             return False
         # No awaits between dispatcher replacement and marking old generations for retirement.
         old = self.active
         self.active, self.revisions = next_active, revisions
+        for generation in self.active.values():
+            generation.start()
         for key, generation in old.items():
             if next_active.get(key) is not generation:
                 task = asyncio.create_task(self.retire(generation))
@@ -157,11 +194,8 @@ class Runtime:
 
     def save(self, active, revisions):
         def specification(value):
-            document = value.spec.model_dump()
-            # Keep legacy checkpoints readable by older runtimes unless Redis is opted in.
-            if value.spec.realtime.backend == "memory":
-                document.pop("realtime")
-            return document
+            # Default-only additions must not make unchanged legacy checkpoints unreadable.
+            return value.spec.model_dump(exclude_defaults=True)
         state = {"version": 1, "components": {
             key: {"specification": specification(value), "revision": revisions[key]}
             for key, value in active.items()
@@ -185,7 +219,7 @@ class Runtime:
             while generation.active_requests or generation.sockets:
                 await asyncio.sleep(0.05)
         finally:
-            await run_in_threadpool(generation.close)
+            await generation.shutdown()
             await self.event_hub.release(generation.bus)
 
     def status(self):
@@ -200,9 +234,14 @@ class Runtime:
                 self.sources_error = f"poll failure: {type(error).__name__}"
 
     async def start(self):
-        await self.restore()
-        await self.reconcile()
-        self.poll_task = asyncio.create_task(self.poll())
+        self.guard.acquire()
+        try:
+            await self.restore()
+            await self.reconcile()
+            self.poll_task = asyncio.create_task(self.poll())
+        except BaseException:
+            await self.close()
+            raise
 
     async def close(self):
         if self.poll_task:
@@ -213,7 +252,8 @@ class Runtime:
             task.cancel()
         await asyncio.gather(*self.retiring, return_exceptions=True)
         for generation in self.active.values():
-            await run_in_threadpool(generation.close)
+            await generation.shutdown()
             await self.event_hub.release(generation.bus)
         await self.event_hub.close()
         await self.reader.close()
+        self.guard.close()

@@ -11,6 +11,7 @@ PAGE = (ASSETS.joinpath("panel.html").read_text(encoding="utf-8")
         .replace("/* PANEL_NAV */", ASSETS.joinpath("navigation.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_CREDENTIALS */", ASSETS.joinpath("credentials.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_FILES */", ASSETS.joinpath("files.js").read_text(encoding="utf-8"))
+        .replace("/* PANEL_OPS */", ASSETS.joinpath("operations.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_JS */", ASSETS.joinpath("panel.js").read_text(encoding="utf-8")))
 
 

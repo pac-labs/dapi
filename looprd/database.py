@@ -10,6 +10,12 @@ from sqlalchemy.orm import sessionmaker
 
 from .spec import Specification
 from .auth import KeyStore
+from .outbox import Outbox
+from .access_policy import AccessPolicies
+from .schema_contract import model_signature, validate_constraints
+from .queries import Queries
+from .limits import RowQuota
+from .jobs import Jobs
 
 SQL_TYPES = {
     "integer": sa.Integer, "float": sa.Float, "boolean": sa.Boolean,
@@ -27,23 +33,27 @@ class Storage:
         self.metadata = sa.MetaData()
         self.tables = {}
         self.inputs = {}
+        self.revisions = {resource.model: resource.revisionField for resource in spec.resources.values() if resource.revisionField}
         for name, model in spec.models.items():
             columns = []
             create_fields, update_fields = {}, {}
             for field_name, field in model.fields.items():
                 sql_type = sa.String(field.maxLength) if field.type == "string" else SQL_TYPES[field.type]()
                 columns.append(sa.Column(
-                    field_name, sql_type, primary_key=field.primaryKey,
+                    field_name, sql_type, *([sa.ForeignKey(field.references.model + "." + field.references.field, ondelete="RESTRICT")] if field.references else []), primary_key=field.primaryKey,
                     autoincrement=True if field.primaryKey else "auto",
                     nullable=not (field.required or field.primaryKey), unique=field.unique,
                 ))
-                if not field.generated:
+                if not field.generated and field_name != self.revisions.get(name):
                     py_type = PY_TYPES[field.type]
                     annotation = py_type if field.required else py_type | None
                     kwargs = {"max_length": field.maxLength} if field.type == "string" else {}
                     create_fields[field_name] = (annotation, Field(default=... if field.required else None, **kwargs))
                     update_fields[field_name] = (annotation, Field(default=None, **kwargs))
-            self.tables[name] = sa.Table(name, self.metadata, *columns)
+            self.tables[name] = sa.Table(name, self.metadata, *columns,
+                                        *(sa.UniqueConstraint(*fields) for fields in model.unique))
+            for index in model.indexes:
+                sa.Index(index.name, *(self.tables[name].c[field] for field in index.fields), unique=index.unique)
             config = ConfigDict(extra="forbid", strict=True)
             self.inputs[name] = (
                 create_model(f"{name}Create", __config__=config, **create_fields),
@@ -74,6 +84,11 @@ class Storage:
             self.engine = sa.create_engine(url.set(drivername="postgresql+psycopg"), pool_pre_ping=True)
         self.sessions = sessionmaker(bind=self.engine)
         self.keys = KeyStore(self) if spec.auth.mode == "database" else None
+        self.events = Outbox(self) if spec.realtime.delivery == "durable" else None
+        self.policies = AccessPolicies(self)
+        self.queries = Queries(self) if any(resource.query for resource in spec.resources.values()) else None
+        self.quota = RowQuota(self) if spec.limits.maxRows else None
+        self.jobs = Jobs(self) if spec.jobs else None
         self.identity = identity
 
     @staticmethod
@@ -83,7 +98,7 @@ class Storage:
 
     def initialize(self):
         fingerprint = hashlib.sha256(json.dumps(
-            {name: model.model_dump() for name, model in self.spec.models.items()}, sort_keys=True,
+            {name: model_signature(model) for name, model in self.spec.models.items()}, sort_keys=True,
         ).encode()).hexdigest()
         try:
             with self.engine.connect() as connection:
@@ -92,6 +107,8 @@ class Storage:
                     connection.exec_driver_sql("BEGIN IMMEDIATE")
                 else:
                     connection.begin()
+                    lock = int.from_bytes(hashlib.sha256(b"looprd-schema-initialization-v1").digest()[:8], "big", signed=True)
+                    connection.execute(sa.text("SELECT pg_advisory_xact_lock(:lock)"), {"lock": lock})
                 try:
                     self._initialize_transaction(connection, fingerprint)
                     connection.commit()
@@ -104,8 +121,24 @@ class Storage:
             raise
 
     def _initialize_transaction(self, connection, fingerprint):
+        owner = sa.Table("_looprd_owner_v1", sa.MetaData(), sa.Column("id", sa.Integer, primary_key=True),
+                         sa.Column("component", sa.String(48), nullable=False))
+        owner.create(connection, checkfirst=True)
+        previous_owner = connection.execute(sa.select(owner.c.component).where(owner.c.id == 1)).scalar()
+        if previous_owner is not None and previous_owner != self.spec.component:
+            raise ValueError("component database is already owned by another component")
+        if previous_owner is None:
+            connection.execute(owner.insert().values(id=1, component=self.spec.component))
+        if self.events:
+            self.events.initialize(connection)
+        if self.queries:
+            self.queries.initialize(connection)
+        if self.quota:
+            self.quota.initialize(connection)
+        if self.jobs:
+            self.jobs.initialize(connection)
         if self.keys:
-            self.keys.table.create(connection, checkfirst=True)
+            self.keys.initialize(connection)
         self.marker.create(connection, checkfirst=True)
         previous = connection.execute(sa.select(self.marker).where(self.marker.c.id == 1)).mappings().first()
         target = self.spec.database.schemaVersion
@@ -146,6 +179,7 @@ class Storage:
                 if column.unique and (column.name,) not in unique_columns:
                     raise ValueError("declared unique constraint is missing from database")
         values = {"version": target, "fingerprint": fingerprint, "backend": self.spec.database.backend}
+        validate_constraints(connection, self.spec)
         if previous:
             connection.execute(self.marker.update().where(self.marker.c.id == 1).values(**values))
         else:

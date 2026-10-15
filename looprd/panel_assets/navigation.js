@@ -1,6 +1,6 @@
 // Fixed workspace navigation with contained panels; no document scrolling.
 let currentView='overview',detailTab='summary',keyTab='list';
-const viewNames={overview:'Service overview',components:'Component inspection',access:'Access keys',files:'Temporary files',runtime:'Runtime & reloads',diagnostics:'Diagnostic snapshot'};
+const viewNames={overview:'Service overview',components:'Component inspection',access:'Access keys',files:'Temporary files',operations:'Operations',runtime:'Runtime & reloads',diagnostics:'Diagnostic snapshot'};
 function showView(view){
  currentView=view;
  document.querySelectorAll('[data-view]').forEach(n=>n.hidden=n.dataset.view!==view);
@@ -9,6 +9,7 @@ function showView(view){
  });
  text('page-title',viewNames[view]);
  if(view==='files'&&token)run(listFiles);
+ if(view==='operations'&&token)run(loadOperations);
 }
 function showDetailTab(tab){
  detailTab=tab;

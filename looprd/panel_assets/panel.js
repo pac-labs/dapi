@@ -13,7 +13,7 @@ function disconnect(){
  session++;token='';snapshot=null;selectedId='';el('token').value='';
  for(const id of ['controls','actions','logout'])el(id).hidden=true;
  el('token').hidden=false;el('connect').hidden=false;el('token').value=rememberedKey;
- for(const id of ['status','component-list','routes','models','keys','detail-facts','runtime-facts'])el(id).replaceChildren();
+ for(const id of ['status','component-list','routes','models','keys','detail-facts','runtime-facts','operations-content'])el(id).replaceChildren();
  el('component').replaceChildren();el('login-card').hidden=false;showView('overview');clearKey();badge(el('connection'),'Disconnected');
 }
 async function api(path,method='GET',body){
@@ -81,7 +81,7 @@ function renderDetail(){
  fact(facts,'Repository',source?.repository||'Local / remote specification');fact(facts,'Tracked ref',source?.ref||'—');
  fact(facts,'Active Git revision',item?.revision,true);fact(facts,'Loaded in this process',date(item?.loadedAt));
  fact(facts,'Database',item?.databaseBackend?item.databaseBackend+' · schema '+item.schemaVersion:'None');
- fact(facts,'Event transport',item?.realtime?item.realtime.backend+' · '+item.realtime.state+' · best effort'+(item.realtime.backend==='redis'?' · '+item.realtime.droppedRemoteEvents+' dropped remote events':''):'Memory · best effort');
+ fact(facts,'Event transport',item?.realtime?item.realtime.backend+' · '+item.realtime.state+' · '+(item.realtime.delivery||'best-effort')+(item.realtime.backend==='redis'?' · '+item.realtime.droppedRemoteEvents+' dropped remote events':''):'Memory · best effort');
  fact(facts,'Live traffic',item?item.activeRequests+' HTTP / auth in flight · '+item.websocketConnections+' sockets':'Not serving');
  text('detail-endpoint',item?location.origin+item.prefix:'No active component URL');el('copy-endpoint').disabled=!item;
  el('routes').replaceChildren();el('socket-note').hidden=!item?.websocket;
@@ -156,5 +156,6 @@ setInterval(()=>{if(token&&el('auto').checked&&!document.hidden)run(async()=>{aw
 window.addEventListener('pagehide',disconnect);
 
 initNavigation();
+el('refresh-operations').onclick=()=>run(loadOperations);
 initFiles();
 initCredentials();

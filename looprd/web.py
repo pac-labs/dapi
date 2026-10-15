@@ -5,10 +5,13 @@ import json
 from contextlib import suppress
 
 from starlette.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 from starlette.websockets import WebSocketDisconnect
 
 from .openapi import document
 from .admin import authorized as admin_authorized
+from .replay import replay, start_cursor, catch_up
+from .outbox import EventError
 
 
 def find_generation(runtime, scope):
@@ -45,6 +48,15 @@ async def health(request):
     return JSONResponse({"status": "ok", "service": "looprd"})
 
 
+async def capabilities(request):
+    denied = admin_access(request)
+    if denied is not None:
+        return denied
+    from .capabilities import CAPABILITIES
+    return JSONResponse({"apiVersion": "looprd/v1", "capabilities": sorted(CAPABILITIES)},
+                        headers={"Cache-Control": "no-store"})
+
+
 async def dispatch(request):
     runtime = request.app.state.runtime
     if request.path_params["component"] in runtime.availability.blocked:
@@ -53,16 +65,27 @@ async def dispatch(request):
     generation = find_generation(runtime, request.scope)
     if not generation:
         return JSONResponse({"error": "component not found"}, status_code=404)
+    if generation.spec.limits.maxInFlight and generation.http_inflight >= generation.spec.limits.maxInFlight:
+        return JSONResponse({"error": "component concurrency limit reached"}, status_code=429, headers={"Retry-After": "1"})
+    generation.http_inflight += 1
     generation.active_requests += 1
     try:
         async with asyncio.timeout(runtime.settings.request_seconds):
+            peer = request.client.host if request.client else "unknown"
+            await generation.limiter.check(peer, authentication=True)
             principal = await generation.authenticate(request.headers.get("authorization"))
             if principal is None:
                 return JSONResponse({"error": "unauthorized"}, status_code=401)
             request.state.principal = principal
+            await generation.limiter.check(peer if generation.spec.auth.mode == "public" else principal.id)
             path = "/" + request.path_params.get("path", "").strip("/")
             if path == "/openapi.json" and request.method == "GET":
                 return JSONResponse(document(generation))
+            if path.startswith("/_events/") and request.method == "GET":
+                return await replay(request, generation, path.removeprefix("/_events/"))
+            if path == "/_services" and request.method == "GET" and generation.spec.dependencies:
+                from .services import discover
+                return JSONResponse({"services": discover(runtime, generation)}, headers={"Cache-Control": "no-store"})
             if path == "/_ws-ticket" and request.method == "POST" and generation.spec.websocket:
                 ws = generation.spec.websocket
                 if not any(generation.permits(principal, ws.permissions.get(r, [])) for r in ws.resources):
@@ -80,13 +103,20 @@ async def dispatch(request):
                     body = json.loads(b"".join(chunks))
                 except (ValueError, UnicodeError):
                     return JSONResponse({"error": "invalid JSON"}, status_code=400)
+            if path.startswith("/_jobs/"):
+                from .job_routes import request_job
+                return await request_job(request, generation, path, body)
             return await generation.handle(request, path, body)
     except TimeoutError:
         return JSONResponse({"error": "request deadline exceeded"}, status_code=504)
+    except EventError as error:
+        return JSONResponse({"error": error.message}, status_code=error.status,
+                            headers={"Retry-After": "60"} if error.status == 429 else {})
     except Exception as error:
         runtime.report(generation.spec.component, "request", error)
         return JSONResponse({"error": "component request failed"}, status_code=500)
     finally:
+        generation.http_inflight -= 1
         generation.active_requests -= 1
 
 
@@ -123,6 +153,10 @@ async def websocket(socket):
         await socket.close(code=1008)
         return
     await socket.accept()
+    limit = generation.spec.limits.maxWebSockets
+    if limit and sum(owner == component for owner in runtime.sockets.values()) >= limit:
+        await socket.close(code=1013)
+        return
     generation.sockets.add(socket)
     runtime.sockets[socket] = component
     subscriber = generation.bus.subscribe()
@@ -133,6 +167,14 @@ async def websocket(socket):
             await subscriptions(socket, generation, subscriber, principal)
     except (WebSocketDisconnect, RuntimeError, OSError):
         pass
+    except EventError:
+        await socket.close(code=1013)
+    except Exception as error:
+        runtime.report(component, "websocket", error)
+        try:
+            await socket.close(code=1011)
+        except (RuntimeError, OSError):
+            pass
     finally:
         generation.bus.subscribers.discard(subscriber)
         generation.sockets.discard(socket)
@@ -157,6 +199,7 @@ async def subscriptions(socket, generation, subscriber, principal):
                 await socket.close(code=1008)
                 return
             if receive in done:
+                await generation.limiter.check("ws:" + principal.id)
                 content = receive.result()
                 if len(content.encode()) > generation.settings.max_body_bytes:
                     await socket.close(code=1009)
@@ -170,8 +213,11 @@ async def subscriptions(socket, generation, subscriber, principal):
                     await socket.send_json({"error": "invalid subscription"})
                 else:
                     if generation.permits(principal, generation.spec.websocket.permissions.get(resource, [])):
-                        subscriber.resources.add(resource)
-                        await socket.send_json({"subscribed": resource})
+                        if generation.storage and generation.storage.events:
+                            await start_cursor(socket, generation, subscriber, principal, resource, message)
+                        else:
+                            subscriber.resources.add(resource)
+                            await socket.send_json({"subscribed": resource})
                     else:
                         await socket.send_json({"error": "insufficient scope"})
                 receive = asyncio.create_task(socket.receive_text())
@@ -180,9 +226,14 @@ async def subscriptions(socket, generation, subscriber, principal):
                 if subscriber.overflow:
                     await socket.close(code=1013)
                     return
-                if generation.permits(principal, generation.spec.websocket.permissions.get(value["resource"], [])):
-                    await socket.send_json(value)
+                if (not subscriber.cursors or "eventId" not in value) and generation.permits(principal, generation.spec.websocket.permissions.get(value["resource"], [])):
+                    allowed_event = not generation.storage or await run_in_threadpool(
+                        generation.storage.policies.event, value["resource"], principal, value.get("_looprd_record", value.get("data")))
+                    if allowed_event:
+                        await socket.send_json({key: data for key, data in value.items() if key != "_looprd_record"})
                 event = asyncio.create_task(subscriber.queue.get())
+            if subscriber.cursors and not await catch_up(socket, generation, subscriber, principal):
+                return
     finally:
         receive.cancel()
         event.cancel()

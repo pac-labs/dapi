@@ -1,0 +1,85 @@
+apiVersion: looprd/v1
+component: records
+release: '1.0'
+api:
+  version: v1
+auth:
+  mode: database
+  scopes:
+  - records:read
+  - records:write
+database:
+  backend: sqlite
+requires:
+- events.replay
+- authorization.owner
+- query.keyset
+- http.revisions
+models:
+  Record:
+    fields:
+      id:
+        type: integer
+        primaryKey: true
+        generated: true
+      owner:
+        type: string
+        maxLength: 64
+        required: true
+      name:
+        type: string
+        maxLength: 100
+        required: true
+      revision:
+        type: integer
+        required: true
+    indexes:
+    - name: record_owner
+      fields:
+      - owner
+    unique:
+    - - owner
+      - name
+resources:
+  records:
+    model: Record
+    path: /records
+    operations:
+    - list
+    - get
+    - create
+    - update
+    - delete
+    permissions:
+      list:
+      - records:read
+      get:
+      - records:read
+      create:
+      - records:write
+      update:
+      - records:write
+      delete:
+      - records:write
+    policy:
+      ownerField: owner
+    revisionField: revision
+    query:
+      filters:
+        name:
+        - eq
+        - prefix
+      sort:
+      - id
+      - name
+websocket:
+  resources:
+  - records
+  permissions:
+    records:
+    - records:read
+realtime:
+  delivery: durable
+limits:
+  requestsPerMinute: 120
+  maxRows: 10000

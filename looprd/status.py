@@ -70,7 +70,8 @@ def snapshot(runtime):
                               for field, column in model.fields.items()}
                        for name, model in spec.models.items()},
             "websocket": spec.websocket.model_dump() if spec.websocket else None,
-            "realtime": value.bus.status(),
+            "realtime": {**value.bus.status(), "delivery": spec.realtime.delivery, "relayError": value.relay_error},
+            "verificationError": value.verifier.error if value.verifier else None,
         }
     return {
         "sourcesError": runtime.sources_error, "components": components,

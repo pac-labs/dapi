@@ -15,6 +15,37 @@
       "title": "API",
       "type": "object"
     },
+    "AccessPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "ownerField": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ownerfield"
+        },
+        "membership": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Membership"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "AccessPolicy",
+      "type": "object"
+    },
     "Auth": {
       "additionalProperties": false,
       "properties": {
@@ -22,7 +53,8 @@
           "enum": [
             "public",
             "bearer",
-            "database"
+            "database",
+            "verified"
           ],
           "title": "Mode",
           "type": "string"
@@ -46,6 +78,30 @@
           },
           "title": "Scopes",
           "type": "array"
+        },
+        "verifier": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Verifier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "realm": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9-]{0,47}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Realm"
         }
       },
       "required": [
@@ -102,6 +158,17 @@
           ],
           "default": null,
           "title": "Maxlength"
+        },
+        "references": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Reference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -149,6 +216,41 @@
         }
       },
       "title": "Database",
+      "type": "object"
+    },
+    "Dependency": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Component",
+          "type": "string"
+        },
+        "contract": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Contract",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 100000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "credentialSecret": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Credentialsecret",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "contract",
+        "version",
+        "credentialSecret"
+      ],
+      "title": "Dependency",
       "type": "object"
     },
     "Handler": {
@@ -210,12 +312,312 @@
           },
           "title": "Scopes",
           "type": "array"
+        },
+        "contract": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ServiceContract"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "execution": {
+          "default": "inline",
+          "enum": [
+            "inline",
+            "process"
+          ],
+          "title": "Execution",
+          "type": "string"
+        },
+        "timeoutSeconds": {
+          "anyOf": [
+            {
+              "maximum": 60,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeoutseconds"
+        },
+        "secrets": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Secrets",
+          "type": "array"
         }
       },
       "required": [
         "path"
       ],
       "title": "Handler",
+      "type": "object"
+    },
+    "Index": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 63,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "unique": {
+          "default": false,
+          "title": "Unique",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "Index",
+      "type": "object"
+    },
+    "Job": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "maxLength": 500000,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "execution": {
+          "default": "process",
+          "enum": [
+            "inline",
+            "process"
+          ],
+          "title": "Execution",
+          "type": "string"
+        },
+        "intervalSeconds": {
+          "anyOf": [
+            {
+              "maximum": 31536000,
+              "minimum": 60,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intervalseconds"
+        },
+        "timeoutSeconds": {
+          "default": 30,
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Timeoutseconds",
+          "type": "integer"
+        },
+        "maxAttempts": {
+          "default": 3,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Maxattempts",
+          "type": "integer"
+        },
+        "retrySeconds": {
+          "default": 30,
+          "maximum": 3600,
+          "minimum": 1,
+          "title": "Retryseconds",
+          "type": "integer"
+        },
+        "expose": {
+          "default": false,
+          "title": "Expose",
+          "type": "boolean"
+        },
+        "scopes": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Scopes",
+          "type": "array"
+        },
+        "secrets": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Secrets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Job",
+      "type": "object"
+    },
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "default": "memory",
+          "enum": [
+            "memory",
+            "redis"
+          ],
+          "title": "Backend",
+          "type": "string"
+        },
+        "connectionSecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connectionsecret"
+        },
+        "requestsPerMinute": {
+          "anyOf": [
+            {
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requestsperminute"
+        },
+        "authAttemptsPerMinute": {
+          "anyOf": [
+            {
+              "maximum": 1000000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authattemptsperminute"
+        },
+        "burstPerSecond": {
+          "anyOf": [
+            {
+              "maximum": 100000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Burstpersecond"
+        },
+        "maxInFlight": {
+          "anyOf": [
+            {
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxinflight"
+        },
+        "maxRows": {
+          "anyOf": [
+            {
+              "maximum": 10000000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxrows"
+        },
+        "maxWebSockets": {
+          "anyOf": [
+            {
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxwebsockets"
+        }
+      },
+      "title": "Limits",
+      "type": "object"
+    },
+    "Membership": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Model",
+          "type": "string"
+        },
+        "subjectField": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Subjectfield",
+          "type": "string"
+        },
+        "membershipField": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Membershipfield",
+          "type": "string"
+        },
+        "recordField": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Recordfield",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "subjectField",
+        "membershipField",
+        "recordField"
+      ],
+      "title": "Membership",
       "type": "object"
     },
     "Migration": {
@@ -254,12 +656,70 @@
           },
           "title": "Fields",
           "type": "object"
+        },
+        "indexes": {
+          "items": {
+            "$ref": "#/$defs/Index"
+          },
+          "maxItems": 32,
+          "title": "Indexes",
+          "type": "array"
+        },
+        "unique": {
+          "items": {
+            "items": {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": 32,
+          "title": "Unique",
+          "type": "array"
         }
       },
       "required": [
         "fields"
       ],
       "title": "Model",
+      "type": "object"
+    },
+    "Query": {
+      "additionalProperties": false,
+      "properties": {
+        "filters": {
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]{0,63}$": {
+              "items": {
+                "enum": [
+                  "eq",
+                  "ne",
+                  "lt",
+                  "le",
+                  "gt",
+                  "ge",
+                  "in",
+                  "prefix"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "title": "Filters",
+          "type": "object"
+        },
+        "sort": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 16,
+          "title": "Sort",
+          "type": "array"
+        }
+      },
+      "title": "Query",
       "type": "object"
     },
     "Realtime": {
@@ -275,8 +735,11 @@
           "type": "string"
         },
         "delivery": {
-          "const": "best-effort",
           "default": "best-effort",
+          "enum": [
+            "best-effort",
+            "durable"
+          ],
           "title": "Delivery",
           "type": "string"
         },
@@ -291,9 +754,58 @@
           ],
           "default": null,
           "title": "Connectionsecret"
+        },
+        "retentionSeconds": {
+          "default": 86400,
+          "maximum": 604800,
+          "minimum": 60,
+          "title": "Retentionseconds",
+          "type": "integer"
+        },
+        "maxEvents": {
+          "default": 100000,
+          "maximum": 1000000,
+          "minimum": 100,
+          "title": "Maxevents",
+          "type": "integer"
+        },
+        "maxEventBytes": {
+          "default": 65536,
+          "maximum": 1047000,
+          "minimum": 1024,
+          "title": "Maxeventbytes",
+          "type": "integer"
+        },
+        "maxReplayBytes": {
+          "default": 1048576,
+          "maximum": 8388608,
+          "minimum": 1048576,
+          "title": "Maxreplaybytes",
+          "type": "integer"
         }
       },
       "title": "Realtime",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Model",
+          "type": "string"
+        },
+        "field": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "field"
+      ],
+      "title": "Reference",
       "type": "object"
     },
     "Resource": {
@@ -334,6 +846,59 @@
           },
           "title": "Permissions",
           "type": "object"
+        },
+        "policy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AccessPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "query": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Query"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projection": {
+          "anyOf": [
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+                "type": "string"
+              },
+              "maxItems": 64,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection"
+        },
+        "revisionField": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revisionfield"
         }
       },
       "required": [
@@ -342,6 +907,74 @@
         "operations"
       ],
       "title": "Resource",
+      "type": "object"
+    },
+    "ServiceContract": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 100000,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        },
+        "request": {
+          "additionalProperties": true,
+          "title": "Request",
+          "type": "object"
+        },
+        "response": {
+          "additionalProperties": true,
+          "title": "Response",
+          "type": "object"
+        },
+        "serviceOnly": {
+          "default": true,
+          "title": "Serviceonly",
+          "type": "boolean"
+        },
+        "allowedCallers": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9-]{0,47}$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Allowedcallers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ServiceContract",
+      "type": "object"
+    },
+    "Verifier": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "python",
+          "default": "python",
+          "title": "Kind",
+          "type": "string"
+        },
+        "source": {
+          "maxLength": 500000,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Verifier",
       "type": "object"
     },
     "WebSocket": {
@@ -456,6 +1089,36 @@
     },
     "realtime": {
       "$ref": "#/$defs/Realtime"
+    },
+    "requires": {
+      "items": {
+        "pattern": "^[a-z][a-z0-9.:-]{0,95}$",
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Requires",
+      "type": "array"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/Dependency"
+      },
+      "maxItems": 64,
+      "title": "Dependencies",
+      "type": "array"
+    },
+    "limits": {
+      "$ref": "#/$defs/Limits"
+    },
+    "jobs": {
+      "maxProperties": 64,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]{0,47}$": {
+          "$ref": "#/$defs/Job"
+        }
+      },
+      "title": "Jobs",
+      "type": "object"
     }
   },
   "required": [

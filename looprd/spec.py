@@ -6,20 +6,21 @@ from typing import Any, Annotated, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-Name = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]{0,47}$")]
-Symbol = Annotated[str, StringConstraints(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,63}$")]
-PathName = Annotated[str, StringConstraints(pattern=r"^/(?:[a-zA-Z0-9_-]+/?)*$")]
-Scope = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9:._-]{0,95}$")]
+from .contract import Name, Symbol, PathName, Scope, Strict
+from .platform_spec import Reference, Index, Query, ServiceContract, Dependency, Limits, Job
 
 
-class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class Verifier(Strict):
+    kind: Literal["python"] = "python"
+    source: str = Field(min_length=1, max_length=500000)
 
 
 class Auth(Strict):
-    mode: Literal["public", "bearer", "database"]
+    mode: Literal["public", "bearer", "database", "verified"]
     secretRef: str | None = None
     scopes: list[Scope] = Field(default_factory=list)
+    verifier: Verifier | None = None
+    realm: Name | None = None
 
     @model_validator(mode="after")
     def bearer_secret(self):
@@ -27,8 +28,12 @@ class Auth(Strict):
             raise ValueError("only bearer requires secretRef")
         if len(self.scopes) != len(set(self.scopes)):
             raise ValueError("duplicate auth scopes")
-        if (self.mode == "database") != bool(self.scopes):
-            raise ValueError("only database mode requires declared scopes")
+        if (self.mode in ("database", "verified")) != bool(self.scopes):
+            raise ValueError("database and verified modes require declared scopes")
+        if (self.mode == "verified") != bool(self.verifier):
+            raise ValueError("only verified mode requires a verifier")
+        if self.realm is not None and self.mode != "verified":
+            raise ValueError("realm applies only to verified authentication")
         return self
 
 
@@ -43,6 +48,7 @@ class Column(Strict):
     generated: bool = False
     unique: bool = False
     maxLength: int | None = Field(default=None, gt=0, le=65536)
+    references: Reference | None = None
 
     @model_validator(mode="after")
     def constraints(self):
@@ -59,6 +65,8 @@ class Column(Strict):
 
 class Model(Strict):
     fields: dict[Symbol, Column] = Field(min_length=1)
+    indexes: list[Index] = Field(default_factory=list, max_length=32)
+    unique: list[list[Symbol]] = Field(default_factory=list, max_length=32)
 
     @model_validator(mode="after")
     def primary_key(self):
@@ -99,11 +107,33 @@ class Database(Strict):
         return self
 
 
+class Membership(Strict):
+    model: Symbol
+    subjectField: Symbol
+    membershipField: Symbol
+    recordField: Symbol
+
+
+class AccessPolicy(Strict):
+    ownerField: Symbol | None = None
+    membership: Membership | None = None
+
+    @model_validator(mode="after")
+    def nonempty(self):
+        if not self.ownerField and not self.membership:
+            raise ValueError("access policy must declare ownership or membership")
+        return self
+
+
 class Resource(Strict):
     model: Symbol
     path: PathName
     operations: list[Literal["list", "get", "create", "update", "delete"]] = Field(min_length=1)
     permissions: dict[str, list[Scope]] = Field(default_factory=dict)
+    policy: AccessPolicy | None = None
+    query: Query | None = None
+    projection: list[Symbol] | None = Field(default=None, min_length=1, max_length=64)
+    revisionField: Symbol | None = None
 
 
 class WebSocket(Strict):
@@ -120,18 +150,28 @@ class Handler(Strict):
     status: int = Field(default=200, ge=200, le=599)
     source: str | None = None
     scopes: list[Scope] = Field(default_factory=list)
+    contract: ServiceContract | None = None
+    execution: Literal["inline", "process"] = "inline"
+    timeoutSeconds: int | None = Field(default=None, ge=1, le=60)
+    secrets: list[str] = Field(default_factory=list, max_length=16)
 
     @model_validator(mode="after")
     def code(self):
         if (self.kind == "python") != bool(self.source):
             raise ValueError("python handlers require inline source; response handlers cannot use source")
+        if self.kind != "python" and (self.execution != "inline" or self.timeoutSeconds or self.secrets):
+            raise ValueError("execution options apply only to Python handlers")
         return self
 
 
 class Realtime(Strict):
     backend: Literal["memory", "redis"] = "memory"
-    delivery: Literal["best-effort"] = "best-effort"
+    delivery: Literal["best-effort", "durable"] = "best-effort"
     connectionSecret: str | None = None
+    retentionSeconds: int = Field(default=86400, ge=60, le=604800)
+    maxEvents: int = Field(default=100000, ge=100, le=1000000)
+    maxEventBytes: int = Field(default=65536, ge=1024, le=1047000)
+    maxReplayBytes: int = Field(default=1048576, ge=1048576, le=8388608)
 
     @model_validator(mode="after")
     def connection(self):
@@ -152,16 +192,54 @@ class Specification(Strict):
     websocket: WebSocket | None = None
     handlers: list[Handler] = Field(default_factory=list)
     realtime: Realtime = Field(default_factory=Realtime)
+    requires: list[Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9.:-]{0,95}$")]] = Field(default_factory=list, max_length=64)
+    dependencies: list[Dependency] = Field(default_factory=list, max_length=64)
+    limits: Limits = Field(default_factory=Limits)
+    jobs: dict[Name, Job] = Field(default_factory=dict, max_length=64)
 
     @model_validator(mode="after")
     def references(self):
+        from .spec_data_checks import data_contracts
+        data_contracts(self)
+        from .capabilities import require_capabilities
+        require_capabilities(self.requires)
+        if self.jobs and not self.database:
+            raise ValueError("jobs require a component database")
+        for job in self.jobs.values():
+            if job.expose and self.auth.mode in ("database", "verified"):
+                if not job.scopes or not set(job.scopes) <= set(self.auth.scopes):
+                    raise ValueError("exposed jobs require declared scopes in scoped authentication modes")
+            elif job.scopes:
+                raise ValueError("job scopes apply only to exposed jobs with scoped authentication")
+        if len(self.requires) != len(set(self.requires)):
+            raise ValueError("duplicate required capabilities")
+        if self.realtime.delivery == "durable" and (not self.database or not self.websocket):
+            raise ValueError("durable events require database and WebSocket resources")
         self.check_permissions()
         if (self.models or self.resources) and not self.database:
             raise ValueError("models/resources require database")
-        occupied = {"/_ws-ticket", "/openapi.json"}
+        occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_services", "/_jobs"}
         for resource in self.resources.values():
             if resource.model not in self.models:
                 raise ValueError("unknown resource model")
+            if resource.policy:
+                if self.auth.mode not in ("database", "verified"):
+                    raise ValueError("private policies require individual verified or database principals")
+                fields = self.models[resource.model].fields
+                owner = resource.policy.ownerField
+                if owner and (owner not in fields or fields[owner].type != "string" or fields[owner].maxLength < 64):
+                    raise ValueError("owner field must be a string accommodating the stable principal ID")
+                membership = resource.policy.membership
+                if membership:
+                    related = self.models.get(membership.model)
+                    if (not related or membership.subjectField not in related.fields
+                            or membership.membershipField not in related.fields or membership.recordField not in fields):
+                        raise ValueError("membership policy references unknown fields")
+                    subject = related.fields[membership.subjectField]
+                    if subject.type != "string" or subject.maxLength < 64:
+                        raise ValueError("membership subject field must accommodate the stable principal ID")
+                    if related.fields[membership.membershipField].type != fields[membership.recordField].type:
+                        raise ValueError("membership key types must match")
             if resource.path == "/":
                 raise ValueError("resource collections require a named path")
             if len(resource.operations) != len(set(resource.operations)):
@@ -186,23 +264,23 @@ class Specification(Strict):
         return self
 
     def check_permissions(self):
-        database_auth = self.auth.mode == "database"
-        if database_auth and not self.database:
+        database_auth = self.auth.mode in ("database", "verified")
+        if self.auth.mode == "database" and not self.database:
             raise ValueError("database authentication requires database")
         requirements = []
         for resource in self.resources.values():
             expected = set(resource.operations) if database_auth else set()
             if set(resource.permissions) != expected:
-                raise ValueError("permissions must cover exactly the exposed operations in database mode")
+                raise ValueError("permissions must cover exactly the exposed operations in scoped authentication modes")
             requirements.extend(resource.permissions.values())
         if self.websocket:
             expected = set(self.websocket.resources) if database_auth else set()
             if set(self.websocket.permissions) != expected:
-                raise ValueError("WebSocket permissions must cover exactly its resources in database mode")
+                raise ValueError("WebSocket permissions must cover exactly its resources in scoped authentication modes")
             requirements.extend(self.websocket.permissions.values())
         for handler in self.handlers:
             if bool(handler.scopes) != database_auth:
-                raise ValueError("only database handlers require scopes")
+                raise ValueError("database and verified handlers require scopes")
             if handler.scopes:
                 requirements.append(handler.scopes)
         for scopes in requirements:

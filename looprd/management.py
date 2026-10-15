@@ -6,7 +6,7 @@ from pydantic import Field, ValidationError
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse, Response
 
-from .spec import Scope, Strict
+from .spec import Scope, Strict, Name
 from .web import admin_access
 
 
@@ -14,6 +14,7 @@ class CreateKey(Strict):
     label: str = Field(min_length=1, max_length=100)
     scopes: list[Scope] = Field(min_length=1)
     expiresInSeconds: int | None = Field(default=2592000, ge=1, le=31536000, strict=True)
+    service: Name | None = None
 
 
 async def keys(request):
@@ -47,7 +48,7 @@ async def keys(request):
                 return JSONResponse({"error": "invalid key request"}, status_code=422)
             if len(set(payload.scopes)) != len(payload.scopes) or not set(payload.scopes) <= set(generation.spec.auth.scopes):
                 return JSONResponse({"error": "scopes must be unique and declared by the component"}, status_code=422)
-            result = await run_in_threadpool(store.create, payload.label, payload.scopes, payload.expiresInSeconds)
+            result = await run_in_threadpool(store.create, payload.label, payload.scopes, payload.expiresInSeconds, payload.service)
             return JSONResponse(result, status_code=201, headers={"Cache-Control": "no-store"})
     except TimeoutError:
         return JSONResponse({"error": "request deadline exceeded"}, status_code=504)

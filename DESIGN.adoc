@@ -333,3 +333,47 @@ Optional companion Quadlets create an isolated Redis network and memory-bounded 
 an operator-mounted ACL file, no published ports and no persistent application data. An optional
 Looprd drop-in attaches to that network and orders Redis startup. Existing installations retain
 their current containers/networks unless explicitly opting in. Durable business data stays in SQL.
+
+== Generic platform passes
+
+The accepted four-pass sequence and compatibility boundaries are recorded in
+ docs/platform-passes.md. Looprd provides storage, authenticated access, authorization,
+transactions, events and reusable infrastructure; application behavior remains in components.
+Authentication extensions must be optional and provider-independent. Public, bearer and
+database modes remain supported. Applications own accounts, credentials, recovery and device
+sessions. Additional verifiers establish a generic principal only through trusted server-side
+verification, never by accepting a client-supplied user ID. No OIDC provider is required;
+OIDC is a possible future adapter, not a prerequisite or an implemented capability.
+
+Pass 1 adds opt-in SQL-backed durable events and capability requirements. Atomic event writes
+are guaranteed for native CRUD and the supplied transaction-bound emitter, not arbitrary trusted
+code using its own transactions or legacy publish. Commit ordering is serialized through a SQL
+clock row; sequences/cursors remain stable across restart. SQL replay and polling recover from
+lost best-effort Redis notifications. Retention gaps are explicit, history/capacity and response
+pages are bounded, and replay uses the same resource authorization as WebSocket subscriptions.
+Default descriptors, event payloads and in-memory behavior stay unchanged. Runtime-owned event
+tables are versioned separately and retained when durability is disabled or a component removed.
+Unsupported required capabilities reject candidates before activation and preserve working ones.
+
+
+Pass 2 uses trusted optional Python verifiers and an identity contract scoped by explicit realm.
+Owner/membership policies guard native CRUD and event/replay delivery; custom SQL remains trusted
+application code responsible for domain checks. Current memberships and session validity are
+rechecked during subscription delivery. Application account/session ownership stays outside core.
+
+Pass 3 adds declared structural constraints, bounded scalar filters/keyset cursors, read-only
+projections and compare-and-swap revisions. Explicit additive migrations remain mandatory for
+model changes; unchanged legacy fingerprints stay stable. Local service calls use declared,
+versioned JSON contracts and caller-bound machine credentials through normal HTTP authorization.
+They provide neither user impersonation nor cross-component/distributed transactions.
+
+Pass 4 adds optional bounded memory/Redis rate counters, local in-flight/socket caps and serialized
+native SQL row quotas. SQL jobs have persistent schedules, bounded queues, leases, at-least-once
+retry and stale-completion checks. Applications own job idempotency. Runtime directory ownership
+is OS-locked; schema initialization is SQL-locked and component-owned. These protections do not
+remove the one-worker constraint for tickets, uploads, checkpoints and operator blocks.
+Optional bounded process execution is a fault-control boundary for trusted pure-JSON handlers,
+not a security sandbox. Inline execution remains cooperative and trusted. Historical local
+metrics/audit are bounded best-effort metadata, omit payloads and credentials, and are exposed
+only through authenticated management. Operational guarantees and rollback limits are specified
+in docs/platform-reference.md; production components opt in independently.

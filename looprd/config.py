@@ -23,10 +23,17 @@ class Settings:
     file_max_bytes: int = 100 * 1024 * 1024
     file_quota_bytes: int = 1024 * 1024 * 1024
     event_namespace: str = "looprd"
+    trusted_components: tuple[str, ...] | None = None
+    worker_memory_mb: int = 256
+    worker_concurrency: int = 2
 
     def __post_init__(self):
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", self.event_namespace):
             raise ValueError("event namespace must contain 1-64 letters, digits, underscores or hyphens")
+        if not 64 <= self.worker_memory_mb <= 2048:
+            raise ValueError("worker memory limit must be between 64 and 2048 MiB")
+        if not 1 <= self.worker_concurrency <= 16:
+            raise ValueError("worker concurrency must be between 1 and 16")
 
     @classmethod
     def from_env(cls):
@@ -43,6 +50,9 @@ class Settings:
             file_max_bytes=max(1, int(os.getenv("LOOPRD_FILE_MAX_BYTES", str(cls.file_max_bytes)))),
             file_quota_bytes=max(1, int(os.getenv("LOOPRD_FILE_QUOTA_BYTES", str(cls.file_quota_bytes)))),
             event_namespace=os.getenv("LOOPRD_EVENT_NAMESPACE", "looprd"),
+            trusted_components=tuple(value.strip() for value in os.environ["LOOPRD_TRUSTED_COMPONENTS"].split(",") if value.strip()) if "LOOPRD_TRUSTED_COMPONENTS" in os.environ else None,
+            worker_memory_mb=int(os.getenv("LOOPRD_WORKER_MEMORY_MB", "256")),
+            worker_concurrency=int(os.getenv("LOOPRD_WORKER_CONCURRENCY", "2")),
         )
 
     def secret(self, reference: str) -> str:

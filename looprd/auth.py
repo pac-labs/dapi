@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import secrets
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import sqlalchemy as sa
 
@@ -14,6 +14,13 @@ class Principal:
     id: str
     label: str
     scopes: frozenset[str]
+    kind: str = "api-key"
+    realm: str | None = None
+    subject: str | None = None
+    session_id: str | None = None
+    expires_at: float | None = None
+    credential: str | None = field(default=None, repr=False, compare=False)
+    key_id: str | None = field(default=None, repr=False)
 
     def permits(self, required):
         return set(required) <= self.scopes
@@ -31,19 +38,25 @@ class KeyStore:
             sa.Column("createdAt", sa.Float, nullable=False),
             sa.Column("expiresAt", sa.Float),
             sa.Column("revokedAt", sa.Float),
+            sa.Column("service", sa.String(48)),
         )
 
     @staticmethod
     def metadata(row):
         return {key: value for key, value in row.items() if key != "digest"}
 
-    def create(self, label, scopes, expires_in):
+    def initialize(self, connection):
+        self.table.create(connection, checkfirst=True)
+        if "service" not in {column["name"] for column in sa.inspect(connection).get_columns(self.table.name)}:
+            connection.exec_driver_sql('ALTER TABLE "_looprd_api_keys" ADD COLUMN service VARCHAR(48)')
+
+    def create(self, label, scopes, expires_in, service=None):
         now = time.time()
         key_id = secrets.token_hex(16)
         token = f"lrk_{key_id}.{secrets.token_urlsafe(32)}"
         row = dict(id=key_id, label=label, scopes=scopes, createdAt=now,
                    expiresAt=now + expires_in if expires_in is not None else None, revokedAt=None,
-                   digest=hashlib.sha256(token.encode()).hexdigest())
+                   digest=hashlib.sha256(token.encode()).hexdigest(), service=service)
         with self.storage.sessions.begin() as session:
             session.execute(self.table.insert().values(**row))
         return {**self.metadata(row), "apiKey": token}
@@ -72,7 +85,11 @@ class KeyStore:
             return None
         if digest is not None and not hmac.compare_digest(row["digest"], digest):
             return None
-        return Principal(row["id"], row["label"], frozenset(row["scopes"]))
+        service = row["service"]
+        identity = hashlib.sha256(("component-services\0" + service).encode()).hexdigest() if service else row["id"]
+        return Principal(identity, row["label"], frozenset(row["scopes"]),
+                         kind="service" if service else "api-key", realm="component-services" if service else None,
+                         subject=service, key_id=row["id"])
 
     def authenticate(self, authorization):
         prefix = "Bearer lrk_"

@@ -99,3 +99,10 @@ The workflow tests and builds `linux/amd64` and `linux/arm64` images, publishing
 `ghcr.io/pac-labs/dapi` on main/master pushes, version tags, and manual runs in that repository.
 Looprd's status/reconciliation API is ready for a ZipRunner companion integration;
 this repository does not modify ZipRunner's UI or project configuration format.
+
+## Optional generic platform features
+
+See the [platform reference](docs/platform-reference.md) for verified principals,
+private record policies, data/query/service contracts, limits, jobs and operations;
+and [durable events](docs/durable-events.md) for replay. No external identity
+provider is required. Application accounts and domain behavior stay in components.

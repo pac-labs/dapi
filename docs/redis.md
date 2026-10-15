@@ -118,3 +118,18 @@ remove a randomly named ACL user. Never point them at a production Redis instanc
 
 References: [Redis Pub/Sub semantics and scoping](https://redis.io/docs/latest/develop/pubsub/),
 [redis-py async connections](https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html).
+
+## Optional shared rate counters
+
+Pub/Sub permissions above remain sufficient for events. Components opting into
+`limits.backend: redis` additionally need only their namespace's limit keys and
+counter transaction commands. Append to the mounted ACL user locally:
+
+```text
+~looprd:limits:* +multi +exec +discard +incr +expire
+```
+
+Adjust the prefix with LOOPRD_EVENT_NAMESPACE. No GET, enumeration or application
+keys are needed. Restart only the Redis companion after an ACL-file change, then
+verify both fanout and configured limits. Existing components keep their narrower
+ACL and memory behavior until explicitly opted in.

@@ -5,7 +5,7 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `ce2560c663002b53d573e91863d27bcf1e2e4acee3f56dbd49d2f0b80653a620`.
+Design SHA-256 (UTF-8/LF): `c0e47905c1e242a859e390622cc7c676f7e6d6720485165cd5dd7a40512c434f`.
 
 == Implemented candidate
 
@@ -122,3 +122,21 @@ Local validation: 95 Python tests passed, two real-server checks skipped without
 PostgreSQL/Redis endpoints; three Node tests passed. Generated schema matches the validator;
 example validates and an extracted wheel imports with the new modules. CI includes actual Redis
 ACL/fanout plus a built-image companion/outage/blocking smoke test.
+
+
+== Four generic platform passes
+
+User requested all four in sequence. Governing design: Generic platform passes;
+contract and acceptance in docs/platform-passes.md. Pass 2 uses optional verified
+principals, not mandatory OIDC or application account management.
+
+Implemented candidate: SQL outbox/replay, verified principals and native policies,
+data/query/revision contracts, scoped local service calls, bounded limits/jobs,
+SQL/OS ownership protection, trusted process fault controls and Operations history.
+No OIDC dependency, application accounts, full active-active support or hostile-code
+sandbox is introduced. See docs/platform-reference.md for exact guarantees and limits.
+Local regression evidence and remote PostgreSQL/Redis/image checks follow below.
+
+Local verification: 109 Python tests passed; three disposable real-server checks
+skipped locally and required by CI. Three Node lifecycle/escaping tests passed;
+new platform descriptor validates and bundled JavaScript syntax checks pass.

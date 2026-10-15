@@ -36,7 +36,7 @@ def configured(settings, spec_data):
 def test_v1_compatibility_and_strict_future_options(spec_data):
     assert Specification.model_validate(spec_data).realtime.backend == "memory"
     for realtime in ({"backend": "redis"}, {"backend": "memory", "connectionSecret": "x"},
-                     {"backend": "redis", "connectionSecret": "x", "delivery": "durable"},
+                     {"backend": "redis", "connectionSecret": "x", "delivery": "unimplemented"},
                      {"backend": "redis", "connectionSecret": "x", "outbox": True}):
         spec_data["realtime"] = realtime
         with pytest.raises(ValidationError):

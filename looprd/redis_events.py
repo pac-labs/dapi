@@ -38,12 +38,24 @@ class RedisBridge:
             return
         try:
             message = json.dumps({"version": 1, "origin": self.hub.origin,
-                                  "id": secrets.token_hex(16), "event": event}, allow_nan=False).encode()
+                                  "id": event.get("eventId", secrets.token_hex(16)), "event": event}, allow_nan=False).encode()
             if len(message) > MAX_MESSAGE:
                 raise ValueError("event too large")
             self.queue.put_nowait(message)
         except (TypeError, ValueError, RecursionError, asyncio.QueueFull):
             self.dropped += 1
+
+    async def publish_confirmed(self, event):
+        message = json.dumps({"version": 1, "origin": self.hub.origin,
+                              "id": event["eventId"], "event": event}, allow_nan=False).encode()
+        if len(message) > MAX_MESSAGE:
+            raise ValueError("event envelope exceeds transport limit")
+        try:
+            await self.client.publish(self.channel, message)
+            self.publish_error = None
+        except (RedisError, OSError) as error:
+            self.publish_error = type(error).__name__
+            raise
 
     async def send(self):
         while True:
