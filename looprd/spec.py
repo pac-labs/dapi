@@ -128,6 +128,18 @@ class Handler(Strict):
         return self
 
 
+class Realtime(Strict):
+    backend: Literal["memory", "redis"] = "memory"
+    delivery: Literal["best-effort"] = "best-effort"
+    connectionSecret: str | None = None
+
+    @model_validator(mode="after")
+    def connection(self):
+        if (self.backend == "redis") != bool(self.connectionSecret):
+            raise ValueError("only Redis realtime requires connectionSecret")
+        return self
+
+
 class Specification(Strict):
     apiVersion: Literal["looprd/v1"]
     component: Name
@@ -139,6 +151,7 @@ class Specification(Strict):
     resources: dict[Name, Resource] = Field(default_factory=dict)
     websocket: WebSocket | None = None
     handlers: list[Handler] = Field(default_factory=list)
+    realtime: Realtime = Field(default_factory=Realtime)
 
     @model_validator(mode="after")
     def references(self):

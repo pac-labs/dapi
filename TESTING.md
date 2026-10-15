@@ -85,3 +85,12 @@ filename/body limits, quota reservations, cancellation and crash recovery, and i
 Node tests cover shell quoting. Container/Traefik smoke exercises a disposable file round trip
 through the shipped public upload/download rules and verifies management remains excluded.
 Browser checks use `.local/files-preview` with synthetic bytes and a test-only mounted token.
+
+
+Redis fanout: `python -m pytest -q tests/test_redis_events.py tests/test_redis_integration.py`
+checks DESIGN.adoc Optional Redis event fanout. The default suite uses a deterministic
+transport substitute for outages, reconnects, queue bounds and candidate ownership.
+The real integration check requires a disposable `LOOPRD_TEST_REDIS_URL`; CI provisions
+Redis 7.4 for both Python jobs and tests actual fanout/echo plus restricted channel/command ACLs.
+Never use a production Redis URL: the real test creates/removes a uniquely named ACL user.
+Legacy checkpoints, descriptors, synchronous handlers and WebSocket wire messages remain covered.

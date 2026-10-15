@@ -14,6 +14,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
       postgres:
         image: postgres:17
         env:
@@ -26,6 +32,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       LOOPRD_TEST_POSTGRES_URL: postgresql://looprd:test-only@localhost:5432/looprd_test
+      LOOPRD_TEST_REDIS_URL: redis://localhost:6379/0
     strategy:
       matrix:
         python: ['3.12', '3.13']
@@ -47,6 +54,7 @@ jobs:
       - run: python -m looprd validate --sources examples/sources.yaml
       - run: python -m looprd validate examples/python-handler.yaml
       - run: python -m looprd validate examples/database-auth.yaml
+      - run: python -m looprd validate examples/redis-events.yaml
 
   image:
     needs: test
@@ -74,6 +82,8 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Exercise the built container and Traefik routing
         run: python3 scripts/container_smoke.py docker looprd:smoke --traefik
+      - name: Exercise Redis companion and cross-runtime event delivery
+        run: python3 scripts/redis_smoke.py docker looprd:smoke
       - uses: docker/login-action@v4
         if: github.event_name != 'pull_request'
         with:

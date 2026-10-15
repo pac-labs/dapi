@@ -15,6 +15,7 @@ psycopg-binary==3.3.6
 pydantic==2.14.0
 pydantic_core==2.50.0
 PyYAML==6.0.3
+redis==8.1.0
 SQLAlchemy==2.0.54
 starlette==1.7.0
 typing-inspection==0.4.4

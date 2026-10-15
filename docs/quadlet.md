@@ -50,6 +50,10 @@ Management stays private unless you explicitly install the optional authenticate
 [panel router](management-panel.md).
 `/_looprd/health` checks the runtime, not whether every source is currently reachable.
 
+Optional [Redis event fanout](redis.md) has separate companion/network Quadlets and
+an opt-in Looprd drop-in. Existing installations and component specs keep their
+current memory delivery unless explicitly enabled. PostgreSQL remains separate.
+
 ## Remote sources
 
 Set `LOOPRD_SOURCES=github://pac-labs/YOUR-PRIVATE-CONFIG/sources.yaml?ref=main`

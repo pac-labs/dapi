@@ -81,6 +81,7 @@ function renderDetail(){
  fact(facts,'Repository',source?.repository||'Local / remote specification');fact(facts,'Tracked ref',source?.ref||'—');
  fact(facts,'Active Git revision',item?.revision,true);fact(facts,'Loaded in this process',date(item?.loadedAt));
  fact(facts,'Database',item?.databaseBackend?item.databaseBackend+' · schema '+item.schemaVersion:'None');
+ fact(facts,'Event transport',item?.realtime?item.realtime.backend+' · '+item.realtime.state+' · best effort'+(item.realtime.backend==='redis'?' · '+item.realtime.droppedRemoteEvents+' dropped remote events':''):'Memory · best effort');
  fact(facts,'Live traffic',item?item.activeRequests+' HTTP / auth in flight · '+item.websocketConnections+' sockets':'Not serving');
  text('detail-endpoint',item?location.origin+item.prefix:'No active component URL');el('copy-endpoint').disabled=!item;
  el('routes').replaceChildren();el('socket-note').hidden=!item?.websocket;

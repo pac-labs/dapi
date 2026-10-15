@@ -11,6 +11,7 @@ dependencies = [
   "starlette>=1.7,<2", "uvicorn>=0.35,<1", "websockets>=13,<18",
   "SQLAlchemy>=2.0.43,<2.1", "pydantic>=2.11,<3",
   "PyYAML>=6.0.2,<7", "httpx>=0.28,<1", "psycopg[binary]>=3.2,<4",
+  "redis>=8.1,<9",
 ]
 
 [project.optional-dependencies]

@@ -262,6 +262,40 @@
       "title": "Model",
       "type": "object"
     },
+    "Realtime": {
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "default": "memory",
+          "enum": [
+            "memory",
+            "redis"
+          ],
+          "title": "Backend",
+          "type": "string"
+        },
+        "delivery": {
+          "const": "best-effort",
+          "default": "best-effort",
+          "title": "Delivery",
+          "type": "string"
+        },
+        "connectionSecret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connectionsecret"
+        }
+      },
+      "title": "Realtime",
+      "type": "object"
+    },
     "Resource": {
       "additionalProperties": false,
       "properties": {
@@ -419,6 +453,9 @@
       },
       "title": "Handlers",
       "type": "array"
+    },
+    "realtime": {
+      "$ref": "#/$defs/Realtime"
     }
   },
   "required": [

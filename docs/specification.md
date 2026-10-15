@@ -82,6 +82,17 @@ Actions are `created`, `updated`, or `deleted`; deletion sends `data: null`.
 Events are best effort. After a disconnect, fetch current state and resubscribe.
 Slow consumers are disconnected with 1013. Reload/removal drains old connections and closes them with 1012.
 
+## Optional event transport
+
+`realtime` is optional in `looprd/v1`. Omission preserves memory delivery. Redis
+fanout is selected with `backend: redis`, a local `connectionSecret` reference,
+and optional `delivery: best-effort` (the only supported delivery policy).
+Existing WebSocket resource subscriptions, scopes, event JSON, and synchronous
+`ctx.publish(event)` remain unchanged. Redis adds no private topics, replay,
+end-user login, or multi-worker guarantee. See [Redis deployment and compatibility](redis.md)
+and [the descriptor example](../examples/redis-events.yaml). Upgrade the runtime
+before opting descriptors in; older strict runtimes reject the new field.
+
 ## Schema changes
 
 The initial schema is created from the models. A changed model requires an increased

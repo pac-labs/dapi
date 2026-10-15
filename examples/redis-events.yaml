@@ -1,0 +1,27 @@
+apiVersion: looprd/v1
+component: redis-demo
+release: '1.0'
+api:
+  version: v1
+auth:
+  mode: bearer
+  secretRef: redis-demo/api-token
+database:
+  backend: sqlite
+  schemaVersion: 1
+realtime:
+  backend: redis
+  connectionSecret: redis-url
+  delivery: best-effort
+models:
+  Item:
+    fields:
+      id: {type: integer, primaryKey: true, generated: true}
+      name: {type: string, maxLength: 200, required: true}
+resources:
+  items:
+    model: Item
+    path: /items
+    operations: [list, get, create, update, delete]
+websocket:
+  resources: [items]

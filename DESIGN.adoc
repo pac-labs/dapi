@@ -299,3 +299,37 @@ these capability paths from reverse-proxy access logs as they do WebSocket ticke
 The panel constructs absolute commands/links from its current origin; JSON API URLs are same-origin
 relative paths, avoiding trust in forwarded hostname/scheme headers. Public Traefik examples include
 only upload/download prefixes, keeping listing and management private unless explicitly enabled.
+
+== Optional Redis event fanout
+
+The reviewed proposal and compatibility decisions are recorded in docs/redis-review.md.
+A component may add realtime with backend memory (default) or redis, delivery best-effort,
+and connectionSecret required only for Redis. Existing v1 descriptors and WebSocket JSON
+remain valid and unchanged. Unknown durability/auth/topic options continue to be rejected.
+Older strict runtimes reject new fields; upgrade the runtime before opt-in and remove new
+fields/checkpoint entries deliberately before a runtime downgrade. No database migration
+or looprd/v2 is needed for this optional transport.
+
+An event hub keeps the existing local bus per component. Generation-bound facades retain
+synchronous publish/subscribe behavior, deliver locally immediately, and enqueue a bounded
+best-effort remote send. Transport connections are reference-counted across candidates and
+draining generations, closed on failed construction/checkpoint, retirement/removal and shutdown.
+Redis connection errors never change committed CRUD success or local notification delivery.
+Missing/invalid local secrets reject configuration; server outages reconnect with bounded backoff
+and expose sanitized connection state/drop counters through protected management diagnostics.
+
+Exact Redis channels include LOOPRD_EVENT_NAMESPACE (default looprd), component and API version.
+Deployments sharing Redis must use distinct namespaces unless cross-runtime delivery is intended.
+Database numbers do not isolate Pub/Sub. Envelopes carry version, random event ID and runtime
+origin; own-origin messages and bounded recently seen duplicates are suppressed. Payloads and
+outgoing queues are bounded. Redis does not authorize clients: all existing resource scopes,
+revocation checks, origin validation, tickets and component blocks remain enforced by Looprd.
+Clients must recover from lost notifications by fetching authoritative SQL/application state.
+There is no outbox, durable replay, presence, user identity, private-topic authorization, or
+multi-worker guarantee in this change. Redis peers in one namespace are trusted equivalent
+runtimes; connect only deployments serving the same authorized resource contract/data.
+
+Optional companion Quadlets create an isolated Redis network and memory-bounded server with
+an operator-mounted ACL file, no published ports and no persistent application data. An optional
+Looprd drop-in attaches to that network and orders Redis startup. Existing installations retain
+their current containers/networks unless explicitly opting in. Durable business data stays in SQL.

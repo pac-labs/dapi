@@ -8,7 +8,8 @@ import os
 from starlette.concurrency import run_in_threadpool
 
 from .component import Generation
-from .events import EventBus, Tickets
+from .events import Tickets
+from .event_hub import EventHub
 from .sources import SourceReader
 from .spec import Specification
 from .status import Monitor, snapshot
@@ -28,6 +29,7 @@ class Runtime:
         self.sources = {}
         self.monitor = Monitor()
         self.buses = {}
+        self.event_hub = EventHub(settings, self.buses)
         self.tickets = Tickets()
         self.lock = asyncio.Lock()
         self.retiring = set()
@@ -85,8 +87,12 @@ class Runtime:
             self.sources_error = f"cache: {type(error).__name__}"
 
     async def build(self, spec):
-        bus = self.buses.setdefault(spec.component, EventBus(self.settings.event_queue))
-        return await run_in_threadpool(Generation, spec, self.settings, bus)
+        bus = self.event_hub.acquire(spec)
+        try:
+            return await run_in_threadpool(Generation, spec, self.settings, bus)
+        except BaseException:
+            await self.event_hub.release(bus)
+            raise
 
     def report(self, component, stage, error):
         # Exception strings can contain URLs, SQL, handler source, or credentials.
@@ -135,6 +141,7 @@ class Runtime:
             self.sources_error = f"state persistence failed: {type(error).__name__}"
             for candidate in candidates.values():
                 await run_in_threadpool(candidate.close)
+                await self.event_hub.release(candidate.bus)
             return False
         # No awaits between dispatcher replacement and marking old generations for retirement.
         old = self.active
@@ -149,8 +156,14 @@ class Runtime:
         return True
 
     def save(self, active, revisions):
+        def specification(value):
+            document = value.spec.model_dump()
+            # Keep legacy checkpoints readable by older runtimes unless Redis is opted in.
+            if value.spec.realtime.backend == "memory":
+                document.pop("realtime")
+            return document
         state = {"version": 1, "components": {
-            key: {"specification": value.spec.model_dump(), "revision": revisions[key]}
+            key: {"specification": specification(value), "revision": revisions[key]}
             for key, value in active.items()
         }}
         temporary = self.checkpoint.with_suffix(".tmp")
@@ -173,6 +186,7 @@ class Runtime:
                 await asyncio.sleep(0.05)
         finally:
             await run_in_threadpool(generation.close)
+            await self.event_hub.release(generation.bus)
 
     def status(self):
         return snapshot(self)
@@ -200,4 +214,6 @@ class Runtime:
         await asyncio.gather(*self.retiring, return_exceptions=True)
         for generation in self.active.values():
             await run_in_threadpool(generation.close)
+            await self.event_hub.release(generation.bus)
+        await self.event_hub.close()
         await self.reader.close()

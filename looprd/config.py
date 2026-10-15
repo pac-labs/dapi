@@ -1,6 +1,7 @@
 """Host configuration and secret references (values never enter specifications)."""
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,6 +22,11 @@ class Settings:
     allowed_origins: tuple[str, ...] = ()
     file_max_bytes: int = 100 * 1024 * 1024
     file_quota_bytes: int = 1024 * 1024 * 1024
+    event_namespace: str = "looprd"
+
+    def __post_init__(self):
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", self.event_namespace):
+            raise ValueError("event namespace must contain 1-64 letters, digits, underscores or hyphens")
 
     @classmethod
     def from_env(cls):
@@ -36,6 +42,7 @@ class Settings:
             allowed_origins=tuple(filter(None, os.getenv("LOOPRD_ORIGINS", "").split(","))),
             file_max_bytes=max(1, int(os.getenv("LOOPRD_FILE_MAX_BYTES", str(cls.file_max_bytes)))),
             file_quota_bytes=max(1, int(os.getenv("LOOPRD_FILE_QUOTA_BYTES", str(cls.file_quota_bytes)))),
+            event_namespace=os.getenv("LOOPRD_EVENT_NAMESPACE", "looprd"),
         )
 
     def secret(self, reference: str) -> str:

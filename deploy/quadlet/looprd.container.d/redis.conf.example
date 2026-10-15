@@ -1,0 +1,10 @@
+# Optional: install as looprd.container.d/redis.conf alongside the existing unit.
+[Unit]
+Wants=looprd-redis.service
+After=looprd-redis.service
+
+[Container]
+Network=looprd-events.network
+# If Looprd currently relies on Podman's default network for GitHub/SQL access,
+# attach it explicitly too; the events network is internal-only.
+Network=podman
