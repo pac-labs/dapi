@@ -28,8 +28,13 @@ class Settings:
     worker_memory_mb: int = 256
     worker_concurrency: int = 2
     container_metrics_file: Path | None = None
+    push_public_url: str | None = None
+    push_delivery_url: str | None = None
+    push_token_secret: str | None = None
 
     def __post_init__(self):
+        from .push_transport import validate_provider
+        validate_provider(self)
         if self.origin_restrictions is not None:
             from .cors_spec import validate_origin
             for origin in self.origin_restrictions:
@@ -61,6 +66,9 @@ class Settings:
             worker_memory_mb=int(os.getenv("LOOPRD_WORKER_MEMORY_MB", "256")),
             worker_concurrency=int(os.getenv("LOOPRD_WORKER_CONCURRENCY", "2")),
             container_metrics_file=Path(os.environ["LOOPRD_CONTAINER_METRICS_FILE"]) if os.getenv("LOOPRD_CONTAINER_METRICS_FILE") else None,
+            push_public_url=os.getenv("LOOPRD_PUSH_PUBLIC_URL"),
+            push_delivery_url=os.getenv("LOOPRD_PUSH_DELIVERY_URL"),
+            push_token_secret=os.getenv("LOOPRD_PUSH_TOKEN_SECRET"),
         )
 
     def secret(self, reference: str) -> str:

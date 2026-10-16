@@ -1,5 +1,14 @@
 # Looprd validation
 
+`tests/test_push.py`, `tests/test_sync.py` and `tests/test_push_postgresql.py` cover
+DESIGN.adoc / Specification authority / Background push and HTTP synchronization:
+endpoint possession, identity/scope isolation, expiry, atomic rollback, coalescing,
+stale completion, retries, revocation, blocking, projections, snapshot/replay races
+and real PostgreSQL tables. `tests/clients/sync.test.mjs` covers staged recovery,
+retention gaps, cancellation, authentication and local commit failures.
+`scripts/push_smoke.py` tests the built image against real private ntfy topics with
+no production data or ports. Container metrics retain a strict four-name allowlist.
+
 `tests/test_spec_imports.py` covers DESIGN.adoc / Specification authority / Nested
 specification imports: recursive composition, same-component validation, immutable
 GitHub revisions, HTTPS containment, child-only reloads, missing-child retention,

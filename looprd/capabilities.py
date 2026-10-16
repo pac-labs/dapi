@@ -14,6 +14,7 @@ CAPABILITIES = frozenset({
     "reports.bugs",
     "management.data",
     "spec.includes",
+    "push.unifiedpush", "events.snapshot",
 })
 
 

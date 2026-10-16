@@ -999,6 +999,60 @@
       "title": "Model",
       "type": "object"
     },
+    "Push": {
+      "additionalProperties": false,
+      "properties": {
+        "transport": {
+          "const": "unifiedpush",
+          "default": "unifiedpush",
+          "title": "Transport",
+          "type": "string"
+        },
+        "scopes": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9:._-]{0,95}$",
+            "type": "string"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Scopes",
+          "type": "array"
+        },
+        "deviceLifetimeSeconds": {
+          "default": 86400,
+          "maximum": 604800,
+          "minimum": 600,
+          "title": "Devicelifetimeseconds",
+          "type": "integer"
+        },
+        "maxDevicesPerPrincipal": {
+          "default": 8,
+          "maximum": 32,
+          "minimum": 1,
+          "title": "Maxdevicesperprincipal",
+          "type": "integer"
+        },
+        "maxDevices": {
+          "default": 5000,
+          "maximum": 50000,
+          "minimum": 1,
+          "title": "Maxdevices",
+          "type": "integer"
+        },
+        "retrySeconds": {
+          "default": 3600,
+          "maximum": 86400,
+          "minimum": 60,
+          "title": "Retryseconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scopes"
+      ],
+      "title": "Push",
+      "type": "object"
+    },
     "Query": {
       "additionalProperties": false,
       "properties": {
@@ -1381,6 +1435,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/Management"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "push": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Push"
         },
         {
           "type": "null"

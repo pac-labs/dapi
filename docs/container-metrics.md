@@ -10,7 +10,7 @@ are optional future integrations, not dependencies of the built-in Operations vi
 
 The standard-library Python sampler in `deploy/metrics/collect.py` runs on the
 host under a systemd timer. It invokes read-only Podman inspect/stats operations
-for exactly `looprd`, `looprd-postgres` and `looprd-redis`. It never lists or samples
+for exactly `looprd`, `looprd-postgres`, `looprd-redis` and optional `looprd-ntfy`. It never lists or samples
 other containers and never starts, stops or changes them. No Podman/Docker socket
 is mounted in Looprd, and no new network endpoint or port is exposed.
 

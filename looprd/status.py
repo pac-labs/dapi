@@ -75,6 +75,7 @@ def snapshot(runtime):
             "websocket": spec.websocket.model_dump() if spec.websocket else None,
             "realtime": {**value.bus.status(), "delivery": spec.realtime.delivery, "relayError": value.relay_error},
             "verificationError": value.verifier.error if value.verifier else None,
+            "push": {"enabled": spec.push is not None, "configured": bool(settings.push_public_url), "error": value.push_error},
         }
     return {
         "sourcesError": runtime.sources_error, "components": components,

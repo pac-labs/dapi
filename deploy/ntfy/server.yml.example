@@ -1,0 +1,12 @@
+# Copy to ~/.config/looprd/ntfy/server.yml and set your private public hostname.
+base-url: https://push.example.com
+listen-http: ':8080'
+cache-file: /var/lib/ntfy/cache.db
+cache-duration: 12h
+auth-file: /var/lib/ntfy/auth.db
+auth-default-access: deny-all
+behind-proxy: true
+enable-login: true
+# Provision distributor read permissions explicitly. UnifiedPush requires
+# anonymous WRITE access to its unpredictable up* topics, never anonymous reads.
+# See docs/push-and-sync.md for CLI examples and credential handling.

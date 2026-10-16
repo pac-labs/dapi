@@ -10,6 +10,7 @@ from .contract import Name, Symbol, PathName, Scope, Strict
 from .platform_spec import Reference, Index, Query, ServiceContract, Dependency, Limits, Job
 from .cors_spec import Cors
 from .administration_spec import Management, check_management
+from .push_spec import Push, check_push
 
 
 class Verifier(Strict):
@@ -191,6 +192,7 @@ class Specification(Strict):
     auth: Auth
     cors: Cors | None = None
     management: Management | None = None
+    push: Push | None = None
     database: Database | None = None
     models: dict[Symbol, Model] = Field(default_factory=dict)
     resources: dict[Name, Resource] = Field(default_factory=dict)
@@ -224,9 +226,10 @@ class Specification(Strict):
             raise ValueError("durable events require database and WebSocket resources")
         self.check_permissions()
         check_management(self)
+        check_push(self)
         if (self.models or self.resources) and not self.database:
             raise ValueError("models/resources require database")
-        occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_services", "/_jobs", "/_bugreports"}
+        occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_sync", "/_push", "/_services", "/_jobs", "/_bugreports"}
         for resource in self.resources.values():
             if resource.model not in self.models:
                 raise ValueError("unknown resource model")

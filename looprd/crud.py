@@ -63,8 +63,9 @@ class NativeCRUD:
             result = None
             if action != "deleted":
                 result = dict(session.execute(sa.select(table).where(pk == record_id)).mappings().one())
+            visible = {field: result[field] for field in resource.projection} if result and resource.projection else result
             event = json_safe({"component": self.spec.component, "resource": name,
-                               "action": action, "id": record_id, "data": result})
+                               "action": action, "id": record_id, "data": visible})
             if self.storage.events and name in self.spec.websocket.resources:
                 event = self.storage.events.emit(session, event, json_safe(dict(row) if action == "deleted" else result))
             if resource.policy:

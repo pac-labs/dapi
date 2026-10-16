@@ -37,6 +37,8 @@ class Generation(NativeCRUD):
         self.job_task = None
         self.job_error = None
         self.relay_error = None
+        self.push_task = None
+        self.push_error = "not_configured" if spec.push and not settings.push_public_url else None
         self.verifier = Verification(self) if spec.auth.mode == "verified" else None
         self.runtime = None
         self.http_inflight = 0
@@ -107,6 +109,9 @@ class Generation(NativeCRUD):
         return await call(self.runtime, self, component, contract, payload)
 
     def start(self):
+        if self.spec.push and self.settings.push_public_url and self.push_task is None:
+            from .push_worker import worker as push_worker
+            self.push_task = asyncio.create_task(push_worker(self))
         if self.storage and self.storage.events and self.relay_task is None:
             self.relay_task = asyncio.create_task(relay(self))
         if self.storage and self.storage.jobs and self.job_task is None:
@@ -114,6 +119,9 @@ class Generation(NativeCRUD):
             self.job_task = asyncio.create_task(worker(self))
 
     async def shutdown(self):
+        if self.push_task:
+            self.push_task.cancel()
+            await asyncio.gather(self.push_task, return_exceptions=True)
         if self.job_task:
             self.job_task.cancel()
             await asyncio.gather(self.job_task, return_exceptions=True)

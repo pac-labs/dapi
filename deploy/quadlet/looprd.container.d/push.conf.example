@@ -1,0 +1,9 @@
+# Optional: install as looprd.container.d/push.conf.
+[Unit]
+Wants=looprd-ntfy.service
+After=looprd-ntfy.service
+
+[Container]
+Network=looprd-push.network
+# Retain the runtime's existing network(s) for GitHub/SQL connectivity.
+Network=podman

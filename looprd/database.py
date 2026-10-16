@@ -30,6 +30,7 @@ PY_TYPES = {
 class Storage:
     def __init__(self, spec: Specification, settings):
         self.spec = spec
+        self.settings = settings
         self.metadata = sa.MetaData()
         self.tables = {}
         self.inputs = {}
@@ -85,6 +86,8 @@ class Storage:
         self.sessions = sessionmaker(bind=self.engine)
         self.keys = KeyStore(self) if spec.auth.mode == "database" else None
         self.events = Outbox(self) if spec.realtime.delivery == "durable" else None
+        from .push_store import PushStore
+        self.push = PushStore(self) if spec.push else None
         self.policies = AccessPolicies(self)
         self.queries = Queries(self) if any(resource.query for resource in spec.resources.values()) else None
         self.quota = RowQuota(self) if spec.limits.maxRows else None
@@ -133,6 +136,8 @@ class Storage:
             connection.execute(owner.insert().values(id=1, component=self.spec.component))
         if self.events:
             self.events.initialize(connection)
+        if self.push:
+            self.push.initialize(connection)
         if self.queries:
             self.queries.initialize(connection)
         if self.quota:

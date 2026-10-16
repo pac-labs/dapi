@@ -20,6 +20,7 @@ from .diagnostic_routes import management as diagnostic_management, diagnostic
 from .diagnostic_contract import endpoint as diagnostic_contract
 from .bugreport_routes import management as bugreport_management
 from .administration_routes import endpoint as data_administration
+from .push_routes import management as push_management
 from .operations import Operations, OperationsMiddleware, endpoint as operations_endpoint
 
 
@@ -69,6 +70,7 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/files/{file_id}", files_endpoint, methods=["DELETE"]),
         Route("/_looprd/components/{component}/availability", availability, methods=["PUT"]),
         Route("/_looprd/components/{component}/keys", keys, methods=["GET", "POST"]),
+        Route("/_looprd/components/{component}/push", push_management),
         Route("/_looprd/components/{component}/keys/{key_id}", keys, methods=["DELETE"]),
         Route("/_looprd/components/{component}/jobs", manage_jobs),
         Route("/_looprd/components/{component}/jobs/{job_id}/retry", manage_jobs, methods=["POST"]),

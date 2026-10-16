@@ -8,11 +8,11 @@ from pydantic import Field, ValidationError
 
 from .contract import Strict
 
-NAMES = ("looprd", "looprd-postgres", "looprd-redis")
+NAMES = ("looprd", "looprd-postgres", "looprd-redis", "looprd-ntfy")
 
 
 class ContainerMetric(Strict):
-    name: Literal["looprd", "looprd-postgres", "looprd-redis"]
+    name: Literal["looprd", "looprd-postgres", "looprd-redis", "looprd-ntfy"]
     state: Literal["running", "exited", "paused", "created", "stopped", "unknown", "missing"]
     startedAt: str | None = Field(default=None, max_length=64)
     restarts: int | None = Field(default=None, ge=0)
@@ -32,7 +32,7 @@ class Snapshot(Strict):
     version: Literal[1]
     collectedAt: float = Field(ge=0, allow_inf_nan=False)
     memorySupported: bool
-    containers: list[ContainerMetric] = Field(max_length=3)
+    containers: list[ContainerMetric] = Field(max_length=4)
 
 
 def read(settings):

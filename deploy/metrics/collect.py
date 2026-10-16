@@ -10,7 +10,7 @@ import tempfile
 import time
 from pathlib import Path
 
-NAMES = ("looprd", "looprd-postgres", "looprd-redis")
+NAMES = ("looprd", "looprd-postgres", "looprd-redis", "looprd-ntfy")
 STATES = {"running", "exited", "paused", "created", "stopped"}
 
 
@@ -63,7 +63,7 @@ def collect(previous=None, runner=command, memory_supported=None, now=None):
     active = [row["name"] for row in rows if row["state"] == "running"]
     try:
         stats = json.loads(runner(["stats", "--no-stream", "--format", "json", *active])) if active else []
-        if not isinstance(stats, list) or len(stats) > 3:
+        if not isinstance(stats, list) or len(stats) > len(NAMES):
             raise ValueError("unexpected measurements")
     except (ValueError, OSError, subprocess.SubprocessError):
         stats = []

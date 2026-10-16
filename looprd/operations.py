@@ -133,6 +133,7 @@ async def endpoint(request):
     result["containers"] = await run_in_threadpool(read, runtime.settings)
     result["components"] = {name: {"httpInFlight": generation.http_inflight,
         "webSockets": len(generation.sockets), "rateLimitError": generation.limiter.error,
-        "jobError": generation.job_error, "relayError": generation.relay_error}
+        "jobError": generation.job_error, "relayError": generation.relay_error,
+        "pushEnabled": generation.spec.push is not None, "pushError": generation.push_error}
         for name, generation in runtime.active.items()}
     return JSONResponse(result, headers={"Cache-Control": "no-store"})

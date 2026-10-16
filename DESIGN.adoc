@@ -101,6 +101,47 @@ The specification contract is `looprd/v1`. Public prefixes are `/looprd/<compone
 
 == Specification authority
 
+=== Background push and HTTP synchronization
+
+Durable resource event histories support authenticated HTTP catch-up independently
+of a live socket. Optional `push` declarations enable UnifiedPush/ntfy wake hints
+for database/verified principals, with explicit registration scopes and bounded
+device lifetime, per-principal/device/queue limits. Host configuration selects the
+public ntfy origin, optional internal delivery origin and mounted publish token.
+Clients cannot select arbitrary outbound hosts or publish on behalf of others.
+Registered endpoints are opaque single-topic URLs on that configured provider;
+redirects/proxies are disabled. Endpoint possession requires a delivered challenge
+before activation. Endpoints/challenges never appear in logs or management status.
+Registration and removal are caller-owned. Tokens are never stored with devices.
+
+Trusted inline handlers/jobs use `ctx.notify(session, principal_id)` in the same
+component event transaction as application changes. Components own recipient
+selection and session/account lifecycle, including explicit `ctx.revoke_push`.
+Notifications are constant, content-free synchronization hints. One durable queue
+row per device coalesces wake hints, with bounded exponential retry, leases,
+expiry and invalid-endpoint cleanup. Delivery is at-least-once and best effort,
+never the source of application truth. Retry completion cannot discard a newer
+queued hint. Device registration expires no later than the registering identity;
+database key revocation is rechecked before delivery. Verified session revocation
+requires application integration because Looprd does not retain login credentials.
+Removal, blocking and opt-out stop new delivery; already issued requests may finish.
+Worker/status failures remain safe and do not expose notification destinations.
+
+Authenticated `/_sync/<resource>` provides bounded projected primary-key pages,
+with an identity/resource/generation-bound signed snapshot cursor and replay
+baseline captured before the first page. Replay from that baseline after snapshot
+completion closes the write race; no event gap is silently discarded. Snapshot
+expiry or a retention gap requires a fresh snapshot. Clients stage snapshots,
+apply deletion tombstones and idempotent events, persist progress only after local
+commit, and synchronize on startup/resume/connectivity recovery even without push.
+Membership/permission changes require application-directed full resynchronization.
+Existing public/bearer/database/verified authentication and replay remain valid;
+WebSockets remain optional client transport. Native and replay events respect
+current declared projections. Push adds runtime-owned SQL tables without changing
+application schema fingerprints. No external identity provider is introduced.
+The optional ntfy companion is separately configured and not installed implicitly.
+Generic Web Push/APNS/FCM adapters are not advertised by this initial implementation.
+
 === Nested specification imports
 
 Optional `includes` lists explicit descendant paths relative to the containing
@@ -551,7 +592,7 @@ in docs/platform-reference.md; production components opt in independently.
 
 == Host container metrics
 
-An optional host-owned sampler observes only the fixed Looprd/PostgreSQL/Redis
+An optional host-owned sampler observes only the fixed Looprd/PostgreSQL/Redis/ntfy
 container allowlist through read-only Podman CLI calls. It atomically writes a
 sanitized snapshot into the existing read-only configuration-directory mount.
 The runtime has no container-control socket, host command execution or write access.

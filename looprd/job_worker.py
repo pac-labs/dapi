@@ -23,7 +23,9 @@ async def execute(generation, job):
         specification=generation.spec, session_factory=generation.storage.sessions, secret=generation.settings.secret,
         transaction=generation.storage.events.transaction if generation.storage.events else generation.storage.sessions.begin,
         emit=generation.storage.events.emit if generation.storage.events else None,
-        publish=generation.bus.publish, call=generation.call, run=run_in_threadpool)
+        publish=generation.bus.publish, call=generation.call, run=run_in_threadpool,
+        notify=generation.storage.push.notify if generation.storage.push else None,
+        revoke_push=generation.storage.push.revoke if generation.storage.push else None)
     async with asyncio.timeout(timeout):
         return await module["handle"](context)
 

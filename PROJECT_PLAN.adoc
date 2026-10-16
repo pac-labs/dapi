@@ -5,9 +5,20 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `1b28cf5761ac24c307c16e782c3fcd931c3aceec29e8c41da67b4b13cc7c6339`.
+Design SHA-256 (UTF-8/LF): `555e7983e5d8f67fa7ffac8513a9fe73302edcc0d89d5dc4750dd83bbffdec35`.
 
 == Implemented candidate
+
+* Optional UnifiedPush/ntfy device proof and transactional wake hints; bounded
+  durable delivery, caller-owned registration, host-controlled destinations,
+  operator delivery counts and ntfy container metrics. HTTP bootstrap snapshots
+  close replay races; JavaScript helper supplies staged recovery/retries.
+  Governing design: Specification authority / Background push and HTTP synchronization.
+  See docs/push-and-sync.md and examples/push-sync.yaml.
+  Local validation: 228 Python tests passed, six optional integration tests skipped;
+  eight UI and seven client recovery tests passed. Disposable ARM64 source-overlay
+  integration passed real ntfy endpoint proof, binary delivery, authenticated
+  catch-up and private subscriber access without production mounts or ports.
 
 * Recursive same-component specification imports, bounded descendant paths,
   immutable GitHub trees, strict composition, flattened checkpoint recovery and

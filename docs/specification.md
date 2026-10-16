@@ -7,8 +7,11 @@ Optional `includes` splits declarations into nested specification fragments in t
 same repository. These extend one component, sharing its authentication and database;
 see [nested specifications](specification-imports.md) and the
 [recursive example](../examples/nested/looprd.yaml).
-Optional `management.resources` and `management.actions` enable protected operator
-browsing, constrained edits and domain actions. See [operator administration](operator-administration.md)
+Optional `push` adds authenticated device registration and trusted
+transactional wake hints, with HTTP snapshots/replay for reconnecting clients; see
+[push and synchronization](push-and-sync.md). Existing behavior is unchanged when
+push is omitted. Optional `management.resources` and `management.actions` enable
+protected operator browsing, constrained edits and domain actions. See [operator administration](operator-administration.md)
 and [the complete account example](../examples/operator-accounts.yaml). Omitted
 management declarations expose no records to the management panel.
 Every component also has a built-in `POST /_bugreports` endpoint. New and updated

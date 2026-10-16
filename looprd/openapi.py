@@ -66,6 +66,15 @@ def document(generation):
     }
     from .bugreport_contract import openapi_contract
     openapi_contract(paths, schemas)
+    from .push_openapi import extend
+    extend(spec, paths, schemas)
+    if spec.realtime.delivery == "durable":
+        result["x-looprd-sync"] = {"apiVersion": "looprd-sync/v1", "snapshotPath": "/_sync/{resource}",
+            "replayPath": "/_events/{resource}", "snapshotLifetimeSeconds": 300, "resetStatus": 410,
+            "retentionSeconds": spec.realtime.retentionSeconds, "idempotencyField": "eventId"}
+    if spec.push:
+        result["x-looprd-push"] = {"apiVersion": "looprd-push/v1", "transport": "unifiedpush", "registrationPath": "/_push/devices",
+            "verificationRequired": True, "hintOnly": True, "deviceLifetimeSeconds": spec.push.deviceLifetimeSeconds}
     if spec.auth.mode in ("bearer", "database", "verified"):
         result["components"]["securitySchemes"] = {"bearer": {"type": "http", "scheme": "bearer"}}
         result["security"] = [{"bearer": []}]

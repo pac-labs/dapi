@@ -1,0 +1,29 @@
+[Unit]
+Description=Optional Looprd UnifiedPush ntfy companion
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=docker.io/binwiederhier/ntfy:v2.31.0
+ContainerName=looprd-ntfy
+Network=looprd-push.network
+# Change the host binding in a private drop-in if Traefik runs elsewhere.
+PublishPort=127.0.0.1:8081:8080
+UserNS=keep-id:uid=10001,gid=10001
+User=10001:10001
+Volume=looprd-ntfy-data.volume:/var/lib/ntfy:U
+Volume=%h/.config/looprd/ntfy:/etc/ntfy:ro,Z
+Exec=serve --config /etc/ntfy/server.yml
+ReadOnly=true
+NoNewPrivileges=true
+DropCapability=all
+Tmpfs=/tmp:rw,size=16m
+
+[Service]
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=300
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

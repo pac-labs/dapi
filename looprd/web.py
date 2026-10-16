@@ -89,6 +89,9 @@ async def dispatch(request):
                 return JSONResponse(document(generation))
             if path.startswith("/_events/") and request.method == "GET":
                 return await replay(request, generation, path.removeprefix("/_events/"))
+            if path.startswith("/_sync/") and request.method == "GET":
+                from .sync import snapshot
+                return await snapshot(request, generation, path.removeprefix("/_sync/"))
             if path == "/_services" and request.method == "GET" and generation.spec.dependencies:
                 from .services import discover
                 return JSONResponse({"services": discover(runtime, generation)}, headers={"Cache-Control": "no-store"})
@@ -112,6 +115,9 @@ async def dispatch(request):
             if path.startswith("/_jobs/"):
                 from .job_routes import request_job
                 return await request_job(request, generation, path, body)
+            if path == "/_push" or path.startswith("/_push/"):
+                from .push_routes import dispatch as push_dispatch
+                return await push_dispatch(request, generation, path, body)
             return await generation.handle(request, path, body)
     except TimeoutError:
         return JSONResponse({"error": "request deadline exceeded"}, status_code=504)

@@ -36,6 +36,8 @@ async def dispatch_handler(self, request, path, body):
                     publish=self.bus.publish,
                     transaction=self.storage.events.transaction if self.storage and self.storage.events else (self.storage.sessions.begin if self.storage else None),
                     emit=self.storage.events.emit if self.storage and self.storage.events else None,
+                    notify=self.storage.push.notify if self.storage and self.storage.push else None,
+                    revoke_push=self.storage.push.revoke if self.storage and self.storage.push else None,
                     call=self.call,
                     secret=self.settings.secret,
                 )

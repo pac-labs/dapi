@@ -6,6 +6,13 @@ async function loadOperations(){
   const card=node('article',undefined,'card');card.append(node('h3',id));
   card.append(node('p',value.httpInFlight+' requests in flight · '+value.webSockets+' sockets'));
   for(const [name,error] of Object.entries(value))if(name.endsWith('Error')&&error)card.append(node('p',name+': '+error,'error'));
+  if(value.pushEnabled){
+   const push=node('button','Inspect push delivery','cds--btn cds--btn--tertiary cds--layout--size-sm');
+   push.onclick=()=>run(async()=>{const state=await api('components/'+encodeURIComponent(id)+'/push');
+    const summary=node('p',state.devices+' devices · '+state.queued+' queued hints · '+state.failed+' failed hints');
+    if(!state.configured)summary.append(node('span',' · provider not configured','error'));
+    if(state.error)summary.append(node('span',' · '+state.error,'error'));push.replaceWith(summary);});card.append(push);
+  }
   const refresh=node('button','Inspect jobs','cds--btn cds--btn--tertiary cds--layout--size-sm');
   refresh.onclick=()=>run(async()=>{
    const jobs=await api('components/'+encodeURIComponent(id)+'/jobs');

@@ -1,0 +1,14 @@
+# Merge into the existing Traefik file-provider configuration.
+http:
+  routers:
+    looprd-push:
+      rule: Host(`push.example.com`)
+      entryPoints: [websecure]
+      service: looprd-push
+      tls:
+        certResolver: letsencrypt
+  services:
+    looprd-push:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:8081

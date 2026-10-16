@@ -1,0 +1,68 @@
+apiVersion: looprd/v1
+component: push-demo
+release: '1.0'
+api: {version: v1}
+requires: [push.unifiedpush, events.snapshot, events.transactional]
+auth:
+  mode: database
+  scopes: [items:read, items:write, events:read, push:manage]
+database: {backend: sqlite}
+realtime: {delivery: durable, retentionSeconds: 86400}
+push:
+  transport: unifiedpush
+  scopes: [push:manage]
+models:
+  Item:
+    fields:
+      id: {type: integer, primaryKey: true, generated: true}
+      name: {type: string, maxLength: 100, required: true}
+      owner: {type: string, maxLength: 64, required: true}
+resources:
+  items:
+    model: Item
+    path: /items
+    operations: [list, get, create, update, delete]
+    policy: {ownerField: owner}
+    permissions:
+      list: [items:read]
+      get: [items:read]
+      create: [items:write]
+      update: [items:write]
+      delete: [items:write]
+websocket:
+  resources: [items]
+  permissions: {items: [events:read]}
+handlers:
+  - path: /create-and-notify
+    method: POST
+    kind: python
+    scopes: [items:write]
+    contract:
+      name: create-item
+      version: 1
+      serviceOnly: false
+      request:
+        type: object
+        required: [name]
+        additionalProperties: false
+        properties:
+          name: {type: string, minLength: 1, maxLength: 100}
+      response:
+        type: object
+        required: [id]
+        additionalProperties: false
+        properties:
+          id: {type: integer}
+    source: |
+      import sqlalchemy as sa
+      async def handle(ctx):
+          with ctx.transaction() as session:
+              record_id = session.execute(sa.text(
+                  'INSERT INTO "Item" (name, owner) VALUES (:name, :owner) RETURNING id'
+              ), {'name': ctx.body['name'], 'owner': ctx.principal.id}).scalar_one()
+              record = {'id': record_id, 'name': ctx.body['name'], 'owner': ctx.principal.id}
+              ctx.emit(session, {'resource': 'items', 'action': 'created', 'id': record_id, 'data': record}, record)
+              # Demo notifies the authenticated author's other devices only.
+              # A real application resolves recipients from its own trusted data.
+              ctx.notify(session, ctx.principal.id)
+          return {'id': record_id}

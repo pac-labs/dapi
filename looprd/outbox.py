@@ -142,7 +142,7 @@ class Outbox:
                     position = row["sequence"]
             finally:
                 result.close()
-            events = [{**row["payload"], "cursor": self.cursor(resource, principal, row["sequence"], clock["secret"])}
+            events = [{**project(self.spec, resource, row["payload"]), "cursor": self.cursor(resource, principal, row["sequence"], clock["secret"])}
                       for row in rows]
             position = position if more else clock["sequence"]
             return {"events": events, "cursor": self.cursor(resource, principal, position, clock["secret"]),
@@ -158,3 +158,11 @@ class Outbox:
     def sent(self, sequence):
         with self.storage.sessions.begin() as session:
             session.execute(self.events.update().where(self.events.c.sequence == sequence).values(sent=True))
+
+
+def project(spec, resource, payload):
+    fields = spec.resources[resource].projection
+    data = payload.get("data")
+    if fields and isinstance(data, dict):
+        return {**payload, "data": {field: data[field] for field in fields if field in data}}
+    return payload

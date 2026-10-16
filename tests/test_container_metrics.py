@@ -28,9 +28,9 @@ def test_sampler_allowlist_cpu_delta_and_missing_memory():
     previous = {"collectedAt": 100, "containers": [{"name": name, "cpuTotalSeconds": 65,
         "startedAt": "2026-10-15T00:00:00Z"} for name in collector.NAMES]}
     snapshot = collector.collect(previous, runner, memory_supported=False, now=110)
-    assert len(calls) == 4
-    assert all(call[-1] in collector.NAMES for call in calls[:3])
-    assert calls[-1][-3:] == list(collector.NAMES)
+    assert len(calls) == len(collector.NAMES) + 1
+    assert all(call[-1] in collector.NAMES for call in calls[:-1])
+    assert calls[-1][-len(collector.NAMES):] == list(collector.NAMES)
     for row in snapshot["containers"]:
         assert row["cpuPercent"] == 50
         assert row["memoryBytes"] is None and row["memoryLimitBytes"] is None
@@ -76,6 +76,6 @@ def test_sampler_failure_never_falls_back_to_all_containers():
         calls.append(arguments)
         raise ValueError("private host error must not escape")
     result = collector.collect(previous={"containers": None}, runner=unavailable, memory_supported=False)
-    assert len(calls) == 3 and all(call[0] == "container" for call in calls)
+    assert len(calls) == len(collector.NAMES) and all(call[0] == "container" for call in calls)
     assert all(row["state"] == "unknown" and row["error"] == "inspect-unavailable" for row in result["containers"])
     assert "private" not in str(result)
