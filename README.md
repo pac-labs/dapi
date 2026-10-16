@@ -8,6 +8,10 @@ SQLite needs no extra container; PostgreSQL is also supported through SQLAlchemy
 Source: [pac-labs/dapi](https://github.com/pac-labs/dapi). Image: `ghcr.io/pac-labs/dapi`.
 The existing Traefik instance serves Looprd paths on your configured API hostname.
 
+All components expose centralized [application bug reporting](docs/bug-reports.md).
+New and updated clients must support consented diagnostic submission. The protected
+management panel groups repeated issues and retains at most 100 distinct issues.
+
 **Removal is explicit:** removing a component from a successfully fetched, valid sources file
 shuts its server down and keeps its data. Unreachable or malformed sources/specifications preserve
 working servers. Cached specifications allow restart while sources are offline.

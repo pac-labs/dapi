@@ -25,6 +25,45 @@ docs/diagnostics.md for endpoint, retention and rollback contracts.
 
 == Purpose
 
+=== Central application bug reports
+
+Every active component exposes POST `/_bugreports` relative to its versioned
+prefix, on both URL aliases, using its existing authentication, request limits,
+operator block and origin policy. Any valid component principal may submit;
+submission grants no read access. Public components intentionally accept public
+reports. Client-provided component identities and deduplication hashes are never
+trusted: the dispatcher supplies component identity and the server computes hashes.
+The built-in route is reserved, advertised by `reports.bugs`, and documented in
+each generated OpenAPI contract. No new required YAML field or database migration
+is introduced. Existing applications continue working; the integration contract
+requires new/updated Looprd clients to offer consented diagnostic submission.
+Looprd cannot enforce that already released client binaries implement that UI.
+
+Reports use a versioned strict JSON contract, at most 64 KiB, containing appVersion,
+category, optional errorCode, message, optional stackTrace/platform and bounded
+scalar diagnostics. Client authors MUST omit credentials, personal data, request
+bodies and unbounded logs. Server redaction is defense in depth, not a guarantee
+that arbitrary free text contains no sensitive information. No request headers,
+IP addresses, principal identifiers or application rows are attached automatically.
+Deduplication hashes component, category, errorCode, sanitized message and stack,
+normalizing UUIDs, hexadecimal addresses and stack line coordinates. Version,
+platform and diagnostic values do not split issues. Only the latest sanitized
+sample is kept, alongside first/last seen, occurrence count and open/resolved state;
+a repeat reopens a resolved issue. This is deterministic grouping, not semantic AI.
+
+One runtime-owned SQLite file in the persistent volume holds at most 100 issues
+across all components. Transactions serialize upsert and eviction, preferring the
+oldest resolved issue then least recently seen open issue. Duplicates at capacity
+are still accepted. Data survives component removal, reload and container restart.
+Management-key-only list/detail/state/delete endpoints live under
+`/_looprd/bugreports`; diagnostic capability links never include reports. Responses
+are no-store. Submission limits are 30/minute/component and 120/minute/runtime,
+process-local with bounded state, in addition to component limits; 429 includes
+Retry-After. Storage errors return 503 without logging report contents. No backing
+container is needed. The Carbon management panel uses contained scrolling and
+text-only rendering, with filtering, details, resolve/reopen and confirmed deletion.
+Downgrading retains the separate file but removes the feature until upgraded.
+
 Looprd is one Python server hosting multiple small logical servers for ZipRunner projects.
 Each project provides one self-contained specification containing its routes, models, authentication
 policy, WebSocket subscriptions, optional inline handlers, and migration history.

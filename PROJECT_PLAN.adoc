@@ -5,9 +5,20 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `d44c3564c2655d89cd09705a07cf80cbdce72cbf109d56d039ac4b1d7945ac4f`.
+Design SHA-256 (UTF-8/LF): `52aad7a53eb6ac9631b0c9dc19e9d67bc1be0b01bad56d6f24b0963ac186f31d`.
 
 == Implemented candidate
+
+* Central application bug-report submission and protected Carbon issue review.
+  Governing design: Purpose / Central application bug reports. Shared persistent
+  inbox with 100-issue cap, deterministic deduplication, occurrence counts,
+  redaction, rate/body limits and resolved-first eviction. Client requirements
+  appear in generated OpenAPI and docs/bug-reports.md; existing binaries still
+  require application-side integration. Local synthetic desktop/phone browser
+  checks verified filtering, resolution and contained scrolling.
+  Local validation: 165 Python tests passed, four optional PostgreSQL/Redis checks
+  skipped, five UI tests passed. Fresh-package report checks pass. Production
+  client submission still requires each application to implement the contract.
 
 * Component frontend-origin policy: optional `cors.allowedOrigins`, private additions
   and restrictions, common HTTP/WebSocket policy, reload and checkpoint retention.

@@ -16,6 +16,7 @@ from .status import Monitor, snapshot
 from .availability import Availability
 from .runtime_guard import RuntimeGuard
 from .diagnostics import Diagnostics
+from .bugreports import BugReports
 
 log = logging.getLogger("looprd")
 
@@ -39,6 +40,7 @@ class Runtime:
         settings.data.mkdir(parents=True, exist_ok=True)
         self.guard = RuntimeGuard(settings.data)
         self.diagnostics = Diagnostics(settings.data)
+        self.bugreports = BugReports(settings.data)
         self.worker_slots = asyncio.Semaphore(settings.worker_concurrency)
         self.availability = Availability(settings.data)
         self.sockets = {}

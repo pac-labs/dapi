@@ -220,7 +220,7 @@ class Specification(Strict):
         self.check_permissions()
         if (self.models or self.resources) and not self.database:
             raise ValueError("models/resources require database")
-        occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_services", "/_jobs"}
+        occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_services", "/_jobs", "/_bugreports"}
         for resource in self.resources.values():
             if resource.model not in self.models:
                 raise ValueError("unknown resource model")

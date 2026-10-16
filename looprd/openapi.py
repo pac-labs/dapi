@@ -61,7 +61,11 @@ def document(generation):
         "openapi": "3.1.0", "info": {"title": spec.component, "version": spec.release},
         "servers": [{"url": generation.prefix}], "paths": paths,
         "components": {"schemas": schemas},
+        "x-looprd-client-requirements": {"bugReports": {"path": "/_bugreports",
+            "apiVersion": "looprd-bugreport/v1", "maxBodyBytes": 65536, "userConsentRequired": True}},
     }
+    from .bugreport_contract import openapi_contract
+    openapi_contract(paths, schemas)
     if spec.auth.mode in ("bearer", "database", "verified"):
         result["components"]["securitySchemes"] = {"bearer": {"type": "http", "scheme": "bearer"}}
         result["security"] = [{"bearer": []}]

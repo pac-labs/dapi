@@ -9,6 +9,7 @@ function duration(seconds){if(seconds<60)return seconds+'s';if(seconds<3600)retu
 function fact(target,label,value,mono=false){const dl=node('dl',undefined,'fact');dl.append(node('dt',label),node('dd',value??'—',mono?'mono':''));target.append(dl);}
 function clearKey(){el('new-key').value='';el('issued').hidden=true;}
 function disconnect(){
+ clearBugReports();
  clearFiles();
  el('diagnostic-url').value='';el('diagnostic-failures').replaceChildren();el('diagnostic-links').replaceChildren();
  session++;token='';snapshot=null;selectedId='';el('token').value='';
@@ -161,4 +162,5 @@ initNavigation();
 el('refresh-operations').onclick=()=>run(loadOperations);
 initFiles();
 initDiagnostics();
+initBugReports();
 initCredentials();

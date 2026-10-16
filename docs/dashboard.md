@@ -1,5 +1,11 @@
 # Management dashboard
 
+**Bug reports** is the protected application issue inbox. Filter by component,
+state or message, review the latest sanitized sample and occurrence count,
+resolve/reopen issues or confirm deletion. Use **Refresh reports** for new
+submissions. The global limit is 100 distinct issues; repeated submissions are
+grouped. See [the client integration and retention contract](bug-reports.md).
+
 The panel uses IBM Carbon v11 styles with the Gray 100 theme. Its styles are bundled
 in the container; no CDN or external font requests are required. For source builds,
 see [panel development](../ui/README.md).

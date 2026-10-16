@@ -1,5 +1,13 @@
 # Looprd validation
 
+`tests/test_bugreports.py` covers DESIGN.adoc / Purpose / Central application bug
+reports: authenticated submission, public mode, CORS and blocking, protected review,
+deduplication and concurrent counts, the global 100-issue cap and eviction policy,
+restart/removal retention, bounded JSON, rate limits, secret redaction, safe storage
+failures, reserved routes and generated OpenAPI discovery. UI checks cover text-only
+rendering, filtering and confirmed deletion; browser verification uses synthetic
+reports and a test-only management key.
+
 `tests/test_cors.py` covers DESIGN.adoc / Specification authority / Component
 frontend origins: component isolation, both URL aliases, HTTP and WebSocket parity,
 authentication, management isolation, legacy fallback, private additions and

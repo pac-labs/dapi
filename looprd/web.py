@@ -82,6 +82,9 @@ async def dispatch(request):
             request.state.principal = principal
             await generation.limiter.check(peer if generation.spec.auth.mode == "public" else principal.id)
             path = "/" + request.path_params.get("path", "").strip("/")
+            if path == "/_bugreports":
+                from .bugreport_routes import submit
+                return await submit(request, generation)
             if path == "/openapi.json" and request.method == "GET":
                 return JSONResponse(document(generation))
             if path.startswith("/_events/") and request.method == "GET":

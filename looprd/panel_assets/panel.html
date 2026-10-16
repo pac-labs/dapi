@@ -15,7 +15,13 @@
 <main id="controls" hidden>
 <nav aria-label="Management sections" class="view-nav">
 <button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Components</button>
-<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="operations">Operations</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button></nav>
+<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="operations">Operations</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button><button data-view-button="bugreports">Bug reports</button></nav>
+<section data-view="bugreports" class="view card" hidden><div class="section-heading"><h2>Application bug reports</h2><button id="refresh-bugreports" data-action class="cds--btn cds--btn--tertiary cds--layout--size-sm">Refresh reports</button></div>
+<p class="muted small">Repeated issues are grouped. Up to 100 issues are retained; new issues replace the oldest resolved issue first, then the least recently seen open issue.</p>
+<div id="bugreport-browser" class="fill"><div class="toolbar"><label class="sr-only" for="bugreport-search">Search reports</label><input id="bugreport-search" type="search" class="cds--text-input" placeholder="Search reports">
+<label class="sr-only" for="bugreport-component">Filter by component</label><select id="bugreport-component" class="cds--select-input"><option value="">All components</option></select>
+<label class="sr-only" for="bugreport-state">Filter by state</label><select id="bugreport-state" class="cds--select-input"><option value="all">All states</option><option value="open">Open</option><option value="resolved">Resolved</option></select></div>
+<p id="bugreport-count" class="muted small"></p><div id="bugreport-list" class="page-list"></div></div><div id="bugreport-detail" class="page-list" hidden></div></section>
 <section data-view="operations" class="view card" hidden><div class="section-heading"><h2>Operations</h2><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="refresh-operations">Refresh</button></div><div id="operations-content" class="page-list"></div></section>
 <section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
@@ -66,4 +72,5 @@
 /* PANEL_FILES */
 /* PANEL_OPS */
 /* PANEL_DIAGNOSTICS */
+/* PANEL_BUGREPORTS */
 /* PANEL_JS */</script></body></html>

@@ -11,6 +11,7 @@ CAPABILITIES = frozenset({
     "limits.memory", "limits.redis", "limits.rows", "jobs.leases", "jobs.schedules",
     "execution.process", "operations.local",
     "cors.component",
+    "reports.bugs",
 })
 
 

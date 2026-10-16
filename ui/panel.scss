@@ -80,3 +80,6 @@ footer { display: flex; justify-content: space-between; gap: 16px; font-size: 12
 
 .diagnostic-workspace { gap: 12px; }.diagnostic-workspace pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media(max-width:480px) { .view-nav { flex-wrap: wrap; }.view-nav button { flex: 1 0 25%; min-width: 0; } }
+
+#bugreport-browser>.toolbar { flex-wrap: wrap; }#bugreport-browser input,#bugreport-browser select { flex: 1; min-width: 120px; }
+@media(max-width:720px) { .view-nav { flex-wrap: wrap; }.view-nav button { flex: 1 0 25%; min-width: 0; } }

@@ -3,6 +3,10 @@
 `looprd.yaml` is self-contained: it carries identity/version, authentication policy, database
 models, API operations, WebSocket subscriptions, migrations, and optional custom Python source.
 There are no handler files or component images to chase. Secrets remain local references.
+Every component also has a built-in `POST /_bugreports` endpoint. New and updated
+Looprd-enabled clients must implement consented diagnostic submission as described
+in [the bug-report integration contract](bug-reports.md). Add `reports.bugs` to
+`requires` when this capability is required; no mandatory YAML field is added.
 See [the complete example](../examples/looprd.yaml) and [generated JSON schemas](../schemas).
 
 Validate documents before committing them:

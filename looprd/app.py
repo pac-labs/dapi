@@ -18,6 +18,7 @@ from .file_service import start_files
 from .job_routes import manage_jobs
 from .diagnostic_routes import management as diagnostic_management, diagnostic
 from .diagnostic_contract import endpoint as diagnostic_contract
+from .bugreport_routes import management as bugreport_management
 from .operations import Operations, OperationsMiddleware, endpoint as operations_endpoint
 
 
@@ -50,6 +51,8 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/ops", operations_endpoint),
         Route("/_looprd/diagnostics", diagnostic_management, methods=["GET", "POST"]),
         Route("/_looprd/diagnostics.openapi.json", diagnostic_contract),
+        Route("/_looprd/bugreports", bugreport_management),
+        Route("/_looprd/bugreports/{report_id}", bugreport_management, methods=["GET", "PATCH", "DELETE"]),
         Route("/_looprd/diagnostics/{link_id}", diagnostic_management, methods=["DELETE"]),
         Route("/_looprd/diagnostic/{token}", diagnostic),
         Route("/_looprd/reconcile", admin, methods=["POST"]),

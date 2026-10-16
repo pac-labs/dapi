@@ -1,0 +1,79 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "looprd-bugreport/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "appVersion": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Appversion",
+      "type": "string"
+    },
+    "category": {
+      "default": "application",
+      "maxLength": 80,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9._-]+$",
+      "title": "Category",
+      "type": "string"
+    },
+    "errorCode": {
+      "default": "",
+      "maxLength": 100,
+      "title": "Errorcode",
+      "type": "string"
+    },
+    "message": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "stackTrace": {
+      "default": "",
+      "maxLength": 24000,
+      "title": "Stacktrace",
+      "type": "string"
+    },
+    "platform": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Platform",
+      "type": "string"
+    },
+    "diagnostics": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "maxProperties": 32,
+      "title": "Diagnostics",
+      "type": "object"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "appVersion",
+    "message"
+  ],
+  "title": "BugReport",
+  "type": "object"
+}

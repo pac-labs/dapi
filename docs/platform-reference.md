@@ -1,5 +1,10 @@
 # Generic platform extensions (`looprd/v1`)
 
+The `reports.bugs` capability provides mandatory built-in bug-report submission
+infrastructure for every component. New/updated clients must implement the
+[application reporting contract](bug-reports.md); installed clients remain
+compatible and need their own update to send reports.
+
 All features are additive and opt-in. Existing public, bearer and database
 authentication, best-effort clients, list arrays and unchanged model fingerprints
 remain compatible. See [durable events](durable-events.md) for replay guarantees.

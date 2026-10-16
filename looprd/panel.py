@@ -13,6 +13,7 @@ PAGE = (ASSETS.joinpath("panel.html").read_text(encoding="utf-8")
         .replace("/* PANEL_FILES */", ASSETS.joinpath("files.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_OPS */", ASSETS.joinpath("operations.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_DIAGNOSTICS */", ASSETS.joinpath("diagnostics.js").read_text(encoding="utf-8"))
+        .replace("/* PANEL_BUGREPORTS */", ASSETS.joinpath("bugreports.js").read_text(encoding="utf-8"))
         .replace("/* PANEL_JS */", ASSETS.joinpath("panel.js").read_text(encoding="utf-8")))
 
 
