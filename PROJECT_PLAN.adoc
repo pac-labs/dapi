@@ -5,9 +5,15 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `7681ff2500ae640a1d37dee460d0a82c0acde390b5f583eee2d5de35ced056f2`.
+Design SHA-256 (UTF-8/LF): `d44c3564c2655d89cd09705a07cf80cbdce72cbf109d56d039ac4b1d7945ac4f`.
 
 == Implemented candidate
+
+* Component frontend-origin policy: optional `cors.allowedOrigins`, private additions
+  and restrictions, common HTTP/WebSocket policy, reload and checkpoint retention.
+  Governing design: Specification authority / Component frontend origins.
+  Local regression evidence: 153 passed; four optional PostgreSQL/Redis checks skipped.
+  Deployment and real-client origin verification remain operator checks.
 
 * Self-contained Looprd specification and generated JSON schemas.
 * Shared Python ASGI runtime, CRUD, inline handlers, authentication, WebSocket events/tickets.

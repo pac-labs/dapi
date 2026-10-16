@@ -10,6 +10,7 @@ CAPABILITIES = frozenset({
     "service.contracts", "service.calls",
     "limits.memory", "limits.redis", "limits.rows", "jobs.leases", "jobs.schedules",
     "execution.process", "operations.local",
+    "cors.component",
 })
 
 

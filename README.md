@@ -85,6 +85,7 @@ No component container build is necessary.
 | `LOOPRD_DRAIN_SECONDS` | `30` | WebSocket reload/removal drain |
 | `LOOPRD_REQUEST_SECONDS` | `30` | HTTP request deadline |
 | `LOOPRD_ORIGINS` | empty | Comma-separated allowed browser origins |
+| `LOOPRD_ORIGIN_RESTRICTIONS` | unset | Optional ceiling on component frontend origins; empty denies all browser origins |
 | `LOOPRD_GITHUB_TOKEN` | unset | Read-only access to private GitHub sources |
 | `LOOPRD_GITHUB_TOKEN_FILE` | unset | Mounted GitHub token file; takes precedence over the environment token |
 | `LOOPRD_ALLOW_PYTHON` | `false` | Enable trusted inline Python handlers |

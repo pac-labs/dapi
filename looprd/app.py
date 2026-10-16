@@ -3,7 +3,7 @@
 from contextlib import asynccontextmanager
 
 from starlette.applications import Starlette
-from starlette.middleware.cors import CORSMiddleware
+from .cors import ComponentCorsMiddleware
 from starlette.routing import Route, WebSocketRoute
 
 from .config import Settings
@@ -73,9 +73,5 @@ def create_app(settings=None, runtime=None):
     app.state.runtime = runtime
     runtime.app = app
     app.add_middleware(OperationsMiddleware)
-    if settings.allowed_origins:
-        app.add_middleware(CORSMiddleware, allow_origins=list(settings.allowed_origins),
-                           allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-                           allow_headers=["Authorization", "Content-Type", "If-Match"],
-                           expose_headers=["ETag"])
+    app.add_middleware(ComponentCorsMiddleware, runtime=runtime)
     return app

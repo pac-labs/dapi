@@ -1,5 +1,10 @@
 # Looprd validation
 
+`tests/test_cors.py` covers DESIGN.adoc / Specification authority / Component
+frontend origins: component isolation, both URL aliases, HTTP and WebSocket parity,
+authentication, management isolation, legacy fallback, private additions and
+restrictions, hot reload and failed-candidate retention, and strict origin validation.
+
 Governing design: `DESIGN.adoc`, sections “Sources and shutdown semantics”,
 “Generation reload”, “Database lifecycle”, and “Authentication and management”. This repository is the standalone Looprd
 companion; it does not modify the parent ZipRunner application.

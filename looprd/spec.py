@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 from .contract import Name, Symbol, PathName, Scope, Strict
 from .platform_spec import Reference, Index, Query, ServiceContract, Dependency, Limits, Job
+from .cors_spec import Cors
 
 
 class Verifier(Strict):
@@ -186,6 +187,7 @@ class Specification(Strict):
     release: str = Field(min_length=1, max_length=100)
     api: API
     auth: Auth
+    cors: Cors | None = None
     database: Database | None = None
     models: dict[Symbol, Model] = Field(default_factory=dict)
     resources: dict[Name, Resource] = Field(default_factory=dict)

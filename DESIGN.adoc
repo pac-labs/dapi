@@ -62,6 +62,30 @@ The specification contract is `looprd/v1`. Public prefixes are `/looprd/<compone
 
 == Specification authority
 
+=== Component frontend origins
+
+Optional `cors.allowedOrigins` declares up to 128 unique exact frontend origins,
+including custom WebView schemes with a host. Wildcards, opaque `null`, credentials,
+paths, queries and fragments are rejected. The effective component list is the
+union of this declaration and private `LOOPRD_ORIGINS` additions. If configured,
+`LOOPRD_ORIGIN_RESTRICTIONS` intersects that union; an explicitly empty value
+permits no browser origins. An omitted restriction leaves the union intact.
+Legacy specifications keep their existing global-origin behavior. An explicit
+empty component list adds nothing; it does not remove operator additions.
+
+HTTP preflight and response headers use one captured active generation, for both
+URL aliases. WebSocket handshakes use the same effective policy. Successful spec
+reconciliation updates policy without a process restart; invalid candidates keep
+the working policy and existing sockets follow the normal generation drain.
+The policy is restored with the generation checkpoint. Component declarations
+never grant cross-origin management access; management retains the global list.
+Authentication and authorization remain required independently. CORS controls
+browser response access, not client identity or server-side request authorization;
+requests without an Origin keep existing native-client behavior. No cookies or
+credentialed CORS are added. `cors.component` advertises this optional capability.
+Effective lists are visible only in authenticated component management status;
+private deployment additions are not copied into public OpenAPI or diagnostics.
+
 `looprd/spec.py` is the executable contract. Generated JSON schemas are in `schemas/`.
 `docs/specification.md` describes fields, operations, authentication, extensions, and migrations.
 `examples/looprd.yaml` is a complete declarative component. `examples/python-handler.yaml`

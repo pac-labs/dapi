@@ -84,7 +84,8 @@ curl -H "Authorization: Bearer $(cat ~/.config/looprd/secrets/roboscope/api-toke
 
 Verify that Traefik's dashboard shows `looprd@file`, its backend health check is green,
 and existing non-Looprd routes still work. Browser clients must have their **UI origin**
-listed in `LOOPRD_ORIGINS`; this may differ from the API hostname.
+listed in the component's `cors.allowedOrigins` or private `LOOPRD_ORIGINS`,
+subject to any `LOOPRD_ORIGIN_RESTRICTIONS`; this may differ from the API hostname.
 The public router also allows `/_looprd/files/upload/` and `/_looprd/files/download/`
 for [temporary file transfers](files.md), without exposing file listing or invitation creation.
 Protect or disable Traefik access logging of file capability paths and WebSocket ticket query strings using your

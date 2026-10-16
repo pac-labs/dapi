@@ -177,6 +177,21 @@
       "title": "Column",
       "type": "object"
     },
+    "Cors": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedOrigins": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "title": "Allowedorigins",
+          "type": "array"
+        }
+      },
+      "title": "Cors",
+      "type": "object"
+    },
     "Database": {
       "additionalProperties": false,
       "properties": {
@@ -1039,6 +1054,17 @@
     },
     "auth": {
       "$ref": "#/$defs/Auth"
+    },
+    "cors": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Cors"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "database": {
       "anyOf": [

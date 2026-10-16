@@ -12,9 +12,12 @@ from .openapi import document
 from .admin import authorized as admin_authorized
 from .replay import replay, start_cursor, catch_up
 from .outbox import EventError
+from .cors import allowed_origins
 
 
 def find_generation(runtime, scope):
+    if "looprd.generation" in scope:
+        return scope["looprd.generation"]
     params = scope["path_params"]
     generation = runtime.active.get(params["component"])
     if generation and generation.spec.api.version == params["version"]:
@@ -132,7 +135,7 @@ async def websocket(socket):
         await socket.close(code=1008)
         return
     origin = socket.headers.get("origin")
-    if origin and origin not in runtime.settings.allowed_origins:
+    if origin and origin not in allowed_origins(runtime.settings, generation.spec):
         await socket.close(code=1008)
         return
     ticket = socket.query_params.get("ticket", "")

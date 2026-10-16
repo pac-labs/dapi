@@ -82,6 +82,7 @@ function renderDetail(){
  fact(facts,'Repository',source?.repository||'Local / remote specification');fact(facts,'Tracked ref',source?.ref||'—');
  fact(facts,'Active Git revision',item?.revision,true);fact(facts,'Loaded in this process',date(item?.loadedAt));
  fact(facts,'Database',item?.databaseBackend?item.databaseBackend+' · schema '+item.schemaVersion:'None');
+ fact(facts,'Allowed frontend origins',item?.allowedOrigins?.join(', ')||'None configured');
  fact(facts,'Event transport',item?.realtime?item.realtime.backend+' · '+item.realtime.state+' · '+(item.realtime.delivery||'best-effort')+(item.realtime.backend==='redis'?' · '+item.realtime.droppedRemoteEvents+' dropped remote events':''):'Memory · best effort');
  fact(facts,'Live traffic',item?item.activeRequests+' HTTP / auth in flight · '+item.websocketConnections+' sockets':'Not serving');
  text('detail-endpoint',item?location.origin+item.prefix:'No active component URL');el('copy-endpoint').disabled=!item;
@@ -119,7 +120,7 @@ function render(result){
  fact(facts,'Process uptime',duration(runtime.uptimeSeconds||0));fact(facts,'Started',date(runtime.startedAt));
  fact(facts,'Last attempt',date(runtime.lastAttemptAt));fact(facts,'Last completed sources reconciliation',date(runtime.lastSuccessAt));
  fact(facts,'Old generations draining',runtime.retiringGenerations??0);fact(facts,'WebSocket drain window',runtime.drainSeconds+'s');
- fact(facts,'Trusted Python handlers',runtime.pythonEnabled?'Enabled':'Disabled');fact(facts,'Allowed browser origins',runtime.allowedOrigins?.join(', ')||'None configured');
+ fact(facts,'Trusted Python handlers',runtime.pythonEnabled?'Enabled':'Disabled');fact(facts,'Server origin additions',runtime.allowedOrigins?.join(', ')||'None configured');
  text('updated','Updated '+new Date().toLocaleTimeString());
 }
 async function status(){render(await api('status'));}

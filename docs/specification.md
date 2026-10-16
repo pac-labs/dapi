@@ -74,7 +74,39 @@ Declare `websocket.path` and its allowed `resources`. Connect at the component p
 Non-browser clients can send the bearer Authorization header during the handshake.
 Browsers POST to `/_ws-ticket` under the component prefix with the bearer header, then connect
 using `?ticket=<returned-ticket>`. Tickets expire after 30 seconds and can be used once.
-Configure `LOOPRD_ORIGINS` with the permitted browser origins.
+Declare permitted frontend origins on the component:
+
+```yaml
+cors:
+  allowedOrigins:
+    - https://your-ui.example.net
+    - http://tauri.localhost
+```
+
+This optional Looprd extension applies to HTTP CORS and WebSocket handshakes on
+both `/looprd` and `/dapi`. Add `requires: [cors.component]` when the component
+must refuse runtimes without this capability. Origins identify frontend locations,
+not users, devices, brands or countries. Use the origins actually emitted by your
+supported clients. Custom origins such as `tauri://localhost` are accepted when
+explicitly declared. Up to 128 unique exact origins are supported; paths, trailing
+slashes, credentials, query strings, fragments, wildcards and `null` are rejected.
+
+The effective list combines the declaration with private `LOOPRD_ORIGINS`
+additions. Optional `LOOPRD_ORIGIN_RESTRICTIONS` restricts the result to its
+comma-separated list; setting it to an empty string permits no browser origins.
+Omitting `cors` preserves existing behavior. `allowedOrigins: []` adds nothing,
+while private additions still apply. A valid specification reload updates the
+policy without a container restart; invalid updates retain the last working policy.
+Changing environment settings requires restarting Looprd. Existing sockets follow
+the normal reload drain/reconnect behavior.
+
+Component declarations do not enable cross-origin management access. HTTP clients
+without an Origin retain normal authenticated access. CORS does not authenticate
+clients, prevent native callers from sending requests, or replace authorization.
+Cookie-based cross-origin credentials are not enabled. The effective list is
+available in authenticated component status; private origins are not published
+in generated OpenAPI or diagnostic snapshots. This is a Looprd specification
+extension, not a standard OpenAPI CORS field.
 
 Send `{"subscribe":"scans"}` and wait for `{"subscribed":"scans"}`.
 Events contain `component`, `resource`, `action`, `id`, and `data`.

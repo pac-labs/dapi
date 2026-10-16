@@ -2,6 +2,7 @@
 
 import time
 from datetime import datetime, timezone
+from .cors import allowed_origins
 
 
 def timestamp():
@@ -62,6 +63,7 @@ def snapshot(runtime):
             "schemaVersion": spec.database.schemaVersion if spec.database else None,
             "databaseBackend": spec.database.backend if spec.database else None,
             "authMode": spec.auth.mode, "scopes": spec.auth.scopes,
+            "allowedOrigins": allowed_origins(settings, spec),
             "blocked": key in runtime.availability.blocked,
             "error": runtime.errors.get(key), "loadedAt": value.loaded_at,
             "activeRequests": value.active_requests, "websocketConnections": len(value.sockets),

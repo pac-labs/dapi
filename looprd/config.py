@@ -20,6 +20,7 @@ class Settings:
     bootstrap_admin: bool = True
     allow_python: bool = False
     allowed_origins: tuple[str, ...] = ()
+    origin_restrictions: tuple[str, ...] | None = None
     file_max_bytes: int = 100 * 1024 * 1024
     file_quota_bytes: int = 1024 * 1024 * 1024
     event_namespace: str = "looprd"
@@ -29,6 +30,10 @@ class Settings:
     container_metrics_file: Path | None = None
 
     def __post_init__(self):
+        if self.origin_restrictions is not None:
+            from .cors_spec import validate_origin
+            for origin in self.origin_restrictions:
+                validate_origin(origin)
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", self.event_namespace):
             raise ValueError("event namespace must contain 1-64 letters, digits, underscores or hyphens")
         if not 64 <= self.worker_memory_mb <= 2048:
@@ -47,7 +52,8 @@ class Settings:
             request_seconds=max(1, float(os.getenv("LOOPRD_REQUEST_SECONDS", "30"))),
             bootstrap_admin=os.getenv("LOOPRD_BOOTSTRAP_ADMIN", "true").lower() == "true",
             allow_python=os.getenv("LOOPRD_ALLOW_PYTHON", "false").lower() == "true",
-            allowed_origins=tuple(filter(None, os.getenv("LOOPRD_ORIGINS", "").split(","))),
+            allowed_origins=tuple(value.strip() for value in os.getenv("LOOPRD_ORIGINS", "").split(",") if value.strip()),
+            origin_restrictions=tuple(value.strip() for value in os.environ["LOOPRD_ORIGIN_RESTRICTIONS"].split(",") if value.strip()) if "LOOPRD_ORIGIN_RESTRICTIONS" in os.environ else None,
             file_max_bytes=max(1, int(os.getenv("LOOPRD_FILE_MAX_BYTES", str(cls.file_max_bytes)))),
             file_quota_bytes=max(1, int(os.getenv("LOOPRD_FILE_QUOTA_BYTES", str(cls.file_quota_bytes)))),
             event_namespace=os.getenv("LOOPRD_EVENT_NAMESPACE", "looprd"),
