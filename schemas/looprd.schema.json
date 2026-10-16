@@ -1333,6 +1333,17 @@
   },
   "additionalProperties": false,
   "properties": {
+    "includes": {
+      "items": {
+        "maxLength": 512,
+        "minLength": 1,
+        "pattern": "^[^\\\\:%?#\\s]+$",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Includes",
+      "type": "array"
+    },
     "apiVersion": {
       "const": "looprd/v1",
       "title": "Apiversion",

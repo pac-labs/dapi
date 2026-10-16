@@ -131,7 +131,12 @@ class SourceReader:
                     location = urljoin(self.base, location)
                 elif not Path(location).is_absolute():
                     location = str(Path(self.base).parent / location)
-        spec = Specification.model_validate(parse_document(await self.read(location)))
+        content = None
+        if location.startswith("github://"):
+            content, location = await self.github_file(location)
+            revision = parse_qs(urlsplit(location).query)["ref"][0]
+        from .spec_imports import compose
+        spec = Specification.model_validate(await compose(self, location, content))
         if spec.component != source.id:
             raise ValueError("specification component differs from source ID")
         return spec, revision

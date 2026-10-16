@@ -5,9 +5,16 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `bcb579fb22b19cdd0e1eaca6e3428187afbfb9c78e469f5e1540f9980e2faf81`.
+Design SHA-256 (UTF-8/LF): `1b28cf5761ac24c307c16e782c3fcd931c3aceec29e8c41da67b4b13cc7c6339`.
 
 == Implemented candidate
+
+* Recursive same-component specification imports, bounded descendant paths,
+  immutable GitHub trees, strict composition, flattened checkpoint recovery and
+  child-only reloads. Governing design: Specification authority / Nested
+  specification imports. See docs/specification-imports.md and examples/nested.
+  Local validation: 205 tests passed; five optional integration tests skipped.
+  The nested example validates through the CLI; CI validates it on each build.
 
 * Opt-in operator record projections, constrained edits and transaction-bound
   application actions, with HMAC ETags, idempotent receipts and atomic audit/outbox.

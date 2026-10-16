@@ -1,5 +1,10 @@
 # Looprd validation
 
+`tests/test_spec_imports.py` covers DESIGN.adoc / Specification authority / Nested
+specification imports: recursive composition, same-component validation, immutable
+GitHub revisions, HTTPS containment, child-only reloads, missing-child retention,
+flattened checkpoints/offline restore, explicit removal, conflicts and read bounds.
+
 `tests/test_administration.py` covers DESIGN.adoc / Specification authority /
 Operator data administration: opt-in/projections, private grants, choices and
 bounds, immutable ownership/revision fields including aliases, atomic edits/actions,

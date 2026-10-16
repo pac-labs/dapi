@@ -13,6 +13,7 @@ CAPABILITIES = frozenset({
     "cors.component",
     "reports.bugs",
     "management.data",
+    "spec.includes",
 })
 
 

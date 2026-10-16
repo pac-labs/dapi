@@ -1,0 +1,6 @@
+includes:
+  - health/looprd.yaml
+handlers:
+  - path: /hello
+    response:
+      message: Hello from an imported specification

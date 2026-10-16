@@ -183,6 +183,7 @@ class Realtime(Strict):
 
 
 class Specification(Strict):
+    includes: list[Annotated[str, StringConstraints(min_length=1, max_length=512, pattern=r"^[^\\:%?#\s]+$")]] = Field(default_factory=list, max_length=32)
     apiVersion: Literal["looprd/v1"]
     component: Name
     release: str = Field(min_length=1, max_length=100)
@@ -203,6 +204,8 @@ class Specification(Strict):
 
     @model_validator(mode="after")
     def references(self):
+        if self.includes:
+            raise ValueError("resolve includes through the specification loader before validation")
         from .spec_data_checks import data_contracts
         data_contracts(self)
         from .capabilities import require_capabilities

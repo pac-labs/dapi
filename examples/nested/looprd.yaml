@@ -1,0 +1,10 @@
+apiVersion: looprd/v1
+component: nested-demo
+release: '1.0'
+api:
+  version: v1
+auth:
+  mode: public
+requires: [spec.includes]
+includes:
+  - services/looprd.yaml

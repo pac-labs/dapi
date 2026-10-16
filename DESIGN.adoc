@@ -101,6 +101,30 @@ The specification contract is `looprd/v1`. Public prefixes are `/looprd/<compone
 
 == Specification authority
 
+=== Nested specification imports
+
+Optional `includes` lists explicit descendant paths relative to the containing
+specification file. Imported fragments recursively extend one component; they
+share its URL, database, authentication and generation lifecycle. Component
+identity, release, API version, authentication, database/migrations and realtime
+infrastructure remain root-only. Mappings merge recursively without scalar
+overrides; lists append root-first in depth-first declaration order. The flattened
+result undergoes the existing strict component contract validation. Final
+contracts/checkpoints never retain unresolved imports. CLI validation uses the
+same loader. `spec.includes` advertises this additive capability.
+
+Imports cannot change origin/repository or escape their containing directory,
+including through local symlinks. Absolute/parent/encoded/query paths are rejected.
+GitHub imports share one immutable revision. Generic HTTPS trees are not atomic
+remote snapshots and require consistent publication. Bounds are 32 direct imports,
+64 total files, eight import levels and 1 MiB aggregate content. Repeated files,
+cycles, conflicts and any fetch/validation failure preserve the active generation.
+Polling includes child files; explicit removal of references removes declarations
+only after successful validation, never stored data. Database compatibility rules
+still apply. Legacy single-file behavior is preserved; rollback requires flattening
+new multi-file specifications before using an older image.
+See docs/specification-imports.md for the public contract and examples.
+
 === Operator data administration
 
 Optional `management` declarations grant the management-key holder explicit

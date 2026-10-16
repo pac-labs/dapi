@@ -1,8 +1,12 @@
 # Looprd specification contract
 
-`looprd.yaml` is self-contained: it carries identity/version, authentication policy, database
+`looprd.yaml` carries identity/version, authentication policy, database
 models, API operations, WebSocket subscriptions, migrations, and optional custom Python source.
 There are no handler files or component images to chase. Secrets remain local references.
+Optional `includes` splits declarations into nested specification fragments in the
+same repository. These extend one component, sharing its authentication and database;
+see [nested specifications](specification-imports.md) and the
+[recursive example](../examples/nested/looprd.yaml).
 Optional `management.resources` and `management.actions` enable protected operator
 browsing, constrained edits and domain actions. See [operator administration](operator-administration.md)
 and [the complete account example](../examples/operator-accounts.yaml). Omitted

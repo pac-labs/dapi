@@ -22,7 +22,21 @@ def main():
     args = parser.parse_args()
     if args.command == "validate":
         contract = Sources if args.sources else Specification
-        contract.model_validate(parse_document(args.file.read_text(encoding="utf-8-sig")))
+        if args.sources:
+            contract.model_validate(parse_document(args.file.read_text(encoding="utf-8-sig")))
+        else:
+            import asyncio
+            from .sources import SourceReader
+            from .spec_imports import compose
+
+            async def validate_component():
+                reader = SourceReader(str(args.file.resolve()))
+                try:
+                    contract.model_validate(await compose(reader, str(args.file.resolve())))
+                finally:
+                    await reader.close()
+
+            asyncio.run(validate_component())
         print(f"Valid {contract.__name__}: {args.file}")
     elif args.command == "schema":
         print(json.dumps((Sources if args.sources else Specification).model_json_schema(), indent=2))
