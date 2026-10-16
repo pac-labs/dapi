@@ -1,5 +1,16 @@
 # Looprd validation
 
+`tests/test_administration.py` covers DESIGN.adoc / Specification authority /
+Operator data administration: opt-in/projections, private grants, choices and
+bounds, immutable ownership/revision fields including aliases, atomic edits/actions,
+rollback on audit failure, concurrent stale writes, cancellation protection,
+HMAC ETags, idempotent receipts, event notifications, blocked-API repairs and
+restart/opt-out retention. `tests/test_operator_postgresql.py` exercises real
+PostgreSQL audit/outbox transactions in an isolated schema when the existing
+disposable test URL is configured. UI tests cover typed controls, literal text,
+confirmation-key reuse and disabled controls. Browser checks use only synthetic
+accounts, including role/balance actions, audit, drafts, search/paging and phone layout.
+
 `tests/test_bugreports.py` covers DESIGN.adoc / Purpose / Central application bug
 reports: authenticated submission, public mode, CORS and blocking, protected review,
 deduplication and concurrent counts, the global 100-issue cap and eviction policy,

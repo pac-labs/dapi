@@ -1,5 +1,13 @@
 # Management dashboard
 
+The operator workspace uses a desktop sidebar and a compact phone selector.
+Overview includes service alerts and shortcuts to data administration, bug reports
+and metrics. **Services** provides inspection/blocking; **Data & actions** provides
+paged projected records, typed fields, named actions, confirmation previews,
+idempotent receipts and audit history when explicitly enabled by a component.
+Drafts remain intact while changing workspace sections. See
+[the administration contract](operator-administration.md) for opt-in and safety rules.
+
 **Bug reports** is the protected application issue inbox. Filter by component,
 state or message, review the latest sanitized sample and occurrence count,
 resolve/reopen issues or confirm deletion. Use **Refresh reports** for new

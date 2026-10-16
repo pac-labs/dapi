@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from .contract import Name, Symbol, PathName, Scope, Strict
 from .platform_spec import Reference, Index, Query, ServiceContract, Dependency, Limits, Job
 from .cors_spec import Cors
+from .administration_spec import Management, check_management
 
 
 class Verifier(Strict):
@@ -188,6 +189,7 @@ class Specification(Strict):
     api: API
     auth: Auth
     cors: Cors | None = None
+    management: Management | None = None
     database: Database | None = None
     models: dict[Symbol, Model] = Field(default_factory=dict)
     resources: dict[Name, Resource] = Field(default_factory=dict)
@@ -218,6 +220,7 @@ class Specification(Strict):
         if self.realtime.delivery == "durable" and (not self.database or not self.websocket):
             raise ValueError("durable events require database and WebSocket resources")
         self.check_permissions()
+        check_management(self)
         if (self.models or self.resources) and not self.database:
             raise ValueError("models/resources require database")
         occupied = {"/_ws-ticket", "/openapi.json", "/_events", "/_services", "/_jobs", "/_bugreports"}

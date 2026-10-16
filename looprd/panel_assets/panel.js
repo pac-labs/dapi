@@ -9,6 +9,8 @@ function duration(seconds){if(seconds<60)return seconds+'s';if(seconds<3600)retu
 function fact(target,label,value,mono=false){const dl=node('dl',undefined,'fact');dl.append(node('dt',label),node('dd',value??'—',mono?'mono':''));target.append(dl);}
 function clearKey(){el('new-key').value='';el('issued').hidden=true;}
 function disconnect(){
+ clearOperatorData();
+ el('operator-attention').replaceChildren();text('operator-open-reports','Review application issues');
  clearBugReports();
  clearFiles();
  el('diagnostic-url').value='';el('diagnostic-failures').replaceChildren();el('diagnostic-links').replaceChildren();
@@ -27,17 +29,17 @@ async function api(path,method='GET',body){
  if(current!==session)throw Error('Session ended.');
  if(!response.ok){if(response.status===401){if(token===rememberedKey)forgetCredential();disconnect();}
   if(result?.components&&token)render(result);
-  throw Error(response.status===401?'Management key was rejected. Connect again.':result?.sourcesError||result?.error||'Request failed ('+response.status+')');}
+  throw Error(response.status===401?'Management key was rejected. Connect again.':result?.sourcesError||operatorError(result?.error)||'Request failed ('+response.status+')');}
  if(response.status!==204&&!result)throw Error('The server returned an invalid response.');
  return result;
 }
 async function run(action,quiet=false){
  if(busy)return;busy=true;
- document.querySelectorAll('[data-action]').forEach(button=>button.disabled=true);
+ const disabled=[...document.querySelectorAll('[data-action]')].map(button=>[button,button.disabled]);disabled.forEach(([button])=>button.disabled=true);
  if(!quiet){text('message','Working…');el('message').className='';}
- try{await action();text('message',storageUnavailable?'Status updated; key is kept for this session only because browser storage is unavailable.':'Status updated.');el('message').className='';}
- catch(error){text('message',error.message);el('message').className='error';if(token)badge(el('connection'),'Refresh failed','warn');}
- finally{busy=false;document.querySelectorAll('[data-action]').forEach(button=>button.disabled=false);}
+ try{await action();if(!quiet){text('message',storageUnavailable?'Status updated; key is kept for this session only because browser storage is unavailable.':'Status updated.');el('message').className='';}}
+ catch(error){text('message',error.message);el('message').className='error';}
+ finally{busy=false;disabled.forEach(([button,value])=>{if(button.isConnected)button.disabled=value;});}
 }
 function ids(){return [...new Set([...Object.keys(snapshot.components),...Object.keys(snapshot.sources||{}),...Object.keys(snapshot.errors),...(snapshot.blocked||[])])].sort();}
 function state(id){if(snapshot.blocked?.includes(id))return ['Blocked','warn'];if(snapshot.errors[id])return ['Needs attention','warn'];if(snapshot.components[id])return ['Active','good'];
@@ -84,6 +86,7 @@ function renderDetail(){
  fact(facts,'Active Git revision',item?.revision,true);fact(facts,'Loaded in this process',date(item?.loadedAt));
  fact(facts,'Database',item?.databaseBackend?item.databaseBackend+' · schema '+item.schemaVersion:'None');
  fact(facts,'Allowed frontend origins',item?.allowedOrigins?.join(', ')||'None configured');
+ fact(facts,'Data administration',item?.dataAdministrationEnabled?'Explicitly enabled':'Not enabled by specification');el('administer-component').disabled=!item?.dataAdministrationEnabled;
  fact(facts,'Event transport',item?.realtime?item.realtime.backend+' · '+item.realtime.state+' · '+(item.realtime.delivery||'best-effort')+(item.realtime.backend==='redis'?' · '+item.realtime.droppedRemoteEvents+' dropped remote events':''):'Memory · best effort');
  fact(facts,'Live traffic',item?item.activeRequests+' HTTP / auth in flight · '+item.websocketConnections+' sockets':'Not serving');
  text('detail-endpoint',item?location.origin+item.prefix:'No active component URL');el('copy-endpoint').disabled=!item;
@@ -116,6 +119,7 @@ function render(result){
  el('source-error').hidden=!result.sourcesError;text('source-error','Sources check failed; previous configuration retained. '+(result.sourcesError||''));
  if(!ids().includes(selectedId))selectedId=ids()[0]||'';
  renderList();renderDetail();syncKeys();
+ renderOperatorAttention();if(currentView==='overview')loadOperatorQueue();
  const facts=el('runtime-facts');facts.replaceChildren();
  badge(el('reload-state'),runtime.checking?'Checking':result.sourcesError?'Source error':Object.keys(result.errors).length?'Component errors':'Watching',result.sourcesError||Object.keys(result.errors).length?'warn':'good');
  fact(facts,'Process uptime',duration(runtime.uptimeSeconds||0));fact(facts,'Started',date(runtime.startedAt));
@@ -163,4 +167,5 @@ el('refresh-operations').onclick=()=>run(loadOperations);
 initFiles();
 initDiagnostics();
 initBugReports();
+initOperatorData();initOperatorOverview();
 initCredentials();

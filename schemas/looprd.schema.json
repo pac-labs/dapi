@@ -46,6 +46,99 @@
       "title": "AccessPolicy",
       "type": "object"
     },
+    "ActionInput": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Label",
+          "type": "string"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Choices"
+        },
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "float",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "maxLength": {
+          "default": 200,
+          "maximum": 2000,
+          "minimum": 1,
+          "title": "Maxlength",
+          "type": "integer"
+        }
+      },
+      "title": "ActionInput",
+      "type": "object"
+    },
     "Auth": {
       "additionalProperties": false,
       "properties": {
@@ -602,6 +695,213 @@
       "title": "Limits",
       "type": "object"
     },
+    "ManagedField": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Label",
+          "type": "string"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxItems": 32,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Choices"
+        },
+        "editable": {
+          "default": false,
+          "title": "Editable",
+          "type": "boolean"
+        }
+      },
+      "title": "ManagedField",
+      "type": "object"
+    },
+    "ManagedResource": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "default": "",
+          "maxLength": 80,
+          "title": "Label",
+          "type": "string"
+        },
+        "titleField": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Titlefield"
+        },
+        "fields": {
+          "maxProperties": 32,
+          "minProperties": 1,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]{0,63}$": {
+              "$ref": "#/$defs/ManagedField"
+            }
+          },
+          "title": "Fields",
+          "type": "object"
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "title": "ManagedResource",
+      "type": "object"
+    },
+    "Management": {
+      "additionalProperties": false,
+      "properties": {
+        "resources": {
+          "maxProperties": 32,
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]{0,47}$": {
+              "$ref": "#/$defs/ManagedResource"
+            }
+          },
+          "title": "Resources",
+          "type": "object"
+        },
+        "actions": {
+          "maxProperties": 32,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]{0,47}$": {
+              "$ref": "#/$defs/ManagementAction"
+            }
+          },
+          "title": "Actions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "resources"
+      ],
+      "title": "Management",
+      "type": "object"
+    },
+    "ManagementAction": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Description",
+          "type": "string"
+        },
+        "resource": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Resource",
+          "type": "string"
+        },
+        "inputs": {
+          "maxProperties": 16,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]{0,63}$": {
+              "$ref": "#/$defs/ActionInput"
+            }
+          },
+          "title": "Inputs",
+          "type": "object"
+        },
+        "writes": {
+          "maxProperties": 16,
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]{0,47}$": {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "title": "Writes",
+          "type": "object"
+        },
+        "source": {
+          "maxLength": 500000,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "resource",
+        "writes",
+        "source"
+      ],
+      "title": "ManagementAction",
+      "type": "object"
+    },
     "Membership": {
       "additionalProperties": false,
       "properties": {
@@ -1059,6 +1359,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/Cors"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "management": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Management"
         },
         {
           "type": "null"

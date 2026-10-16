@@ -56,6 +56,7 @@ jobs:
       - run: python -m looprd validate examples/database-auth.yaml
       - run: python -m looprd validate examples/redis-events.yaml
       - run: python -m looprd validate examples/platform.yaml
+      - run: python -m looprd validate examples/operator-accounts.yaml
 
   image:
     needs: test

@@ -14,8 +14,15 @@
 <p id="message" role="status" aria-live="polite">Connect to view your runtime.</p>
 <main id="controls" hidden>
 <nav aria-label="Management sections" class="view-nav">
-<button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Components</button>
-<button data-view-button="access">Access keys</button><button data-view-button="files">Files</button><button data-view-button="operations">Operations</button><button data-view-button="runtime">Runtime</button><button data-view-button="diagnostics">Diagnostics</button><button data-view-button="bugreports">Bug reports</button></nav>
+<label class="mobile-nav" for="workspace-view">Operator workspace</label><select id="workspace-view" class="mobile-nav cds--select-input"><option value="overview">Overview</option><option value="components">Services</option><option value="data">Data &amp; actions</option><option value="access">Access keys</option><option value="bugreports">Bug reports</option><option value="files">Files</option><option value="operations">Operations</option><option value="diagnostics">Diagnostics</option><option value="runtime">Runtime</option></select>
+<p class="nav-label">Operate</p><button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Services</button><button data-view-button="data">Data &amp; actions</button><button data-view-button="access">Access keys</button><button data-view-button="bugreports">Bug reports</button><button data-view-button="files">Files</button><p class="nav-label">Observe</p><button data-view-button="operations">Operations</button><button data-view-button="diagnostics">Diagnostics</button><button data-view-button="runtime">Runtime</button></nav>
+<section data-view="data" class="view card" hidden><div class="section-heading"><h2>Data &amp; management actions</h2><button id="operator-reload" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Reload options</button></div>
+<label for="operator-component">Service</label><select id="operator-component" class="cds--select-input"></select><p id="operator-guidance" class="muted small"></p>
+<div id="operator-workspace" class="fill" hidden><div class="toolbar"><label for="operator-resource">Resource</label><select id="operator-resource" class="cds--select-input"></select><button id="operator-history" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Audit trail</button></div>
+<p id="operator-receipt" class="small muted" aria-live="polite"></p>
+<div id="operator-browser" class="fill"><div class="toolbar"><label class="sr-only" for="operator-search">Search visible fields or record ID</label><input id="operator-search" class="cds--text-input" type="search" maxlength="100" placeholder="Search visible fields or record ID"><button id="operator-find" class="cds--btn cds--btn--secondary cds--layout--size-sm">Find records</button></div>
+<div id="operator-rows" class="page-list operator-table"></div><div class="toolbar"><button id="operator-prev" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Previous records</button><span id="operator-page" class="small muted"></span><button id="operator-next" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Next records</button></div></div>
+<div id="operator-editor" class="page-list" hidden></div><div id="operator-audit" class="page-list" hidden></div></div></section>
 <section data-view="bugreports" class="view card" hidden><div class="section-heading"><h2>Application bug reports</h2><button id="refresh-bugreports" data-action class="cds--btn cds--btn--tertiary cds--layout--size-sm">Refresh reports</button></div>
 <p class="muted small">Repeated issues are grouped. Up to 100 issues are retained; new issues replace the oldest resolved issue first, then the least recently seen open issue.</p>
 <div id="bugreport-browser" class="fill"><div class="toolbar"><label class="sr-only" for="bugreport-search">Search reports</label><input id="bugreport-search" type="search" class="cds--text-input" placeholder="Search reports">
@@ -25,6 +32,7 @@
 <section data-view="operations" class="view card" hidden><div class="section-heading"><h2>Operations</h2><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="refresh-operations">Refresh</button></div><div id="operations-content" class="page-list"></div></section>
 <section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
+<div class="operator-home"><section class="card fill"><div class="section-heading"><h2>Needs attention</h2><span id="operator-attention-count" class="small muted"></span></div><div id="operator-attention" class="page-list"></div></section><section class="card operator-shortcuts"><h2>Operator shortcuts</h2><button id="operator-go-data" class="cds--btn cds--btn--ghost cds--layout--size-sm">Administer data</button><button id="operator-go-reports" class="cds--btn cds--btn--ghost cds--layout--size-sm"><span id="operator-open-reports">Review application issues</span></button><button id="operator-go-operations" class="cds--btn cds--btn--ghost cds--layout--size-sm">Inspect service metrics</button></section></div>
 <div class="metrics">
 <article class="card metric"><span class="eyebrow">SERVING APIs</span><strong id="metric-components">—</strong><span id="metric-configured" class="muted small"></span></article>
 <article class="card metric"><span class="eyebrow">NEEDS ATTENTION</span><strong id="metric-errors">—</strong><span class="muted small">Sources and component errors</span></article>
@@ -37,6 +45,7 @@
 <section data-view="components" class="view" hidden>
 <div class="toolbar component-picker"><label class="sr-only" for="component-picker">Inspect component</label><select id="component-picker" class="cds--select-input"></select>
 <button id="block-api" class="cds--btn cds--btn--danger--tertiary cds--layout--size-sm" data-action hidden>Block API</button></div>
+<button id="administer-component" class="cds--btn cds--btn--tertiary cds--layout--size-sm" disabled>Administer this service</button>
 <div id="detail-empty" class="card empty">Select a component from Overview to inspect its API and storage.</div>
 <article id="detail" class="card fill" hidden><div class="section-heading"><h2 id="detail-name"></h2><span id="detail-state" class="badge"></span></div>
 <p id="detail-error" class="notice warning" hidden></p><nav class="subnav" aria-label="Component details"><button data-tab-button="summary">Summary</button><button data-tab-button="routes">API routes</button><button data-tab-button="storage">Database models</button></nav>
@@ -73,4 +82,7 @@
 /* PANEL_OPS */
 /* PANEL_DIAGNOSTICS */
 /* PANEL_BUGREPORTS */
+/* PANEL_OPERATOR_FORMS */
+/* PANEL_OPERATOR_DATA */
+/* PANEL_OPERATOR_OVERVIEW */
 /* PANEL_JS */</script></body></html>

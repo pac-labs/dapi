@@ -1,0 +1,56 @@
+apiVersion: looprd/v1
+component: operator-demo
+release: '1.0'
+requires: [management.data]
+api: {version: v1}
+auth: {mode: bearer, secretRef: sample/client-token}
+database: {backend: sqlite, schemaVersion: 1}
+models:
+  Account:
+    fields:
+      id: {type: integer, primaryKey: true, generated: true}
+      username: {type: string, maxLength: 80, required: true, unique: true}
+      role: {type: string, maxLength: 20, required: true}
+      coins: {type: integer, required: true}
+      revision: {type: integer, required: true}
+      internalNote: {type: string, maxLength: 200}
+resources:
+  accounts:
+    model: Account
+    path: /accounts
+    operations: [list, get]
+    projection: [id, username, role, coins, revision]
+    revisionField: revision
+websocket: {path: /events, resources: [accounts]}
+management:
+  resources:
+    accounts:
+      label: Accounts
+      titleField: username
+      fields:
+        username: {label: Username, editable: true}
+        role: {label: Role, editable: true, choices: [player, admin]}
+        coins: {label: Coins, minimum: 0}
+  actions:
+    adjust-coins:
+      label: Adjust coins
+      description: Adjust an existing balance without allowing it to become negative.
+      resource: accounts
+      inputs:
+        amount: {label: Amount to add or subtract, type: integer, minimum: -1000000, maximum: 1000000}
+      writes: {accounts: [coins]}
+      source: |
+        def handle(ctx):
+            account = ctx.get('accounts', ctx.recordId)
+            balance = account['coins'] + ctx.body['amount']
+            if balance < 0:
+                ctx.reject('insufficient_balance')
+            ctx.update('accounts', ctx.recordId, {'coins': balance})
+    promote-admin:
+      label: Grant administrator role
+      description: Set the selected account's application role to admin.
+      resource: accounts
+      writes: {accounts: [role]}
+      source: |
+        def handle(ctx):
+            ctx.update('accounts', ctx.recordId, {'role': 'admin'})

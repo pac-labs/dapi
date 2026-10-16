@@ -8,6 +8,11 @@ SQLite needs no extra container; PostgreSQL is also supported through SQLAlchemy
 Source: [pac-labs/dapi](https://github.com/pac-labs/dapi). Image: `ghcr.io/pac-labs/dapi`.
 The existing Traefik instance serves Looprd paths on your configured API hostname.
 
+The Carbon operator workspace supports service controls, issue review and optional
+[data administration](docs/operator-administration.md). Components explicitly
+declare readable/editable fields and trusted management actions in `looprd.yaml`;
+confirmed changes use transactions, stale-record protection and audit receipts.
+
 All components expose centralized [application bug reporting](docs/bug-reports.md).
 New and updated clients must support consented diagnostic submission. The protected
 management panel groups repeated issues and retains at most 100 distinct issues.

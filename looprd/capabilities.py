@@ -12,6 +12,7 @@ CAPABILITIES = frozenset({
     "execution.process", "operations.local",
     "cors.component",
     "reports.bugs",
+    "management.data",
 })
 
 

@@ -1,6 +1,6 @@
 // Fixed workspace navigation with contained panels; no document scrolling.
 let currentView='overview',detailTab='summary',keyTab='list';
-const viewNames={overview:'Service overview',components:'Component inspection',access:'Access keys',files:'Temporary files',operations:'Operations',runtime:'Runtime & reloads',diagnostics:'Diagnostics & agent access',bugreports:'Application bug reports'};
+const viewNames={overview:'Service overview',components:'Service inspection',data:'Data & management actions',access:'Access keys',files:'Temporary files',operations:'Operations',runtime:'Runtime & reloads',diagnostics:'Diagnostics & agent access',bugreports:'Application bug reports'};
 function showView(view){
  currentView=view;
  document.querySelectorAll('[data-view]').forEach(n=>n.hidden=n.dataset.view!==view);
@@ -8,6 +8,9 @@ function showView(view){
   if(n.dataset.viewButton===view)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current');
  });
  text('page-title',viewNames[view]);
+ el('workspace-view').value=view;
+ if(view==='data'&&token)run(loadOperatorData);
+ if(view==='overview'&&token)loadOperatorQueue();
  if(view==='files'&&token)run(listFiles);
  if(view==='operations'&&token)run(loadOperations);
  if(view==='diagnostics'&&token)run(loadDiagnostics);
@@ -41,6 +44,7 @@ function syncPicker(){
  }
 }
 function initNavigation(){
+ el('workspace-view').onchange=()=>showView(el('workspace-view').value);
  document.querySelectorAll('[data-view-button]').forEach(n=>n.onclick=()=>showView(n.dataset.viewButton));
  document.querySelectorAll('[data-tab-button]').forEach(n=>n.onclick=()=>showDetailTab(n.dataset.tabButton));
  document.querySelectorAll('[data-key-button]').forEach(n=>n.onclick=()=>showKeyTab(n.dataset.keyButton));

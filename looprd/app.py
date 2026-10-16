@@ -19,6 +19,7 @@ from .job_routes import manage_jobs
 from .diagnostic_routes import management as diagnostic_management, diagnostic
 from .diagnostic_contract import endpoint as diagnostic_contract
 from .bugreport_routes import management as bugreport_management
+from .administration_routes import endpoint as data_administration
 from .operations import Operations, OperationsMiddleware, endpoint as operations_endpoint
 
 
@@ -52,6 +53,12 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/diagnostics", diagnostic_management, methods=["GET", "POST"]),
         Route("/_looprd/diagnostics.openapi.json", diagnostic_contract),
         Route("/_looprd/bugreports", bugreport_management),
+        Route("/_looprd/data", data_administration),
+        Route("/_looprd/data/{component}", data_administration),
+        Route("/_looprd/data/{component}/audit", data_administration),
+        Route("/_looprd/data/{component}/resources/{resource}", data_administration),
+        Route("/_looprd/data/{component}/resources/{resource}/{record_id}", data_administration, methods=["GET", "PATCH"]),
+        Route("/_looprd/data/{component}/resources/{resource}/{record_id}/actions/{action}", data_administration, methods=["POST"]),
         Route("/_looprd/bugreports/{report_id}", bugreport_management, methods=["GET", "PATCH", "DELETE"]),
         Route("/_looprd/diagnostics/{link_id}", diagnostic_management, methods=["DELETE"]),
         Route("/_looprd/diagnostic/{token}", diagnostic),

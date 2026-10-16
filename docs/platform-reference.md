@@ -1,5 +1,10 @@
 # Generic platform extensions (`looprd/v1`)
 
+`management.data` supports opt-in, management-key-only projected browsing,
+constrained edits, transaction-bound component actions and append-only audit
+receipts. [Operator administration](operator-administration.md) remains separate
+from application user authentication and ownership policies.
+
 The `reports.bugs` capability provides mandatory built-in bug-report submission
 infrastructure for every component. New/updated clients must implement the
 [application reporting contract](bug-reports.md); installed clients remain

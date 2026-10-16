@@ -3,6 +3,10 @@
 `looprd.yaml` is self-contained: it carries identity/version, authentication policy, database
 models, API operations, WebSocket subscriptions, migrations, and optional custom Python source.
 There are no handler files or component images to chase. Secrets remain local references.
+Optional `management.resources` and `management.actions` enable protected operator
+browsing, constrained edits and domain actions. See [operator administration](operator-administration.md)
+and [the complete account example](../examples/operator-accounts.yaml). Omitted
+management declarations expose no records to the management panel.
 Every component also has a built-in `POST /_bugreports` endpoint. New and updated
 Looprd-enabled clients must implement consented diagnostic submission as described
 in [the bug-report integration contract](bug-reports.md). Add `reports.bugs` to

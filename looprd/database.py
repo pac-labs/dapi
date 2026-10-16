@@ -89,6 +89,8 @@ class Storage:
         self.queries = Queries(self) if any(resource.query for resource in spec.resources.values()) else None
         self.quota = RowQuota(self) if spec.limits.maxRows else None
         self.jobs = Jobs(self) if spec.jobs else None
+        from .operator_audit import OperatorAudit
+        self.operator_audit = OperatorAudit() if spec.management is not None else None
         self.identity = identity
 
     @staticmethod
@@ -139,6 +141,8 @@ class Storage:
             self.jobs.initialize(connection)
         if self.keys:
             self.keys.initialize(connection)
+        if self.operator_audit:
+            self.operator_audit.initialize(connection)
         self.marker.create(connection, checkfirst=True)
         previous = connection.execute(sa.select(self.marker).where(self.marker.c.id == 1)).mappings().first()
         target = self.spec.database.schemaVersion

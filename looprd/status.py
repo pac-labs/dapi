@@ -64,6 +64,7 @@ def snapshot(runtime):
             "databaseBackend": spec.database.backend if spec.database else None,
             "authMode": spec.auth.mode, "scopes": spec.auth.scopes,
             "allowedOrigins": allowed_origins(settings, spec),
+            "dataAdministrationEnabled": value.administration is not None,
             "blocked": key in runtime.availability.blocked,
             "error": runtime.errors.get(key), "loadedAt": value.loaded_at,
             "activeRequests": value.active_requests, "websocketConnections": len(value.sockets),

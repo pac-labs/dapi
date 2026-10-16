@@ -1,0 +1,42 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "generation": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Generation",
+      "type": "string"
+    },
+    "etag": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Etag",
+      "type": "string"
+    },
+    "operationId": {
+      "pattern": "^[a-zA-Z0-9_-]{8,64}$",
+      "title": "Operationid",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 500,
+      "minLength": 3,
+      "pattern": "\\S.*\\S",
+      "title": "Reason",
+      "type": "string"
+    },
+    "values": {
+      "additionalProperties": true,
+      "maxProperties": 32,
+      "title": "Values",
+      "type": "object"
+    }
+  },
+  "required": [
+    "generation",
+    "etag",
+    "operationId",
+    "reason",
+    "values"
+  ],
+  "title": "OperatorWrite",
+  "type": "object"
+}

@@ -21,7 +21,7 @@ from .crud import NativeCRUD
 class Generation(NativeCRUD):
     def __init__(self, spec, settings, bus):
         self.spec, self.settings, self.bus = spec, settings, bus
-        python = any(handler.kind == "python" for handler in spec.handlers) or spec.auth.mode == "verified" or bool(spec.jobs)
+        python = any(handler.kind == "python" for handler in spec.handlers) or spec.auth.mode == "verified" or bool(spec.jobs) or bool(spec.management and spec.management.actions)
         if python and (not settings.allow_python or settings.trusted_components is not None and spec.component not in settings.trusted_components):
             raise ValueError("Python execution requires host trust and LOOPRD_ALLOW_PYTHON=true")
         self.loaded_at = timestamp()
@@ -59,9 +59,17 @@ class Generation(NativeCRUD):
         for job in spec.jobs.values():
             if not any(isinstance(node, ast.AsyncFunctionDef) and node.name == "handle" for node in ast.parse(job.source).body):
                 raise ValueError("job must define async def handle(ctx)")
+        self.administration = None
         if spec.database:
             self.storage = Storage(spec, settings)
-            self.storage.initialize()
+            try:
+                if spec.management is not None:
+                    from .administration import Administration
+                    self.administration = Administration(self)
+                self.storage.initialize()
+            except BaseException:
+                self.storage.close()
+                raise
 
     async def authenticate(self, authorization):
         import hmac

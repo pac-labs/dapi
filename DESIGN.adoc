@@ -101,6 +101,54 @@ The specification contract is `looprd/v1`. Public prefixes are `/looprd/<compone
 
 == Specification authority
 
+=== Operator data administration
+
+Optional `management` declarations grant the management-key holder explicit
+component-wide operator authority, separately from application principals and row
+policies. No declaration means no record browsing, editing or action execution.
+Resources name the readable fields, labels, optional title field and editable
+fields with optional numeric bounds/choices. Generated IDs, ownership fields and
+revision fields are never editable. Trusted synchronous Python actions name a
+target resource, typed scalar inputs and per-resource writable fields; source is
+inline and requires the existing host Python/trusted-component policy. Actions
+use transaction-bound get/update helpers; no session/engine, commit method,
+secret accessor or arbitrary SQL endpoint is exposed. This is a trusted-code
+contract, not a sandbox: handlers must return promptly, perform no external side
+effects or unmanaged work, and not bypass helpers via imports.
+
+Protected management endpoints provide paged/searchable declared projections,
+record details, edits, actions and append-only audit history. Record ETags are
+HMACs under a fresh server-only generation key, preventing enumeration of hidden
+low-entropy column values through a plain record hash. Public component
+credentials and diagnostic links cannot access them. Operator authority remains
+available while public APIs are blocked. Every write requires a reason, active
+generation digest, record ETag and client operation ID. Reconciliation and writes
+serialize; transactions lock records, enforce strict model and declared field
+validation, increment revision fields, and write audit metadata atomically.
+An operation ID with the same request hash returns its receipt without repeating
+the change; reuse with different input returns conflict. Failed actions roll back
+all updates and audit. Audit records retain actor kind, reason, operation, target,
+generation, request hash and changed field names, never credential values or
+before/after record contents. Shared management keys do not identify an individual.
+Audit entries/receipts persist in runtime-owned component tables independently
+of application fingerprints/schema versions and remain until operator-managed
+database archival; reads are paged and capped. Removing opt-in retains the table
+but disables access until re-enabled. No application schema migration is needed.
+
+Native event messages and durable outbox writes remain transactional; best-effort
+events publish only after commit. Operator updates honor resource projections in
+client-visible event data, with full records retained only for internal policy
+checks. Action helpers may update up to 50 records per
+transaction. Request bodies and input sizes are bounded. Concurrent record edits
+or changed generation metadata return conflict rather than overwriting silently.
+The panel generates typed forms and confirmation previews from declarations,
+preserves drafts during navigation, never stores records in browser persistence,
+and provides searchable records, named actions and audit history. Disabled
+components show opt-in guidance. Desktop navigation is an operator sidebar;
+phone navigation is a compact selector, with no document scrolling. Overview
+offers an attention queue and direct administration/report/operations entry points.
+`management.data` advertises this additive capability; legacy specs remain valid.
+
 === Component frontend origins
 
 Optional `cors.allowedOrigins` declares up to 128 unique exact frontend origins,

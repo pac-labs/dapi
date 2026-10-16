@@ -5,9 +5,20 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `52aad7a53eb6ac9631b0c9dc19e9d67bc1be0b01bad56d6f24b0963ac186f31d`.
+Design SHA-256 (UTF-8/LF): `bcb579fb22b19cdd0e1eaca6e3428187afbfb9c78e469f5e1540f9980e2faf81`.
 
 == Implemented candidate
+
+* Opt-in operator record projections, constrained edits and transaction-bound
+  application actions, with HMAC ETags, idempotent receipts and atomic audit/outbox.
+  Governing design: Specification authority / Operator data administration.
+  Carbon operator sidebar/phone selector, attention queue, paged search, typed
+  edit/action forms, confirmation previews, draft retention and audit history.
+  Local validation: 183 Python tests passed/five optional integration checks
+  skipped; eight UI tests passed. Synthetic browser workflows exercised role and
+  balance changes, pagination, receipts, audit and no document scroll at phone width.
+  Applications must declare explicit management grants; production records are
+  not made editable implicitly. Trusted actions retain the existing host trust gate.
 
 * Central application bug-report submission and protected Carbon issue review.
   Governing design: Purpose / Central application bug reports. Shared persistent
