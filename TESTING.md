@@ -132,3 +132,10 @@ The real integration check requires a disposable `LOOPRD_TEST_REDIS_URL`; CI pro
 Redis 7.4 for both Python jobs and tests actual fanout/echo plus restricted channel/command ACLs.
 Never use a production Redis URL: the real test creates/removes a uniquely named ACL user.
 Legacy checkpoints, descriptors, synchronous handlers and WebSocket wire messages remain covered.
+
+## Discovery observation regressions
+
+Authority: DESIGN.adoc / Optional discovery observation and service availability.
+Run tests/test_discovery.py, tests/test_service_options.py and
+tests/test_application_errors.py, then the full suite. These generic checks do not
+certify the cross-product game-play acceptance plan.

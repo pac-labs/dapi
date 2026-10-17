@@ -350,6 +350,11 @@
           "minLength": 1,
           "title": "Credentialsecret",
           "type": "string"
+        },
+        "optional": {
+          "default": false,
+          "title": "Optional",
+          "type": "boolean"
         }
       },
       "required": [

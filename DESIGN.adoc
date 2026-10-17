@@ -101,6 +101,46 @@ The specification contract is `looprd/v1`. Public prefixes are `/looprd/<compone
 
 == Specification authority
 
+=== Optional discovery observation and service availability
+
+An operator-enabled, default-off observer reads optional sibling `atriumd.yaml`
+only after a successful component/source checkpoint. It uses the root source's
+resolved immutable Git commit, including on sidecar-only changes. Local reads
+stay in the resolved root directory; plain HTTPS observation additionally
+requires an exact operator-approved origin. Redirects are never followed.
+Sidecars are independently bounded to 64 KiB and validated as metadata against
+the pinned Atrium `atriumd/v1` contract, without executing repository code or
+adding an Atrium field to the portable Looprd schema. Missing, invalid,
+unavailable, inactive and withdrawn are distinct observations. GitHub 404 is
+not authoritative absence without a successful bounded directory listing at
+the same revision. Unknown/failed observations preserve the last valid metadata.
+
+Observation runs outside the activation path and cannot undo a good generation.
+A single bounded observer task coalesces source snapshots; writes recheck the
+active generation/revision under the runtime lock. A separate private versioned
+SQLite store retains at most 1,000 component records, including last valid
+metadata/fingerprint. Management-only JSON lists status and exposes full metadata
+only on explicit detail reads. No diagnostics capability grants metadata access.
+This build is observe-only: no sender, approval key, public listing, launch URL
+binding, withdrawal delivery or acknowledgement protocol is invented. Atrium's
+receiver-owned machine trust/provenance/lifecycle changes remain prerequisites
+for automatic delivery. Observation removal never deletes application data.
+
+Declared service dependencies gain `optional: true`, default false. Missing or
+incompatible optional consumers do not reject producer activation or upgrades;
+calls still require declared contracts and caller-bound machine credentials and
+fail with 503 when unavailable. Missing optional credentials also fail at call
+time, not producer activation. Required dependencies preserve their prior checks.
+Application-owned durable outboxes use this to tolerate Social absence without
+turning Looprd's jobs/events into permanent application history.
+
+Trusted handlers raising Starlette HTTPException retain valid 4xx/5xx status;
+responses use static safe messages and never forward arbitrary details/headers.
+Only a bounded numeric Retry-After is retained for 429/503. Unsupported exception
+statuses fail closed as 500. Existing EventError behavior remains available for
+explicit application-defined responses. See docs/discovery-observation.adoc and
+docs/ARCHITECTURE_DIFFERENCES_GAME_DISCOVERY.adoc for delivered scope and gaps.
+
 === Background push and HTTP synchronization
 
 Durable resource event histories support authenticated HTTP catch-up independently

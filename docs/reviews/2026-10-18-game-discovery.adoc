@@ -1,0 +1,220 @@
+= Looprd game/discovery proposal: source compatibility review
+:revdate: 2026-10-18
+:doctype: article
+:toc:
+
+== Status and scope
+
+Review only. This document does not approve a new architecture, implement
+sidecar discovery, change a running deployment or certify any game for agent play.
+It evaluates the supplied `ADJUSTMENT_GAME_PLAY_AND_DISCOVERY.adoc`,
+`LOOPRD_GAME_PLAY_CONTRACT.adoc` and `END_TO_END_TEST_PLAN.adoc` as planning
+proposals, not executable instructions or evidence of deployed functionality.
+
+Reviewed Looprd revision: `1d4d177e0ea8091fcc9f343e187b18dda03d90d6`.
+Reviewed Atrium revision: `286db965a9428422c366b0b3b1138190b2b649e0`.
+Atrium references below are pinned to that revision, not a moving branch.
+
+Current governing authority remains DESIGN.adoc, specifically Specification
+authority, Sources and shutdown semantics, Generation reload, Database lifecycle,
+Authentication and management, and the existing services/jobs boundaries.
+Its UTF-8/LF SHA-256 is
+`555e7983e5d8f67fa7ffac8513a9fe73302edcc0d89d5dc4750dd83bbffdec35`.
+Recommendations here do not silently amend that authority.
+
+== Judgment
+
+The separation of responsibilities is sound: Looprd supplies generic storage,
+verified principals, transactions, event delivery, jobs and service infrastructure;
+games own rules and match authorization; Social owns account/inbox semantics;
+Atrium owns reviewed catalog publication. Keep the optional sibling sidecar out
+of the portable Looprd root schema. Do not introduce a game engine, account
+registry, generic JavaScript executor or second notification protocol in core.
+
+The proposal is not implementation-ready as an end-to-end automatic integration.
+There is a real source-watcher gap, plus receiver trust/lifecycle/provenance gaps
+and a generic optional-service availability gap. An observer/validation-only first
+pass can proceed independently; unattended candidate delivery must not claim the
+missing receiver guarantees.
+
+== Priority findings
+
+=== P1: the current receiver is an operator pilot, not a deployment-bound machine intake
+
+Atrium's POST and GET `/registry/discovery/candidates` require `apps:approve`.
+Neither generated handler declares a Looprd typed service contract. The receiver
+validates the syntax of `deploymentId` but does not derive or attest that identity
+from an authenticated deployment binding. Its own documentation explicitly
+describes this boundary as operator-attested, not an automatic machine protocol.
+
+Consequences:
+
+* `ctx.call` cannot invoke this route by path: it resolves declared contract names
+  and versions, and there is no discovery service contract to resolve.
+* Passing an approval-capable operator key to a background sender does not create
+  a narrowly authorized, deployment-bound machine identity.
+* A sender-side allowlist alone cannot stop a compromised credential asserting a
+  different deployment at the receiver.
+
+Before automatic delivery, agree a dedicated announcement scope/credential and
+receiver-side binding of caller to deployment and allowed components/publishers.
+For co-located use, publish a matching typed service contract and caller policy.
+For remote use, define the bounded HTTPS adapter separately, including credential
+rotation/revocation and redirect/SSRF policy. Do not use the Looprd management key.
+Keep the existing operator CLI explicitly a pilot if it remains available.
+
+Evidence: Atrium
+https://github.com/TheBigTreeInc/atrium/blob/286db965a9428422c366b0b3b1138190b2b649e0/docs/P1_054_DISCOVERY_INTAKE.adoc[intake boundary],
+https://github.com/TheBigTreeInc/atrium/blob/286db965a9428422c366b0b3b1138190b2b649e0/src/discovery_runtime.py[receiver],
+and Looprd `looprd/services.py`.
+
+=== P1: required dependencies conflict with optional Social availability
+
+Looprd already has same-runtime service calls, but declared dependencies are
+required activation dependencies. With no cached generation, a game declaring a
+missing Social contract does not activate. A changed candidate can also be rejected
+while its dependency is unavailable. This is stronger than a background relay
+returning a retryable 503.
+
+An isolated fresh-runtime probe reproduced an empty active set and
+`load: service dependency incompatible` for an otherwise valid game whose only
+missing requirement was its notification consumer. Existing generations and
+cached restart paths have different retention behavior; the finding must not be
+misstated as every Social outage stopping an already active game.
+
+Define an additive optional dependency policy, defaulting to today's required
+behavior. An absent optional service must not reject the game's activation or
+update; discovery reports unavailable and `ctx.call` remains authenticated and
+fails safely when invoked. Do not weaken required dependencies globally or
+bypass declared caller credentials. A durable game-owned outbox and periodic job
+then retry the optional handoff without blocking turn commits.
+
+Evidence: `looprd/services.py` / `dependency_errors`, `looprd/runtime.py` /
+`_reconcile`, and the fresh-runtime probe described below.
+
+=== P1: withdrawal and non-Git provenance are not represented by the intake envelope
+
+The receiver requires exactly `deploymentId`, `component`, `sourceRevision` and
+`sidecar`. `sourceRevision` must be a 40-character Git SHA. There is no withdrawal
+operation in the reviewed receiver and no advertised/withdrawn instance state in
+the candidate record. The endpoint cannot currently receive the proposed
+sidecar-removal availability reconciliation.
+
+Looprd returns revision `content` for ordinary local/HTTPS sources. Substituting a
+made-up Git SHA, a branch name or a SHA-256 digest would misrepresent provenance
+and/or fail validation. The full local/HTTPS/GitHub proposal therefore cannot be
+satisfied by simply POSTing the current candidate shape.
+
+Agree a receiver-owned withdrawal/state contract that preserves reviewed history
+and application data. Agree explicit provenance kinds for non-Git sources, or
+scope first automatic delivery to GitHub sources with real immutable commits.
+Local/HTTPS sidecar observation can still work without pretending delivery is
+supported. API origin and `game-web` launch origin remain separate private
+operator bindings; neither is derivable from a repository name.
+
+Treat missing, invalid, forbidden and temporarily unavailable as separate states.
+In particular, GitHub may mask repository-access failures as 404; do not infer a
+voluntary withdrawal solely from an ambiguous failed request. A withdrawal needs
+an authoritative successful source observation and confirmed absence.
+
+Evidence: Atrium `src/discovery_runtime.py`, `tools/announce_atriumd.py`,
+and Looprd `looprd/sources.py`.
+
+=== P2: application HTTP errors currently lose their intended status
+
+Atrium's discovery handler raises Starlette `HTTPException` for rejected input
+and conflicts. Looprd's dispatcher catches generic exceptions and returns a safe
+500; it has no corresponding `HTTPException` branch. An isolated handler raising
+409 returned HTTP 500 with `component request failed`.
+
+Without an agreed error adapter, malformed sidecars and ownership conflicts can
+look like transient server failures to a retry worker. Fix the generic transport
+boundary or adapt the application to a supported structured error contract, with
+bounded safe details and regression tests. Do not blindly forward exception text,
+tracebacks, credentials or arbitrary response headers.
+
+Evidence: `looprd/web.py` / `dispatch`, `looprd/handler_routes.py`, and pinned
+Atrium `src/discovery_runtime.py` / `_discovery_fail`.
+
+=== P2: the pilot CLI rejects a valid reviewed/no-change acknowledgement
+
+Atrium's receiver returns `status: reviewed, change: unchanged` when an already
+reviewed candidate is replayed without a content/revision change. Its pilot
+`submit_candidate` accepts only `status: pending`. Calling that exact function
+with a mocked HTTP-200 reviewed/no-change response raises
+`unexpected discovery intake response`.
+
+Define valid acknowledgement states explicitly for the runtime reconciler.
+An unchanged already-reviewed candidate must count as acknowledged without being
+forced back to pending. Validate returned game/instance/fingerprint against the
+sent intent before persisting acknowledgement. Do not copy the pilot CLI's
+pending-only response check unchanged.
+
+Evidence: pinned Atrium `src/discovery_runtime.py` and
+`tools/announce_atriumd.py`; isolated acknowledgement probe below.
+
+== Existing infrastructure that should be reused
+
+[cols="2,3,3",options="header"]
+|===
+|Requirement |Current support |Boundary
+|SQL persistence and transactions |SQLAlchemy SQLite/PostgreSQL, explicit migrations, `ctx.transaction` |Application rules and journals remain application-owned
+|Revision control |Native CRUD revision fields and conditional writes |Custom gameplay SQL must implement its own atomic expected-revision check
+|Verified identity |Database and pluggable verified principals; owner/membership policies |Custom handlers must enforce match/seat access explicitly; their raw sessions are not automatically filtered
+|Durable events |SQL outbox and identity-bound HTTP replay/snapshots |Emit in the same transaction; best-effort `ctx.publish` is not a durable substitute
+|Redis |Optional fanout |Not authoritative storage; one worker remains required
+|Deadline/outbox scans |Persistent leased periodic jobs |Application owns absolute UTC deadlines, repeat-safe scans and the long-lived notification outbox
+|Notifications |Transactional content-free push hints and HTTP recovery |Social must persist/deduplicate inbox acceptance before Life acknowledges its outbox
+|Service calls |Declared, scoped, caller-bound same-runtime contracts |No generic remote transport and no optional dependency flag today
+|===
+
+Job payloads are bounded to 16 KiB, active jobs to 1,000, attempts to at most ten,
+and finished history to one day/10,000 records. Durable-event retention is also
+bounded. Neither queue/history is a permanent game journal or durable business
+notification inbox. Periodic jobs can repeatedly scan application-owned pending
+rows after short-lived execution attempts have finished.
+
+== Bounded implementation sequence
+
+. Correct/agree the generic error and optional-dependency boundaries with isolated
+  regression tests. Defaults must preserve current required-dependency semantics.
+. Add opt-in sibling observation, separately validated against the pinned
+  `atriumd/v1` contract. Preserve the resolved root location/revision while loading;
+  never re-resolve a branch just to fetch its sidecar.
+. Observe only successful component/source snapshots after checkpoint publication.
+  Handle sidecar-only changes even if the flattened API specification compares
+  equal. A failed candidate or failed checkpoint must never produce an advertisement
+  for that unactivated revision.
+. Maintain bounded runtime-owned desired/acknowledged discovery metadata and
+  retry state. This is control-plane reconciliation, not a second generic job
+  system or another game notification queue. Validate documents once per new
+  successful observation and retain safe failure diagnostics.
+. Align Atrium's machine credential, provenance, acknowledgement and withdrawal
+  contracts. Implement a receiver-compatible local/remote adapter only within the
+  agreed trust boundary. Candidate delivery must never auto-approve or publish.
+. Add the application fixture for turn/CAS/outbox/periodic scans and Social
+  idempotent acceptance. A generic fixture proves infrastructure, not a Life game
+  implementation or cross-project certification.
+. Run the supplied staging and headless acceptance plan in the owning projects.
+  Keep `agentPlaySupported: false` until the required deployed agent tests pass.
+
+The schema owner should provide versioned compatibility fixtures or a shared
+validator artifact for `atriumd/v1`; avoid maintaining an independently evolving
+copy in Looprd. Importing arbitrary repository Python during metadata discovery
+would cross the intended trust boundary and is not an acceptable shortcut.
+
+== Validation performed
+
+* Full current Looprd suite: `python -m pytest -q` -- 228 passed, six optional
+  PostgreSQL/Redis integration checks skipped locally. One upstream TestClient
+  deprecation warning. This verifies existing regressions, not proposed features.
+* Isolated handler probe: intended HTTP 409 -> observed HTTP 500.
+* Isolated fresh-runtime probe: missing declared consumer -> game candidate rejected.
+* Isolated invocation of the pinned Atrium CLI function with a mocked receiver
+  acknowledgement: reviewed/unchanged -> rejected by the current pilot CLI.
+* Parsed both generated discovery routes: `apps:approve`, no typed service contract.
+
+Probe inputs are synthetic. HTTP probing used an in-process disposable runtime;
+the acknowledgement probe used a mock transport. No production database, account,
+source list, container, publisher or catalog was changed. No cross-device game,
+live Social handoff, OS push delivery or headless Life turn was certified.

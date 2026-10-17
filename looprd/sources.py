@@ -3,6 +3,7 @@
 import asyncio
 import os
 import re
+import hashlib
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlencode, urljoin, urlsplit
 
@@ -17,9 +18,10 @@ class SourceReader:
     def __init__(self, sources_location):
         self.location = sources_location
         self.base = sources_location
+        self.snapshots = {}
         self.client = httpx.AsyncClient(timeout=15, follow_redirects=False)
 
-    async def read(self, location, *, github_sha=False):
+    async def read(self, location, *, github_sha=False, max_bytes=MAX_DOCUMENT):
         if location.startswith("github://"):
             content, _ = await self.github_file(location)
             return content
@@ -42,13 +44,13 @@ class SourceReader:
                 chunks, total = [], 0
                 async for chunk in response.aiter_bytes():
                     total += len(chunk)
-                    if total > MAX_DOCUMENT:
+                    if total > max_bytes:
                         raise ValueError("remote document exceeds size limit")
                     chunks.append(chunk)
             return b"".join(chunks).decode("utf-8")
         if "://" in location:
             raise ValueError("only github://, HTTPS, and local paths are supported")
-        return await asyncio.to_thread(self._read_local, location)
+        return await asyncio.to_thread(self._read_local, location, max_bytes)
 
     @staticmethod
     def github_token():
@@ -97,10 +99,10 @@ class SourceReader:
         return f"https://api.github.com/repos/{repository}/contents/{quote(path, safe='/')}?{urlencode({'ref': revision})}"
 
     @staticmethod
-    def _read_local(location):
+    def _read_local(location, max_bytes=MAX_DOCUMENT):
         with Path(location).open("rb") as file:
-            content = file.read(MAX_DOCUMENT + 1)
-        if len(content) > MAX_DOCUMENT:
+            content = file.read(max_bytes + 1)
+        if len(content) > max_bytes:
             raise ValueError("local document exceeds size limit")
         return content.decode("utf-8-sig")
 
@@ -111,6 +113,8 @@ class SourceReader:
         else:
             content, base = await self.read(self.location), self.location
         sources = Sources.model_validate(parse_document(content))
+        selected = {entry.id for entry in sources.components}
+        self.snapshots = {key: value for key, value in self.snapshots.items() if key in selected}
         self.base = base
         return sources
 
@@ -139,6 +143,8 @@ class SourceReader:
         spec = Specification.model_validate(await compose(self, location, content))
         if spec.component != source.id:
             raise ValueError("specification component differs from source ID")
+        from .discovery_source import SourceSnapshot
+        self.snapshots[source.id] = SourceSnapshot(location, revision, hashlib.sha256(spec.model_dump_json().encode()).hexdigest())
         return spec, revision
 
     async def close(self):

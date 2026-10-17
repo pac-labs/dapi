@@ -1,0 +1,56 @@
+= Optional discovery observation
+:doctype: article
+
+== Host configuration
+
+Disabled by default; no backing container is needed.
+LOOPRD_DISCOVERY_ENABLED=true observes the sibling atriumd.yaml of each
+successfully loaded root specification. Nested imports do not add sidecars.
+LOOPRD_DISCOVERY_COMPONENTS is an optional comma-separated allowlist:
+unset means all, explicitly empty means none.
+LOOPRD_DISCOVERY_HTTPS_ORIGINS permits exact plain HTTPS origins for ordinary
+HTTPS sources. Redirects are not followed. GitHub reads reuse the root commit
+and repository credential. Local sidecars must stay within the root directory.
+This host policy is not game YAML; repositories cannot supply intake credentials.
+
+== Management API
+
+Existing management authentication is required; responses are no-store JSON.
+
+* GET /_looprd/discovery: observation summaries, mode and delivery status.
+* GET /_looprd/discovery/{component}: full observation including lastValid metadata.
+
+Capability discovery.atrium.observe means observation only. Delivery is disabled.
+No dashboard page, public catalog, diagnostic grant or sender is added.
+
+States: valid, absent, invalid, unavailable, withdrawn, inactive.
+Absent means no valid metadata was previously observed; withdrawn means confirmed
+absence after valid metadata. Unreachable never means withdrawal. GitHub absence
+requires a successful non-truncated directory listing at the same revision.
+Blocked/removed components become inactive after successful reconciliation.
+
+Records contain component, state, reason, observedAt, changedAt, stale, revision,
+generation and lastValid. Times are Unix seconds. lastValid holds metadata,
+fingerprint, sourceIdentity, revision and generation. List responses omit full
+lastValid metadata and include its fingerprint. Source identity is a hash,
+not the private location. Revision content is not a Git SHA.
+
+== Storage and isolation
+
+Private LOOPRD_DATA/discovery.sqlite3 retains at most 1000 historical component
+records. Sidecars are limited to 64 KiB. No application database is changed.
+schemas/atriumd.schema.json describes metadata; runtime validation also checks
+cross-field constraints, component identity and deployment-address exclusion.
+Unknown extensions are rejected according to the reviewed atriumd/v1 contract.
+
+Observation follows successful checkpoint publication. Coalesced reads are checked
+against the active generation before persistence. Observation failures do not
+reject the API. Existing diagnostics report safe failure stages. Last valid
+metadata survives restart. Disable the setting and restart to stop observing;
+data remains on disk.
+
+== Delivery boundary
+
+No Redis or ntfy is required. There is no retry queue, acknowledgement loop or
+remote catalog mutation. Future delivery needs receiver-defined deployment-bound
+authentication and withdrawal. Local observations never imply remote approval.

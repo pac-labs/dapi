@@ -150,3 +150,10 @@ are additive; older binaries ignore them. Rollback may require restoring the old
 checkpoint and descriptors if new non-default fields are present. Keep the current
 data backup and never run a descriptor requiring unsupported capabilities. Existing
 Life/Social specifications are not automatically rewritten.
+
+### Optional dependencies and handler failures
+
+Dependencies accept optional: true (default false). Missing targets, contracts or
+credentials then fail at call time without rejecting the producer. Trusted handler
+HTTP exceptions preserve valid 400-599 statuses with safe static messages; numeric
+Retry-After is supported for 429/503. See [discovery](discovery-observation.adoc).

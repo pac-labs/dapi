@@ -1,0 +1,88 @@
+= Looprd: critical architecture differences
+:doctype: article
+:toc:
+
+== Scope
+
+This first build implements generic discovery groundwork, not the complete
+multi-product game workflow. Authority: DESIGN.adoc / Specification authority /
+Optional discovery observation and service availability.
+
+Inputs: END_TO_END_TEST_PLAN.adoc, LOOPRD_GAME_PLAY_CONTRACT.adoc and
+ADJUSTMENT_GAME_PLAY_AND_DISCOVERY.adoc. Application behavior remains owned by
+the applications. See reviews/2026-10-18-game-discovery.adoc for the baseline review.
+
+== Critical differences
+
+[cols="1,2,2",options="header"]
+|===
+|Requested |Built now |Remaining boundary
+
+|Automatic intake
+|Default-off, observe-only sibling discovery and protected management JSON.
+|Atrium needs deployment-bound machine intake, scoped credentials, idempotent
+acknowledgements and withdrawal. Existing apps:approve authority is too broad
+for an automatic sender. No outgoing submission is implemented.
+
+|Immutable provenance
+|GitHub sidecars use the resolved root commit. Metadata-only changes do not
+restart an unchanged generation.
+|Local/ordinary HTTPS sources have content provenance, not Git commits.
+Never represent their fingerprints as Git revisions.
+
+|Optional services
+|Dependencies accept optional: true; default false preserves existing behavior.
+Unavailable targets, contracts or credentials fail at call time.
+|This creates no remote transport. ctx.call remains same-runtime invocation.
+
+|Withdrawal and outages
+|Confirmed absence after valid metadata becomes withdrawn. Invalid/unavailable
+reads retain lastValid. Removed or blocked components become inactive.
+|These are local observations, not catalog deletion. No remote withdrawal API
+or acknowledgement is invented. GitHub 404 needs directory absence proof.
+
+|Application failures
+|Trusted HTTP exceptions retain valid 400-599 statuses with static safe messages.
+Numeric Retry-After is supported for 429/503.
+|Applications define richer domain response contracts. Arbitrary exception
+details and headers are not forwarded.
+
+|Game play and recovery
+|Looprd stays generic. No game engine, JavaScript execution host or built-in
+/play routes are added.
+|Games own match rules, ownership, transactions, compare-and-swap, idempotency
+and durable journals/outboxes. Social owns grants/inbox; ntfy is a wake hint.
+
+|End-to-end acceptance
+|Regression tests cover generic infrastructure behavior.
+|These do not certify Life/Atrium/Social/remote-agent interoperability. Run the
+supplied cross-product acceptance plan against actual application releases.
+|===
+
+== Operator acceptance
+
+. Verify existing components with discovery disabled.
+. Enable observation on an isolated instance and add a valid sibling atriumd.yaml.
+. Inspect /_looprd/discovery with management authentication.
+. Change metadata only; verify observation changes without generation restart.
+. Remove the sidecar; verify withdrawn while API/data remain.
+. Make the source unreadable; verify unavailable retains lastValid.
+. Restart; verify persisted observations remain.
+. Verify unauthenticated management access is rejected.
+
+== Next work
+
+Agree Atrium's machine principal, deployment binding, envelope versioning,
+replay-safe acknowledgements and authenticated withdrawal. Then implement a
+bounded durable sender with receiver contract tests. Approval, publication and
+launch-origin binding remain operator-owned. Do not put intake URLs or approval
+credentials in game repositories.
+
+See discovery-observation.adoc for configuration and limits.
+
+== Build evidence
+
+Local validation: 250 Python tests passed, six optional integration checks skipped;
+15 UI/client checks passed. A fresh wheel was built and its extracted package
+passed 22 new-feature checks. Publishable files passed the private-address scan.
+The running production service is not changed by this build.

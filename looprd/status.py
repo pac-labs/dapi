@@ -88,5 +88,6 @@ def snapshot(runtime):
             "lastFinishedAt": monitor.last_finished, "lastSuccessAt": monitor.last_success,
             "retiringGenerations": len(runtime.retiring), "pythonEnabled": settings.allow_python,
             "allowedOrigins": list(settings.allowed_origins),
+            "discoveryMode": "observe-only" if runtime.discovery else "unavailable" if settings.discovery_enabled else "disabled",
         },
     }

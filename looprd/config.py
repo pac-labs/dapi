@@ -31,8 +31,15 @@ class Settings:
     push_public_url: str | None = None
     push_delivery_url: str | None = None
     push_token_secret: str | None = None
+    discovery_enabled: bool = False
+    discovery_components: tuple[str, ...] | None = None
+    discovery_https_origins: tuple[str, ...] = ()
 
     def __post_init__(self):
+        from .discovery_source import origin
+        for value in self.discovery_https_origins:
+            if origin(value) != value:
+                raise ValueError("discovery origins must omit trailing slashes")
         from .push_transport import validate_provider
         validate_provider(self)
         if self.origin_restrictions is not None:
@@ -69,6 +76,9 @@ class Settings:
             push_public_url=os.getenv("LOOPRD_PUSH_PUBLIC_URL"),
             push_delivery_url=os.getenv("LOOPRD_PUSH_DELIVERY_URL"),
             push_token_secret=os.getenv("LOOPRD_PUSH_TOKEN_SECRET"),
+            discovery_enabled=os.getenv("LOOPRD_DISCOVERY_ENABLED", "false").lower() == "true",
+            discovery_components=tuple(value.strip() for value in os.environ["LOOPRD_DISCOVERY_COMPONENTS"].split(",") if value.strip()) if "LOOPRD_DISCOVERY_COMPONENTS" in os.environ else None,
+            discovery_https_origins=tuple(value.strip() for value in os.getenv("LOOPRD_DISCOVERY_HTTPS_ORIGINS", "").split(",") if value.strip()),
         )
 
     def secret(self, reference: str) -> str:

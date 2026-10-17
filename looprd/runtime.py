@@ -45,6 +45,13 @@ class Runtime:
         self.availability = Availability(settings.data)
         self.sockets = {}
         self.checkpoint = settings.data / "active.json"
+        self.discovery = None
+        if settings.discovery_enabled:
+            try:
+                from .discovery_observer import DiscoveryObserver
+                self.discovery = DiscoveryObserver(self)
+            except Exception as error:
+                self.record_failure(None, "discovery initialization", error)
 
     async def set_blocked(self, component, blocked):
         async with self.lock:
@@ -101,7 +108,8 @@ class Runtime:
             generation = await run_in_threadpool(Generation, spec, self.settings, bus)
             generation.runtime = self
             for dependency in spec.dependencies:
-                self.settings.secret(dependency.credentialSecret)
+                if not dependency.optional:
+                    self.settings.secret(dependency.credentialSecret)
             return generation
         except BaseException:
             if generation:
@@ -143,10 +151,11 @@ class Runtime:
                                    "ref": entry.ref if entry.repository else None}
                         for entry in sources.components}
         desired = {entry.id: entry for entry in sources.components if entry.enabled}
-        candidates, revisions = {}, dict(self.revisions)
+        candidates, revisions, loaded = {}, dict(self.revisions), set()
         for component, entry in desired.items():
             try:
                 spec, revision = await self.reader.component(entry)
+                loaded.add(component)
                 current = self.active.get(component)
                 if current and current.spec == spec:
                     revisions[component] = revision
@@ -163,7 +172,7 @@ class Runtime:
         while failures and candidates:
             rejected = set(failures) & candidates.keys()
             for client in set(failures) - rejected:
-                rejected.update(item.component for item in prospective[client].spec.dependencies if item.component in candidates)
+                rejected.update(item.component for item in prospective[client].spec.dependencies if not item.optional and item.component in candidates)
             if not rejected:
                 break
             for component in rejected:
@@ -205,6 +214,11 @@ class Runtime:
                 self.retiring.add(task)
                 task.add_done_callback(self.retiring.discard)
         self.errors = {k: v for k, v in self.errors.items() if k in desired}
+        if self.discovery:
+            try:
+                self.discovery.schedule(loaded - self.errors.keys())
+            except Exception as error:
+                self.record_failure(None, "discovery scheduling", error)
         self.sources_error = None
         return True
 
@@ -270,6 +284,8 @@ class Runtime:
         if self.poll_task:
             self.poll_task.cancel()
             await asyncio.gather(self.poll_task, return_exceptions=True)
+        if self.discovery:
+            await self.discovery.close()
         # ASGI server has drained requests before lifespan shutdown.
         for task in tuple(self.retiring):
             task.cancel()

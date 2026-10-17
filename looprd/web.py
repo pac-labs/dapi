@@ -5,6 +5,7 @@ import json
 from contextlib import suppress
 
 from starlette.responses import JSONResponse
+from starlette.exceptions import HTTPException
 from starlette.concurrency import run_in_threadpool
 from starlette.websockets import WebSocketDisconnect
 
@@ -124,6 +125,11 @@ async def dispatch(request):
     except EventError as error:
         return JSONResponse({"error": error.message}, status_code=error.status,
                             headers={"Retry-After": "60"} if error.status == 429 else {})
+    except HTTPException as error:
+        if type(error.status_code) is not int or error.status_code >= 500:
+            runtime.record_failure(generation.spec.component, "application request", error)
+        from .application_errors import response
+        return response(error)
     except Exception as error:
         runtime.report(generation.spec.component, "request", error)
         return JSONResponse({"error": "component request failed"}, status_code=500)

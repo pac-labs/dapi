@@ -5,9 +5,19 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `555e7983e5d8f67fa7ffac8513a9fe73302edcc0d89d5dc4750dd83bbffdec35`.
+Design SHA-256 (UTF-8/LF): `f33028f98c753b959a5e724c395b538c82dd41a4b77a6de3de30537ba9f547aa`.
 
 == Implemented candidate
+
+* Optional observe-only sibling discovery, bounded persistent lifecycle records
+  and management JSON; optional dependencies and safe HTTP error statuses.
+  Governing design: Specification authority / Optional discovery observation
+  and service availability. See docs/ARCHITECTURE_DIFFERENCES_GAME_DISCOVERY.adoc.
+  Automatic intake, remote withdrawal and cross-product acceptance remain separate.
+  Validation: 250 Python tests passed; six optional integrations skipped locally.
+  Fifteen UI/client tests passed. Fresh wheel extraction passed all 22 new-feature
+  checks. Private-address source scan passed. Discovery remains disabled by default.
+
 
 * Optional UnifiedPush/ntfy device proof and transactional wake hints; bounded
   durable delivery, caller-owned registration, host-controlled destinations,

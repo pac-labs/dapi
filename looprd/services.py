@@ -20,7 +20,8 @@ def discover(runtime, generation):
         target = runtime.active.get(dependency.component)
         handler = contract(target, dependency.contract, dependency.version) if target else None
         result.append({"component": dependency.component, "contract": dependency.contract,
-            "version": dependency.version, "available": bool(handler and dependency.component not in runtime.availability.blocked),
+            "version": dependency.version, "optional": dependency.optional,
+            "available": bool(handler and dependency.component not in runtime.availability.blocked),
             "endpoint": target.prefix + handler.path if handler else None,
             "request": handler.contract.request if handler else None, "response": handler.contract.response if handler else None})
     return result
@@ -36,7 +37,10 @@ async def call(runtime, generation, component, name, payload=None):
     handler = contract(target, name, dependency.version) if target else None
     if not handler or component in runtime.availability.blocked:
         raise EventError(503, "required service is unavailable")
-    credential = generation.settings.secret(dependency.credentialSecret)
+    try:
+        credential = generation.settings.secret(dependency.credentialSecret)
+    except (OSError, ValueError):
+        raise EventError(503, "service credential unavailable") from None
     principal = await target.authenticate("Bearer " + credential)
     if not principal or principal.kind != "service" or principal.subject != generation.spec.component:
         raise EventError(403, "service credential is not bound to the calling component")
@@ -56,6 +60,8 @@ def dependency_errors(generations):
     errors = {}
     for name, generation in generations.items():
         for dependency in generation.spec.dependencies:
+            if dependency.optional:
+                continue
             target = generations.get(dependency.component)
             if not target or not contract(target, dependency.contract, dependency.version):
                 errors[name] = "required service contract unavailable"

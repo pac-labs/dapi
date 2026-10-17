@@ -37,6 +37,7 @@ class Dependency(Strict):
     contract: Name
     version: int = Field(ge=1, le=100000)
     credentialSecret: str = Field(min_length=1, max_length=256)
+    optional: bool = False
 
 
 class Limits(Strict):
