@@ -1,0 +1,122 @@
+= Discovery delivery: proposed receiver contract
+:doctype: article
+:toc:
+:revdate: 2026-10-18
+
+== Status and scope
+
+This is the next design increment after observe-only discovery. It is a proposal
+for agreement with Atrium, not a description of implemented endpoints. The existing
+candidate endpoint and its operator pilot must keep their existing contract.
+No sender is enabled by this document. Governing implemented boundary:
+DESIGN.adoc / Specification authority / Optional discovery observation and service
+availability. See ARCHITECTURE_DIFFERENCES_GAME_DISCOVERY.adoc.
+
+Looprd supplies source observation and transport infrastructure. Atrium owns
+candidate validation, publisher policy, review and publication. Games own behavior.
+No external identity provider is required.
+
+== Trust and configuration
+
+The operator configures a stable deployment ID, HTTPS receiver origin, credential
+secret reference, eligible components and approved source identities on the host.
+The receiver binds its machine credential to that deployment ID and an explicit
+component/source allowlist. The request's deploymentId must match the authenticated
+binding; accepting a syntactically valid string is insufficient.
+
+Use separate discovery:submit and discovery:withdraw permissions. Neither implies
+apps:approve, registry write access, publisher ownership or artifact execution.
+Rotate/revoke machine credentials through the receiver's existing account/key
+system. Never put credentials or receiver URLs in component YAML or sidecars.
+The server verifies every machine request; client-supplied identity is not trusted.
+
+Local invocation is allowed only through an explicit typed service contract with
+caller/deployment binding. Remote invocation uses HTTPS with certificate validation,
+fixed host-controlled origin, bounded responses, no redirects and no credential
+forwarding to another origin. Existing ctx.call does not acquire remote semantics.
+
+== Versioned envelope
+
+Use a separately versioned receiver contract, for example
+discovery.reconcile version 2. Endpoint spelling is receiver-owned and must be
+agreed before implementation. Do not silently extend the current strict envelope.
+
+[cols="1,3",options="header"]
+|===
+|Field |Meaning
+|protocolVersion |Integer 2; unsupported versions are rejected.
+|deploymentId |Stable operator identity, checked against the credential binding.
+|component |Eligible observed component, also present in upsert metadata.
+|operationId |Persistent unique ID, reused for every retry of the same intent.
+|sequence |Persisted increasing integer per deployment/component, not a timestamp.
+|operation |upsert or withdraw.
+|source |Approved repository identity and immutable Git commit for the initial pilot.
+|fingerprint |Canonical metadata/provenance digest; equality is not authority.
+|sidecar |Validated metadata for upsert only; omitted for withdrawal.
+|reason |For withdrawal: confirmed absence or authoritative component removal.
+|===
+
+The initial transport supports GitHub immutable commits only. Local and ordinary
+HTTPS observation stays supported locally; content hashes must not masquerade as
+Git revisions. Additional provenance kinds need a versioned receiver agreement.
+
+The receiver validates metadata independently, checks approved source bindings and
+stores provenance with the candidate. A caller assertion alone does not prove
+publisher ownership or launch-domain control. Publication still requires those
+separate operator checks. Origin references are resolved through vetted bindings.
+
+== Ordering and acknowledgements
+
+The receiver stores the last accepted sequence and request digest atomically with
+the candidate update. An identical operationId/digest replay returns the original
+acknowledgement, even after review. Reusing an operationId with different content
+is a conflict. Older sequences cannot overwrite newer state. Equal sequences with
+different content are conflicts. Higher-sequence changed metadata creates a fresh
+review requirement; it never inherits approval automatically.
+
+An acknowledgement identifies protocol version, deployment, component, operationId,
+accepted sequence, fingerprint and disposition. Valid dispositions include pending,
+reviewed, unchanged and withdrawn. Reviewed/unchanged replays are successes, not
+retry triggers. An acknowledgement confirms candidate reconciliation only, never
+publication. Unknown/mismatched acknowledgement fields are a delivery failure.
+
+Withdrawal retains an auditable tombstone. It does not delete application data or
+automatically uninstall clients. The receiver must define how withdrawn candidates
+affect existing published entries and active sessions before production activation.
+Blocking an API pauses delivery; it is not a new publisher withdrawal decision.
+
+== Durable sender behavior
+
+Extend runtime-owned discovery state rather than creating game jobs or using Redis
+as the source of truth. Persist desired intent, operation ID, sequence, last valid
+acknowledgement, attempt count and next attempt time. Keep at most one pending
+intent per deployment/component; coalesce superseded unsent metadata. A successful
+checkpoint must precede enqueueing an advertisement. Invalid/unavailable reads do
+not overwrite desired valid metadata and never enqueue withdrawal.
+
+Only confirmed absence or authoritative removal can enqueue withdrawal. A timeout,
+GitHub permission failure, truncated listing or failed root update cannot do so.
+Retain sequence/tombstone history across restart and component re-addition. Restoring
+an older sender backup requires receiver reconciliation before reusing sequence IDs.
+
+Use bounded exponential backoff with jitter and capped Retry-After for network
+failures, 408, 429 and transient 5xx. Authentication/authorization failures pause the
+binding visibly; malformed requests and protocol conflicts need operator correction.
+Bound queue size, document size, concurrent requests and attempt history. Do not
+discard a withdrawal merely because a retry limit was reached. Never log credentials
+or complete private envelopes. Expose machine-readable delivery stage/reason and
+last successful acknowledgement through authenticated management endpoints.
+
+== Acceptance before enabling
+
+. Receiver contract tests reject wrong deployment, component, source and scope.
+. Duplicate/reordered requests and restarts preserve ordering and acknowledgements.
+. Reviewed/unchanged acknowledgement replay succeeds without repeated candidates.
+. Invalid/unreachable sidecars never withdraw; confirmed deletion does.
+. Metadata changes require fresh review and cannot change a live launch binding.
+. Credential rotation, outage recovery and rollback are tested on isolated data.
+. A real staging receiver passes the shared end-to-end plan before host opt-in.
+
+Outstanding receiver decisions: exact endpoint/DTO version, credential provisioning,
+withdrawal effects on published entries, source attestation policy and compatible
+conformance fixtures. These block automatic delivery only, not Looprd deployment.
