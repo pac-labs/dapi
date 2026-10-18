@@ -85,6 +85,10 @@ footer { display: flex; justify-content: space-between; gap: 16px; font-size: 12
 @media(max-width:720px) { .view-nav { flex-wrap: wrap; }.view-nav button { flex: 1 0 25%; min-width: 0; } }
 
 // Operator workspace: persistent desktop navigation, compact phone selector.
+.observation-content h3 { margin: 16px 0 8px; font-size: 16px; font-weight: 600; }
+.observation-content p { margin: 8px 0; }
+.observation-content table { min-width: 580px; }
+.observation-content progress { width: 100%; height: 12px; accent-color: var(--cds-support-info); }
 #controls { display: grid; grid-template-columns: 184px minmax(0,1fr); gap: 16px; }
 #controls>.view-nav { grid-column: 1; grid-row: 1; flex-direction: column; flex-wrap: nowrap; gap: 4px; overflow: auto; min-height: 0; border-bottom: 0; border-right: 1px solid var(--cds-border-subtle-01); padding-right: 12px; }
 #controls>.view { grid-column: 2; grid-row: 1; }

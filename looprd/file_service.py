@@ -29,6 +29,9 @@ class FileService:
     def __init__(self, store):
         self.store = store
         self.lock = asyncio.Lock()
+        self.next_sweep_at = time.time() + 30
+        self.sweep_state = "waiting"
+        self.sweep_error = None
         self.task = asyncio.create_task(self.sweep())
 
     async def call(self, operation, *args):
@@ -58,10 +61,16 @@ class FileService:
 
     async def sweep(self):
         while True:
+            self.next_sweep_at = time.time() + 30
+            self.sweep_state = "error" if self.sweep_error else "waiting"
             await asyncio.sleep(30)
+            self.next_sweep_at = None
+            self.sweep_state = "running"
             try:
                 await self.call("clean")
+                self.sweep_error = None
             except (OSError, SQLAlchemyError):
+                self.sweep_error = "cleanup_unavailable"
                 logging.getLogger("looprd").warning("file expiry cleanup failed; retrying")
 
     async def close(self):

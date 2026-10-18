@@ -139,3 +139,11 @@ Authority: DESIGN.adoc / Optional discovery observation and service availability
 Run tests/test_discovery.py, tests/test_service_options.py and
 tests/test_application_errors.py, then the full suite. These generic checks do not
 certify the cross-product game-play acceptance plan.
+
+## Operator schedule and storage
+
+DESIGN.adoc / Purpose / Operator schedule and storage visibility is covered by
+tests/test_operator_observation.py and tests/ui/observation.test.mjs: timer/SQL
+metadata, unavailable workers, blocking semantics, private payload/path exclusion,
+bounded scans, links, cache, disk pressure and allowlisted PostgreSQL/Redis sizes.
+Browser checks use synthetic data and verify contained scrolling at desktop/390px.

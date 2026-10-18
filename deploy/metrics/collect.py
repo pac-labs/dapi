@@ -94,9 +94,33 @@ def collect(previous=None, runner=command, memory_supported=None, now=None):
     return {"version": 1, "collectedAt": now, "memorySupported": memory_supported, "containers": rows}
 
 
+def collect_storage(runner=command, disk_runner=subprocess.run):
+    """Host-only allocated sizes; no paths, listings or arbitrary volume names exported."""
+    rows = []
+    for name in ("looprd-data", "looprd-postgres-data", "looprd-redis-data", "looprd-ntfy-data"):
+        row = {"name": name, "state": "unavailable", "allocatedBytes": None}
+        try:
+            raw = runner(["volume", "inspect", "--format", "{{.Mountpoint}}", name]).strip()
+            path = Path(raw)
+            if not path.is_absolute() or not path.is_dir() or path.is_symlink():
+                raise ValueError("volume mount unavailable")
+            result = disk_runner(["du", "-s", "-B1", "--", str(path)], capture_output=True, text=True, timeout=3)
+            if result.returncode or len(result.stdout) > 4096:
+                raise ValueError("volume measurement unavailable")
+            value = result.stdout.split()[0]
+            if not value.isdecimal():
+                raise ValueError("invalid volume size")
+            row.update(state="available", allocatedBytes=int(value))
+        except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+            pass
+        rows.append(row)
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--storage", action="store_true", help="Measure only the four named Looprd volumes")
     args = parser.parse_args()
     previous = None
     try:
@@ -105,6 +129,8 @@ def main():
     except (ValueError, OSError):
         pass
     snapshot = collect(previous)
+    if args.storage:
+        snapshot["storage"] = collect_storage()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:

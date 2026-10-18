@@ -14,8 +14,8 @@
 <p id="message" role="status" aria-live="polite">Connect to view your runtime.</p>
 <main id="controls" hidden>
 <nav aria-label="Management sections" class="view-nav">
-<label class="mobile-nav" for="workspace-view">Operator workspace</label><select id="workspace-view" class="mobile-nav cds--select-input"><option value="overview">Overview</option><option value="components">Services</option><option value="data">Data &amp; actions</option><option value="access">Access keys</option><option value="bugreports">Bug reports</option><option value="files">Files</option><option value="operations">Operations</option><option value="diagnostics">Diagnostics</option><option value="runtime">Runtime</option></select>
-<p class="nav-label">Operate</p><button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Services</button><button data-view-button="data">Data &amp; actions</button><button data-view-button="access">Access keys</button><button data-view-button="bugreports">Bug reports</button><button data-view-button="files">Files</button><p class="nav-label">Observe</p><button data-view-button="operations">Operations</button><button data-view-button="diagnostics">Diagnostics</button><button data-view-button="runtime">Runtime</button></nav>
+<label class="mobile-nav" for="workspace-view">Operator workspace</label><select id="workspace-view" class="mobile-nav cds--select-input"><option value="overview">Overview</option><option value="components">Services</option><option value="data">Data &amp; actions</option><option value="access">Access keys</option><option value="bugreports">Bug reports</option><option value="files">Files</option><option value="operations">Operations</option><option value="schedule">Schedule</option><option value="storage">Storage</option><option value="diagnostics">Diagnostics</option><option value="runtime">Runtime</option></select>
+<p class="nav-label">Operate</p><button data-view-button="overview" aria-current="page">Overview</button><button data-view-button="components">Services</button><button data-view-button="data">Data &amp; actions</button><button data-view-button="access">Access keys</button><button data-view-button="bugreports">Bug reports</button><button data-view-button="files">Files</button><p class="nav-label">Observe</p><button data-view-button="operations">Operations</button><button data-view-button="schedule">Schedule</button><button data-view-button="storage">Storage</button><button data-view-button="diagnostics">Diagnostics</button><button data-view-button="runtime">Runtime</button></nav>
 <section data-view="data" class="view card" hidden><div class="section-heading"><h2>Data &amp; management actions</h2><button id="operator-reload" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Reload options</button></div>
 <label for="operator-component">Service</label><select id="operator-component" class="cds--select-input"></select><p id="operator-guidance" class="muted small"></p>
 <div id="operator-workspace" class="fill" hidden><div class="toolbar"><label for="operator-resource">Resource</label><select id="operator-resource" class="cds--select-input"></select><button id="operator-history" class="cds--btn cds--btn--tertiary cds--layout--size-sm">Audit trail</button></div>
@@ -29,6 +29,12 @@
 <label class="sr-only" for="bugreport-component">Filter by component</label><select id="bugreport-component" class="cds--select-input"><option value="">All components</option></select>
 <label class="sr-only" for="bugreport-state">Filter by state</label><select id="bugreport-state" class="cds--select-input"><option value="all">All states</option><option value="open">Open</option><option value="resolved">Resolved</option></select></div>
 <p id="bugreport-count" class="muted small"></p><div id="bugreport-list" class="page-list"></div></div><div id="bugreport-detail" class="page-list" hidden></div></section>
+<section data-view="schedule" class="view card" hidden><div class="section-heading"><h2>Scheduled activities</h2><button id="refresh-schedule" data-action class="cds--btn cds--btn--tertiary cds--layout--size-sm">Refresh schedule</button></div>
+<p class="small muted">Local times. Due dates are eligible times, not execution guarantees. Worker rows show cadence; this view does not change schedules.</p>
+<label class="sr-only" for="schedule-search">Find activity or service</label><input id="schedule-search" type="search" class="cds--text-input" placeholder="Find activity or service">
+<p id="schedule-summary" class="small muted" aria-live="polite">Connect to view scheduled activities.</p><div id="schedule-content" class="page-list observation-content"></div></section>
+<section data-view="storage" class="view card" hidden><div class="section-heading"><h2>Storage usage</h2><button id="refresh-storage" data-action class="cds--btn cds--btn--tertiary cds--layout--size-sm">Refresh storage</button></div>
+<p id="storage-summary" class="small muted" aria-live="polite">Connect to measure storage.</p><div id="storage-content" class="page-list observation-content"></div></section>
 <section data-view="operations" class="view card" hidden><div class="section-heading"><h2>Operations</h2><button class="cds--btn cds--btn--tertiary cds--layout--size-sm" id="refresh-operations">Refresh</button></div><div id="operations-content" class="page-list"></div></section>
 <section data-view="overview" class="view">
 <div id="source-error" class="notice warning" hidden></div>
@@ -80,6 +86,7 @@
 /* PANEL_NAV */
 /* PANEL_FILES */
 /* PANEL_OPS */
+/* PANEL_OBSERVATION */
 /* PANEL_DIAGNOSTICS */
 /* PANEL_BUGREPORTS */
 /* PANEL_OPERATOR_FORMS */

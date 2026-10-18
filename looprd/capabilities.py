@@ -16,6 +16,7 @@ CAPABILITIES = frozenset({
     "spec.includes",
     "push.unifiedpush", "events.snapshot",
     "service.dependencies.optional", "discovery.atrium.observe",
+    "management.schedule", "management.storage",
 })
 
 

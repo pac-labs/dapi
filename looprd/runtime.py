@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 
 from starlette.concurrency import run_in_threadpool
 
@@ -263,7 +264,9 @@ class Runtime:
 
     async def poll(self):
         while True:
+            self.monitor.next_poll_at = time.time() + self.settings.poll_seconds
             await asyncio.sleep(self.settings.poll_seconds)
+            self.monitor.next_poll_at = None
             try:
                 await self.reconcile()
             except Exception as error:

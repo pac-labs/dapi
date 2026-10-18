@@ -33,6 +33,16 @@ class Snapshot(Strict):
     collectedAt: float = Field(ge=0, allow_inf_nan=False)
     memorySupported: bool
     containers: list[ContainerMetric] = Field(max_length=4)
+    storage: list["VolumeMetric"] | None = Field(default=None, max_length=4)
+
+
+class VolumeMetric(Strict):
+    name: Literal["looprd-data", "looprd-postgres-data", "looprd-redis-data", "looprd-ntfy-data"]
+    state: Literal["available", "unavailable"]
+    allocatedBytes: int | None = Field(default=None, ge=0)
+
+
+Snapshot.model_rebuild()
 
 
 def read(settings):
@@ -47,6 +57,8 @@ def read(settings):
         snapshot = Snapshot.model_validate_json(raw)
         if len({item.name for item in snapshot.containers}) != len(snapshot.containers):
             raise ValueError("duplicate metrics")
+        if snapshot.storage and len({item.name for item in snapshot.storage}) != len(snapshot.storage):
+            raise ValueError("duplicate volume metrics")
         age = time.time() - snapshot.collectedAt
         if age < -5:
             raise ValueError("snapshot timestamp is in the future")

@@ -5,9 +5,20 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `f33028f98c753b959a5e724c395b538c82dd41a4b77a6de3de30537ba9f547aa`.
+Design SHA-256 (UTF-8/LF): `c0946368eddd2e56d2590e1cbf62bd5617640aca51803a8ec6c8f223ae35de5e`.
 
 == Implemented candidate
+
+* Read-only Schedule and Storage Carbon workspaces with local due/lease times,
+  periodic/queued jobs, maintenance cadence, bounded cached data-volume accounting,
+  filesystem pressure warnings and optional companion-volume/memory measurements
+  including PostgreSQL and Redis. Governing design: Purpose / Operator schedule
+  and storage visibility. See docs/operator-observation.md.
+  No automatic cleanup, new containers or application schema migrations.
+  Fresh-package regression: 257 passed/six optional integration skips;
+  seven focused observation tests and 17 UI/client checks pass.
+  Browser verified desktop and 390px navigation with no document scrolling.
+
 
 * Optional observe-only sibling discovery, bounded persistent lifecycle records
   and management JSON; optional dependencies and safe HTTP error statuses.

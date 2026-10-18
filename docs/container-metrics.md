@@ -67,6 +67,11 @@ setting disables metrics ingestion. Neither action changes any container or data
 
 ## Optional PostgreSQL companion
 
+The Storage workspace can additionally show occupied named-volume bytes, including
+PostgreSQL and Redis, with the collector's optional `--storage` flag. Memory remains
+a separate measurement. See [operator observation](operator-observation.md) for
+sampling limits, unavailable values and overlapping size categories.
+
 The supplied PostgreSQL Quadlets and database-network drop-in are opt-in for new
 deployments. Existing installations should retain their database container and
 connection secrets. Set a node-local `postgres-password` secret and `postgres.env`

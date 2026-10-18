@@ -25,6 +25,34 @@ docs/diagnostics.md for endpoint, retention and rollback contracts.
 
 == Purpose
 
+=== Operator schedule and storage visibility
+
+Management-only GET /_looprd/schedule exposes a bounded read-only agenda of
+declared periodic jobs, queued/running retries and runtime maintenance. Due times
+come from durable schedule/queue rows or actual runtime timers; worker cadence is
+labelled as cadence, not a promised execution time. Blocking and missing workers
+are visible. No job payloads, credentials or handler source are returned. The
+view does not change scheduling, enqueue jobs or provide a cron editor.
+
+Management-only GET /_looprd/storage exposes cached bounded filesystem measurement
+of LOOPRD_DATA, categorized into component databases, temporary files and runtime
+state. Symlinks are never followed; hardlinks are counted once. File sizes and
+allocated bytes are distinguished where supported, and incomplete scans are
+explicit. Filesystem capacity/free space includes other users of that filesystem;
+it is never equated with measured Looprd files. Low-space warning thresholds are
+informational (80/90 percent used or below 1 GiB available); no deletion occurs.
+
+Optional host metrics may add allowlisted Looprd companion-volume sizes. Missing
+measurements remain unknown, not zero. Database/volume/file figures can overlap
+and must not be summed into an invented host total. Container images, host logs,
+backups and unmounted volumes are explicitly outside the runtime scan. No host
+engine socket, new container or wider diagnostic capability is introduced.
+
+The Carbon panel adds Schedule and Storage workspaces with local-time timestamps,
+manual/automatic refresh, read-only status and scrolling inside panels. Protected
+JSON endpoints and existing operation authentication remain unchanged. See
+docs/operator-observation.md for limits, measurement scope and host configuration.
+
 === Central application bug reports
 
 Every active component exposes POST `/_bugreports` relative to its versioned

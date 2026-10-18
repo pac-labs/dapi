@@ -111,6 +111,27 @@ class Jobs:
         with self.storage.sessions() as session:
             return [self.describe(row) for row in session.execute(sa.select(self.table).order_by(self.table.c.next.desc()).limit(100)).mappings()]
 
+    def agenda(self):
+        """Read schedule/queue metadata only; never deserialize application payloads."""
+        items = []
+        with self.storage.sessions() as session:
+            names = list(self.storage.spec.jobs)[:250]
+            due = dict(session.execute(sa.select(self.schedule.c.name, self.schedule.c.next)
+                .where(self.schedule.c.name.in_(names))).all())
+            for name, definition in list(self.storage.spec.jobs.items())[:250]:
+                if definition.intervalSeconds:
+                    items.append({"name": name, "kind": "periodic job", "state": "waiting",
+                        "cadenceSeconds": definition.intervalSeconds, "nextAt": due.get(name), "error": None})
+            queued = session.execute(sa.select(self.table.c.name, self.table.c.state, self.table.c.next,
+                self.table.c.attempts, self.table.c.error, self.table.c.until)
+                .where(self.table.c.state.in_(["pending", "running"]))
+                .order_by(self.table.c.next).limit(251)).mappings().all()
+            for row in queued[:250]:
+                items.append({"name": row["name"], "kind": "job retry" if row["attempts"] else "queued job",
+                    "state": row["state"], "cadenceSeconds": None, "nextAt": row["until"] if row["state"] == "running" else row["next"],
+                    "attempts": row["attempts"], "error": row["error"]})
+        return {"items": items, "truncated": len(queued) > 250 or len(self.storage.spec.jobs) > 250}
+
     def get(self, name, identity, owner):
         with self.storage.sessions() as session:
             row = session.execute(sa.select(self.table).where(self.table.c.name == name,

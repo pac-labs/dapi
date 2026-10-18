@@ -17,6 +17,7 @@ class Monitor:
         self.last_attempt = None
         self.last_finished = None
         self.last_success = None
+        self.next_poll_at = None
 
     def begin(self):
         self.checking = True
