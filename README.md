@@ -1,5 +1,16 @@
 # Looprd
 
+Independent nested components are available in the [0.4.0 subcomponents contract](docs/subcomponents.adoc).
+Each child owns its authentication, database, jobs and lifecycle. Existing `includes`
+continues to compose fragments of one component.
+
+## Optional service registrations (0.3.0)
+
+Components may declare `registrations: [{service: atrium, document: atriumd.yaml}]`.
+Authorized consumers pull their own metadata without becoming runtime dependencies.
+See [generic service registrations](docs/service-registrations.adoc). Existing
+Atrium push discovery remains compatible; consumer pull clients are separate work.
+
 One Python companion server hosts small APIs defined in self-contained project specifications.
 A specification includes data models, CRUD routes, WebSocket events, authentication policy,
 inline custom handlers, and database migrations. Components hot reload inside the shared runtime.
@@ -7,6 +18,11 @@ SQLite needs no extra container; PostgreSQL is also supported through SQLAlchemy
 
 Source: [pac-labs/dapi](https://github.com/pac-labs/dapi). Image: `ghcr.io/pac-labs/dapi`.
 The existing Traefik instance serves Looprd paths on your configured API hostname.
+
+Version 0.2.0 adds optional [automatic Atrium discovery delivery](docs/automatic-atrium-discovery.adoc)
+with durable retries and typed Git/local/HTTPS provenance. Defaults remain off;
+it requires a matching Atrium v2 machine receiver. Source ZIP import never deploys
+or enables this integration automatically.
 
 The Carbon operator workspace supports service controls, issue review and optional
 [data administration](docs/operator-administration.md). Components explicitly

@@ -1,0 +1,53 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "atrium.discovery-capabilities/v2",
+      "title": "Schema",
+      "type": "string"
+    },
+    "deploymentId": {
+      "maxLength": 96,
+      "title": "Deploymentid",
+      "type": "string"
+    },
+    "operations": {
+      "items": {
+        "enum": [
+          "upsert",
+          "withdraw"
+        ],
+        "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Operations",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "provenanceKinds": {
+      "items": {
+        "enum": [
+          "git",
+          "local",
+          "https"
+        ],
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Provenancekinds",
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "deploymentId",
+    "operations",
+    "provenanceKinds"
+  ],
+  "title": "Receiver",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1,5 +1,9 @@
 # Nested specifications
 
+Independent children with their own database, authentication and lifecycle use
+[`subcomponents`](subcomponents.adoc), available in Looprd 0.4.0. `includes`
+retains the same-component behavior described below.
+
 Register the top-level `looprd.yaml` once in the sources file. It can explicitly
 import fragments from its own folder or subfolders:
 

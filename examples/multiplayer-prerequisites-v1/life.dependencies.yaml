@@ -1,0 +1,17 @@
+# Fragment to merge with Life's own server adapter; not installed by this review.
+dependencies:
+  - component: looprd-social
+    contract: tavi-game-grant-redeem
+    version: 1
+    credentialSecret: tavi/services/life
+    optional: true
+  - component: looprd-social
+    contract: tavi-game-event
+    version: 1
+    credentialSecret: tavi/services/life
+    optional: true
+  - component: looprd-social
+    contract: tavi-game-room-roster
+    version: 1
+    credentialSecret: tavi/services/life
+    optional: true

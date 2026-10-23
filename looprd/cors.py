@@ -22,14 +22,12 @@ class ComponentCorsMiddleware:
         settings = self.runtime.settings
         origins = list(settings.allowed_origins)
         enabled = bool(origins)
-        parts = scope.get("path", "").split("/")
-        if len(parts) >= 4 and parts[1] in ("looprd", "dapi"):
-            generation = self.runtime.active.get(parts[2])
-            if generation and generation.spec.api.version == parts[3]:
-                # Dispatch and response headers must refer to the same generation.
-                scope["looprd.generation"] = generation
-                origins = allowed_origins(settings, generation.spec)
-                enabled = enabled or generation.spec.cors is not None or settings.origin_restrictions is not None
+        from .component_routes import resolve
+        generation = resolve(self.runtime, scope)
+        if generation:
+            # Dispatch and response headers must refer to the same generation.
+            origins = allowed_origins(settings, generation.spec)
+            enabled = enabled or generation.spec.cors is not None or settings.origin_restrictions is not None
         if not enabled:
             return await self.app(scope, receive, send)
         middleware = CORSMiddleware(

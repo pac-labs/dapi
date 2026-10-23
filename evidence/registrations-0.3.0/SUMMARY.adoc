@@ -1,0 +1,21 @@
+= Looprd 0.3.0 producer verification
+:revdate: 2026-10-22
+
+* Focused registration/import/metadata suite: 42 passed.
+* Final source Python suite: 307 passed, six optional PostgreSQL/Redis skips,
+  one existing Starlette warning; 40.82 seconds.
+* Final clean complete-ZIP extraction: 307 passed, the same six skips and warning;
+  44.78 seconds. Pinned actual Atrium/Social interoperability tests explicitly ran.
+* UI/client Node suite: 17 passed in source and clean extraction. Carbon CSS rebuilt.
+* 0.3.0 wheel built; registration reader/spec, generic URL module and CSS match source.
+* Actual 0.2.0 versus 0.3.0 legacy declaration serialization is byte-identical.
+* Pinned/current ZipRunner-spec 2.3.0 (341005206094862853435ad68801be7ff28c4490)
+  package validation passed with the mandatory Workboard receipt and verification plan.
+* All original source Workboard cards/criteria/status and manager review preserved.
+* Final archive inventory hashes and clean-tested runtime file hashes are checked.
+
+No real PostgreSQL/Redis URLs were configured for the six optional integrations.
+No generic consumer pull adapter, live reader credential/configuration, deployment,
+Git push, publication, application migration or independent operator acceptance is
+claimed. Existing Atrium push behavior remains compatible. Runtime/test code is
+unchanged after clean extraction; only delivery documentation/evidence is finalized.

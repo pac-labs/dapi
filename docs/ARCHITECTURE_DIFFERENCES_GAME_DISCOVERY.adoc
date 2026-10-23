@@ -4,6 +4,10 @@
 
 == Scope
 
+Historical comparison for the first observe-only build. DAPI 0.2.0 supersedes its
+sender/withdrawal rows with opt-in durable v2 delivery; see
+automatic-atrium-discovery.adoc for current behavior and receiver requirements.
+
 This first build implements generic discovery groundwork, not the complete
 multi-product game workflow. Authority: DESIGN.adoc / Specification authority /
 Optional discovery observation and service availability.

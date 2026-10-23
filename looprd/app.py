@@ -23,6 +23,7 @@ from .administration_routes import endpoint as data_administration
 from .push_routes import management as push_management
 from .discovery_routes import endpoint as discovery_management
 from .observation_routes import schedule, storage
+from .registration_reader import endpoint as registration_reader
 from .operations import Operations, OperationsMiddleware, endpoint as operations_endpoint
 
 
@@ -55,6 +56,8 @@ def create_app(settings=None, runtime=None):
         Route("/_looprd/storage", storage),
         Route("/_looprd/capabilities", capabilities),
         Route("/_looprd/discovery", discovery_management),
+        Route("/_looprd/registrations", registration_reader),
+        Route("/_looprd/registrations/{component}/{service}/document", registration_reader),
         Route("/_looprd/discovery/{component}", discovery_management),
         Route("/_looprd/ops", operations_endpoint),
         Route("/_looprd/diagnostics", diagnostic_management, methods=["GET", "POST"]),

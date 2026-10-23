@@ -16,8 +16,17 @@ class DiscoveryObserver:
         self.pending = None
         self.task = None
         self.sequence = 0
+        self.delivery = None
+        if runtime.settings.discovery_delivery_enabled:
+            from .discovery_delivery import DiscoveryDelivery
+            self.delivery = DiscoveryDelivery(self)
+
+    def start_delivery(self):
+        if self.delivery:
+            self.delivery.start()
 
     def schedule(self, loaded):
+        self.start_delivery()
         self.sequence += 1
         selected = self.runtime.settings.discovery_components
         active = {key: (value.digest, self.runtime.revisions[key]) for key, value in self.runtime.active.items()
@@ -31,6 +40,9 @@ class DiscoveryObserver:
         task = asyncio.create_task(asyncio.to_thread(self.store.record, component, result, snapshot))
         try:
             await asyncio.shield(task)
+            if self.delivery:
+                self.delivery.dirty = True
+                self.delivery.revision += 1
         except asyncio.CancelledError:
             await task
             raise
@@ -54,7 +66,11 @@ class DiscoveryObserver:
                 snapshot = snapshots.get(component)
                 try:
                     if component not in active:
-                        result = {"state": "inactive", "reason": "component_not_active"}
+                        source = self.runtime.sources.get(component)
+                        reason = "source_removed" if source is None else "source_disabled" if not source["enabled"] else "component_not_active"
+                        if self.runtime.settings.discovery_components is not None and component not in self.runtime.settings.discovery_components:
+                            reason = "not_selected"
+                        result = {"state": "inactive", "reason": reason}
                     elif component in self.runtime.availability.blocked:
                         result = {"state": "inactive", "reason": "component_blocked"}
                     elif snapshot is None:
@@ -80,3 +96,5 @@ class DiscoveryObserver:
         if self.task:
             self.task.cancel()
             await asyncio.gather(self.task, return_exceptions=True)
+        if self.delivery:
+            await self.delivery.close()

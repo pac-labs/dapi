@@ -1,0 +1,8 @@
+..............................                                           [100%]
+============================== warnings summary ===============================
+tests\test_discovery.py:8
+  <workspace>\tests\test_discovery.py:8: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+30 passed, 1 warning in 7.74s

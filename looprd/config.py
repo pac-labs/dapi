@@ -34,6 +34,12 @@ class Settings:
     discovery_enabled: bool = False
     discovery_components: tuple[str, ...] | None = None
     discovery_https_origins: tuple[str, ...] = ()
+    discovery_delivery_enabled: bool = False
+    discovery_receiver_url: str | None = None
+    discovery_credential_secret: str | None = None
+    deployment_id: str | None = None
+    public_url: str | None = None
+    registration_readers: str = "{}"
 
     def __post_init__(self):
         from .discovery_source import origin
@@ -77,6 +83,12 @@ class Settings:
             push_delivery_url=os.getenv("LOOPRD_PUSH_DELIVERY_URL"),
             push_token_secret=os.getenv("LOOPRD_PUSH_TOKEN_SECRET"),
             discovery_enabled=os.getenv("LOOPRD_DISCOVERY_ENABLED", "false").lower() == "true",
+            discovery_delivery_enabled=os.getenv("LOOPRD_DISCOVERY_DELIVERY", "false").lower() == "true",
+            discovery_receiver_url=os.getenv("LOOPRD_DISCOVERY_RECEIVER"),
+            discovery_credential_secret=os.getenv("LOOPRD_DISCOVERY_CREDENTIAL"),
+            deployment_id=os.getenv("LOOPRD_DEPLOYMENT_ID"),
+            public_url=os.getenv("LOOPRD_PUBLIC_URL"),
+            registration_readers=os.getenv("LOOPRD_REGISTRATION_READERS", "{}"),
             discovery_components=tuple(value.strip() for value in os.environ["LOOPRD_DISCOVERY_COMPONENTS"].split(",") if value.strip()) if "LOOPRD_DISCOVERY_COMPONENTS" in os.environ else None,
             discovery_https_origins=tuple(value.strip() for value in os.getenv("LOOPRD_DISCOVERY_HTTPS_ORIGINS", "").split(",") if value.strip()),
         )

@@ -51,6 +51,7 @@ data remains on disk.
 
 == Delivery boundary
 
-No Redis or ntfy is required. There is no retry queue, acknowledgement loop or
-remote catalog mutation. Future delivery needs receiver-defined deployment-bound
-authentication and withdrawal. Local observations never imply remote approval.
+No Redis or ntfy is required. Defaults remain observe-only. Version 0.2.0 adds an
+explicitly opt-in v2 sender in the same observation database; see
+automatic-atrium-discovery.adoc. A matching Atrium machine receiver is required.
+Local observations and delivery acknowledgements never imply remote approval.

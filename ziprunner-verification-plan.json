@@ -1,0 +1,211 @@
+{
+  "schema": "ziprunner.verification-plan/v1",
+  "project": "Looprd-DAPI",
+  "version": "0.4.0",
+  "tasks": [
+    {
+      "id": "discovery-observer-provenance",
+      "criteria": [
+        {
+          "id": "discovery-observer-provenance-ac-code",
+          "description": "Extend existing observation with stable Git/local/HTTPS provenance, explicit withdrawal and temporary-failure safety.",
+          "mode": "automated",
+          "checks": [
+            "discovery-observer-provenance-automated"
+          ]
+        },
+        {
+          "id": "discovery-observer-provenance-ac-review",
+          "description": "Independent review of the matching contract and declared production boundaries.",
+          "mode": "manual",
+          "checks": [
+            "discovery-observer-provenance-manual"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discovery-durable-delivery",
+      "criteria": [
+        {
+          "id": "discovery-durable-delivery-ac-code",
+          "description": "Persistent intent, sequence/CAS, retry/restart reconciliation and strict authenticated v2 exchange.",
+          "mode": "automated",
+          "checks": [
+            "discovery-durable-delivery-automated"
+          ]
+        },
+        {
+          "id": "discovery-durable-delivery-ac-review",
+          "description": "Independent review of the matching contract and declared production boundaries.",
+          "mode": "manual",
+          "checks": [
+            "discovery-durable-delivery-manual"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discovery-contract-v2",
+      "criteria": [
+        {
+          "id": "discovery-contract-v2-ac-code",
+          "description": "Versioned schemas, fixtures and explicit matching-release acceptance; no claim that receiver is installed.",
+          "mode": "automated",
+          "checks": [
+            "discovery-contract-v2-automated"
+          ]
+        },
+        {
+          "id": "discovery-contract-v2-ac-review",
+          "description": "Independent review of the matching contract and declared production boundaries.",
+          "mode": "manual",
+          "checks": [
+            "discovery-contract-v2-manual"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "registration-readers-v1",
+      "criteria": [
+        {
+          "id": "registration-readers-v1-ac-code",
+          "description": "Validate optional opaque registrations, scoped reader isolation and source/lifecycle safety",
+          "mode": "automated",
+          "checks": [
+            "registration-readers-v1-automated"
+          ]
+        },
+        {
+          "id": "registration-readers-v1-ac-review",
+          "description": "Review consumer migration and non-deployment boundaries",
+          "mode": "manual",
+          "checks": [
+            "registration-readers-v1-manual"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subcomponents-v1",
+      "criteria": [
+        {
+          "id": "subcomponents-v1-code",
+          "description": "Verify isolated child data/authentication and explicitly bound service calls. Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations. Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads.",
+          "mode": "automated",
+          "checks": [
+            "subcomponents-v1-automated"
+          ]
+        },
+        {
+          "id": "subcomponents-v1-review",
+          "description": "Review consumer rollout and downgrade boundaries",
+          "mode": "manual",
+          "checks": [
+            "subcomponents-v1-manual"
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "discovery-observer-provenance-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Source-aware discovery lifecycle",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_discovery_delivery.py",
+      "assertions": [
+        "Run Git/local/HTTPS fixture tests and verify only Git has a real commit revision.",
+        "Confirm invalid/unreachable sidecars retain last valid intent; explicit removal withdraws."
+      ]
+    },
+    {
+      "id": "discovery-observer-provenance-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Source-aware discovery lifecycle review",
+      "instructions": "Review tests/test_discovery_delivery.py and docs/automatic-atrium-discovery.adoc; confirm matching receiver/staging limitations before operator acceptance."
+    },
+    {
+      "id": "discovery-durable-delivery-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Durable deployment-bound sender",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_discovery_delivery_safety.py",
+      "assertions": [
+        "Run lost-ack/restart/supersession tests; the same retry operation is reused.",
+        "Confirm wrong credentials/binding/acknowledgement cannot clear pending work or prevent API activation."
+      ]
+    },
+    {
+      "id": "discovery-durable-delivery-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Durable deployment-bound sender review",
+      "instructions": "Review tests/test_discovery_delivery_safety.py and docs/automatic-atrium-discovery.adoc; confirm matching receiver/staging limitations before operator acceptance."
+    },
+    {
+      "id": "discovery-contract-v2-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Shared Atrium v2 handoff",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_discovery_contract.py",
+      "assertions": [
+        "Validate shared schemas/examples and review receiver requirements against the matching Atrium release.",
+        "Confirm this ZIP neither deploys nor claims legacy apps:approve intake supports v2."
+      ]
+    },
+    {
+      "id": "discovery-contract-v2-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Shared Atrium v2 handoff review",
+      "instructions": "Review tests/test_discovery_contract.py and docs/automatic-atrium-discovery.adoc; confirm matching receiver/staging limitations before operator acceptance."
+    },
+    {
+      "id": "registration-readers-v1-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Generic registration regressions",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_registrations.py",
+      "assertions": [
+        "Unknown services do not block API activation.",
+        "Cross-service reads, stale generations and path escapes fail safely.",
+        "Outages preserve declarations; explicit complete-view removal is distinct."
+      ]
+    },
+    {
+      "id": "registration-readers-v1-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Generic consumer handoff",
+      "instructions": "Review docs/service-registrations.adoc and confirm no consumer implementation, secret or deployment is included."
+    },
+    {
+      "id": "subcomponents-v1-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Independent subcomponents regressions",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_subcomponents.py",
+      "assertions": [
+        "Verify isolated child data/authentication and explicitly bound service calls.",
+        "Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations.",
+        "Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads."
+      ]
+    },
+    {
+      "id": "subcomponents-v1-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Consumer and operator acceptance",
+      "instructions": "Review docs/subcomponents.adoc and verify matching receiver adapters use supplied nested URLs before deployment."
+    }
+  ]
+}

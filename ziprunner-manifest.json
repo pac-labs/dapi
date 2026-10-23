@@ -1,0 +1,226 @@
+{
+  "schema": "ziprunner.update-manifest/v1",
+  "spec_version": "1.0.0",
+  "project": {
+    "key": "Looprd-DAPI",
+    "version": "0.4.0",
+    "base_version": "0.3.0"
+  },
+  "update": {
+    "id": "DAPI-20261023-SUBCOMPONENTS-001",
+    "kind": "source_update",
+    "created_at": "2026-10-23T12:00:00+02:00",
+    "summary": "Complete 0.4.0 source candidate with independent subcomponents; no deployment."
+  },
+  "planned_work": [
+    {
+      "id": "discovery-observer-provenance",
+      "title": "Source-aware discovery lifecycle",
+      "acceptance_criteria": "Run Git/local/HTTPS fixture tests and verify only Git has a real commit revision. Confirm invalid/unreachable sidecars retain last valid intent; explicit removal withdraws.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-durable-delivery",
+      "title": "Durable deployment-bound sender",
+      "acceptance_criteria": "Run lost-ack/restart/supersession tests; the same retry operation is reused. Confirm wrong credentials/binding/acknowledgement cannot clear pending work or prevent API activation.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-contract-v2",
+      "title": "Shared Atrium v2 handoff",
+      "acceptance_criteria": "Validate shared schemas/examples and review receiver requirements against the matching Atrium release. Confirm this ZIP neither deploys nor claims legacy apps:approve intake supports v2.",
+      "priority": "high"
+    },
+    {
+      "id": "define-next-pass",
+      "title": "Define the next bounded implementation pass",
+      "acceptance_criteria": "Collect the latest project state and convert it into one reviewable implementation slice.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-receiver-release",
+      "title": "Matching Atrium v2 release",
+      "acceptance_criteria": "Atrium owner must implement machine binding, real candidate transactions, replay/tombstones and shared fixture conformance.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-staging-acceptance",
+      "title": "Independent staging and operator acceptance",
+      "acceptance_criteria": "After receiver release, provision scoped credentials and generic deployment metadata; test live staging without modifying production in this pass.",
+      "priority": "high"
+    },
+    {
+      "id": "registration-readers-v1",
+      "title": "Generic optional service registrations and scoped reader",
+      "acceptance_criteria": "Declare any service without installing a consumer; verify API activation remains independent. Read only the authenticated service declarations/documents and verify root-relative pinning, safe outage retention and restart/removal behavior.",
+      "priority": "high"
+    },
+    {
+      "id": "registration-consumer-adapter",
+      "title": "Consumer-owned registration reader integration",
+      "acceptance_criteria": "Atrium and other consumers implement scoped polling and durable metadata reconciliation before replacing legacy delivery.",
+      "priority": "high"
+    },
+    {
+      "id": "subcomponents-v1",
+      "title": "Independent nested components",
+      "acceptance_criteria": "Verify isolated child data/authentication and explicitly bound service calls. Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations. Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads.",
+      "priority": "high"
+    }
+  ],
+  "done_work": [
+    {
+      "id": "discovery-observer-provenance",
+      "summary": "Extend existing observation with stable Git/local/HTTPS provenance, explicit withdrawal and temporary-failure safety. Producer-reported; independent acceptance pending.",
+      "evidence": [
+        {
+          "kind": "source",
+          "ref": "tests/test_discovery_delivery.py",
+          "description": "Source-aware discovery lifecycle regression implementation"
+        },
+        {
+          "kind": "documentation",
+          "ref": "docs/automatic-atrium-discovery.adoc",
+          "description": "Contract boundaries and matching release requirements"
+        }
+      ]
+    },
+    {
+      "id": "discovery-durable-delivery",
+      "summary": "Persistent intent, sequence/CAS, retry/restart reconciliation and strict authenticated v2 exchange. Producer-reported; independent acceptance pending.",
+      "evidence": [
+        {
+          "kind": "source",
+          "ref": "tests/test_discovery_delivery_safety.py",
+          "description": "Durable deployment-bound sender regression implementation"
+        },
+        {
+          "kind": "documentation",
+          "ref": "docs/automatic-atrium-discovery.adoc",
+          "description": "Contract boundaries and matching release requirements"
+        }
+      ]
+    },
+    {
+      "id": "discovery-contract-v2",
+      "summary": "Versioned schemas, fixtures and explicit matching-release acceptance; no claim that receiver is installed. Producer-reported; independent acceptance pending.",
+      "evidence": [
+        {
+          "kind": "source",
+          "ref": "tests/test_discovery_contract.py",
+          "description": "Shared Atrium v2 handoff regression implementation"
+        },
+        {
+          "kind": "documentation",
+          "ref": "docs/automatic-atrium-discovery.adoc",
+          "description": "Contract boundaries and matching release requirements"
+        }
+      ]
+    },
+    {
+      "id": "registration-readers-v1",
+      "summary": "Producer-reported implementation; independent review and consumer integration remain.",
+      "evidence": [
+        {
+          "kind": "source",
+          "ref": "tests/test_registrations.py",
+          "description": "Registration contract and reader regressions"
+        },
+        {
+          "kind": "documentation",
+          "ref": "docs/service-registrations.adoc",
+          "description": "Generic consumer reader contract"
+        }
+      ]
+    }
+  ],
+  "todo_work": [
+    {
+      "id": "define-next-pass",
+      "status": "planned",
+      "next_action": "Collect the latest project state and convert it into one reviewable implementation slice."
+    },
+    {
+      "id": "discovery-receiver-release",
+      "status": "blocked",
+      "next_action": "Atrium owner must implement machine binding, real candidate transactions, replay/tombstones and shared fixture conformance.",
+      "blockers": [
+        "Matching Atrium v2 production receiver not implemented in the reviewed release; no deployment authorized."
+      ]
+    },
+    {
+      "id": "discovery-staging-acceptance",
+      "status": "blocked",
+      "next_action": "After receiver release, provision scoped credentials and generic deployment metadata; test live staging without modifying production in this pass.",
+      "blockers": [
+        "Matching Atrium v2 production receiver not implemented in the reviewed release; no deployment authorized."
+      ]
+    },
+    {
+      "id": "registration-consumer-adapter",
+      "status": "planned",
+      "next_action": "Consumer owners implement generic scoped polling and durable metadata reconciliation before replacing legacy delivery."
+    },
+    {
+      "id": "subcomponents-v1",
+      "status": "planned",
+      "next_action": "Independently review source regressions, rollout and matching consumer URL handling."
+    }
+  ],
+  "validation": {
+    "model_reported": "partial",
+    "checks": [
+      {
+        "id": "SUBCOMPONENTS-SOURCE",
+        "description": "338 Python tests passed, six optional service skips",
+        "status": "passed",
+        "evidence_ref": "evidence/subcomponents-0.4.0/source-python.txt"
+      },
+      {
+        "id": "SUBCOMPONENTS-NODE",
+        "description": "17 UI/client tests passed",
+        "status": "passed",
+        "evidence_ref": "evidence/subcomponents-0.4.0/node-tests.txt"
+      },
+      {
+        "id": "SUBCOMPONENTS-FRESH",
+        "description": "Clean complete source: 338 Python passed, six optional skips; 17 UI/client passed",
+        "status": "passed",
+        "evidence_ref": "evidence/subcomponents-0.4.0/fresh-python.txt"
+      }
+    ]
+  },
+  "handover": {
+    "next_pass": "Receiver owner implements the shared v2 contract, then independent staging/QA/operator acceptance.",
+    "risks": [
+      "Legacy Atrium v1 intake cannot accept this sender.",
+      "Current project destination is the prior planning scaffold; review complete-source recipe and clean destination."
+    ],
+    "blockers": [
+      "Atrium must implement the generic pull-reader adapter before replacing the existing compatible push connection."
+    ],
+    "notes": [
+      "define-next-pass and existing manager-review-needed state preserved.",
+      "No claim of independent QA, operator approval or production readiness.",
+      "Uncommitted source candidate based on 13b99a80a1a7e08de547adb70b33ddf39e9199bd; the ZIP checksum identifies delivered bytes.",
+      "0.3.0 adds optional generic reader; existing immutable 0.2.0 ZIP and operator decisions are retained. Atrium pull consumer implementation is separate work."
+    ]
+  },
+  "operator_actions": [
+    {
+      "id": "DAPI-OP-RECIPE",
+      "description": "Review full-source destination/build recipe without changing project identity or overwriting local Workboard state.",
+      "status": "required"
+    },
+    {
+      "id": "DAPI-OP-RECEIVER",
+      "description": "Approve/install matching receiver and staging configuration separately after review.",
+      "status": "required"
+    }
+  ],
+  "release": {
+    "requested": false,
+    "requires_operator_approval": true,
+    "notes": "Source ZIP only; do not push, install receiver or deploy automatically."
+  }
+}

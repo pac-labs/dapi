@@ -1,0 +1,18 @@
+✔ discovered Life appears but never becomes a playable legacy game (3.1522ms)
+✔ rejects forged/invalid data and absent Tavi identity (1.4988ms)
+✔ home and Games show discovered titles, not an unapproved play or challenge (6.0581ms)
+✔ Atrium accepts reviewed HTTPS Pages and operator custom subpath, not local or credential URLs (1.5454ms)
+✔ unconfigured Atrium is an explicit disabled launcher, not a second catalog (0.3422ms)
+✔ Windows Games shows explicit Atrium destination and keeps the old challenge flow separate (6.5228ms)
+✔ Web, Windows and Android use same account challenge methods (4.4627ms)
+✔ native Games surface exposes play and explicit challenge from accepted contacts (1.1992ms)
+✔ Tavi browser/Windows/Android use one game-inbox SDK and never send credentials to games (2.9976ms)
+✔ room API sends only authenticated Social commands with validated room IDs (2.7076ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166.3727

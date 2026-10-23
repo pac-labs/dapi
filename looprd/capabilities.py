@@ -14,8 +14,11 @@ CAPABILITIES = frozenset({
     "reports.bugs",
     "management.data",
     "spec.includes",
+    "spec.subcomponents",
     "push.unifiedpush", "events.snapshot",
     "service.dependencies.optional", "discovery.atrium.observe",
+    "discovery.atrium.delivery.v2",
+    "registration.readers.v1",
     "management.schedule", "management.storage",
 })
 

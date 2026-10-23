@@ -1,0 +1,127 @@
+= Automatic Atrium discovery delivery — DAPI 0.2.0
+:doctype: article
+:toc:
+
+== Delivered boundary
+
+The existing observer now has an opt-in durable sender. It uses the same
+discovery.sqlite3, with observations_v1 plus discovery_delivery_v2. It stores
+control-plane intents/acknowledgements only, not a second game registry.
+Activation, checkpoints, application databases and API availability do not depend
+on Atrium or on valid delivery configuration. Defaults retain observe-only mode.
+
+This source ZIP does not install or enable anything. The reviewed Atrium revision
+264a109681e3c8a24039c3356d9f7fb556197fed still implements operator-only v1 intake.
+It cannot receive this protocol. Automatic registration requires a matching
+Atrium release implementing contracts/atrium-discovery-v2/README.adoc, schemas
+and conformance fixtures. No version number for an unbuilt release is claimed.
+
+== Host configuration
+
+[source,text]
+----
+LOOPRD_DISCOVERY_ENABLED=true
+LOOPRD_DISCOVERY_DELIVERY=true
+LOOPRD_DEPLOYMENT_ID=example-node
+LOOPRD_PUBLIC_URL=https://api.example.com
+LOOPRD_DISCOVERY_RECEIVER=https://catalog.example.com/looprd/atrium/v1/registry/discovery/v2
+LOOPRD_DISCOVERY_CREDENTIAL=atrium/discovery-token
+----
+
+The last value is a mounted secret reference, never a credential value. The token
+must be provisioned by the matching receiver with deployment/component/source
+restrictions and discovery submit/withdraw rights. Never use an apps:approve or
+management key. Credentials are reread for rotation. Do not place values in the
+game repository or atriumd.yaml. Keep actual configuration outside source ZIPs.
+
+The deployment identity/public API origin are generic host metadata, aligned once
+with the existing reverse-proxy deployment. Older Looprd settings did not have a
+trusted advertised public origin; it cannot safely be inferred from arbitrary
+Host headers, CORS origins or private listening addresses. LOOPRD_PUBLIC_URL
+imports that existing deployment fact without adding a per-game URL registry.
+The component's active canonical prefix supplies the rest of the API location.
+
+For example an active demo/v1 automatically advertises
+https://api.example.com/looprd/demo/v1. This is an API location, not the launch
+URL of a hosted web game. Atrium resolves sidecar originRef through its vetted
+launch binding. DAPI does not invent a frontend host from the API origin.
+
+Existing component allowlist and approved HTTPS-source-origin settings apply.
+Missing or invalid new configuration appears as configuration_unavailable in
+protected delivery status; it never prevents components loading. Enabling delivery
+without observation does not silently start a sender.
+
+== Lifecycle and provenance
+
+Git reads remain pinned to the activated root commit. Source identity excludes
+the changing commit ref; the true 40-hex revision is separate. Local and ordinary
+HTTPS observations carry kind, opaque identity and activated flattened-specification
+digest, with revision null. Paths, query credentials and artificial Git SHAs are
+never sent. Non-Git observation is not an atomic repository snapshot claim.
+
+Only valid fresh metadata creates a new upsert. Sidecar-only changes, runtime API
+origin/prefix changes and later valid source revisions reconcile the desired intent.
+Unknown or invalid reads preserve existing work. A different active generation
+cannot send a stale upsert. API blocks and component-filter exclusions pause sends;
+they do not become publisher withdrawal decisions. An API block does not suppress
+a subsequent independently confirmed source removal/withdrawal.
+
+Confirmed Git/local absence withdraws. HTTPS 404 is inconclusive and preserves
+the existing candidate; an approved HTTPS source may explicitly return 410 Gone
+to withdraw. Source-list removal/disable withdraws only after successful authoritative
+reconciliation/checkpoint. Failed sources retrieval or failed candidate activation
+does not withdraw. Reappearing invalid metadata never resurrects a withdrawn game.
+
+One pending desired intent per deployment/component coalesces old unsent updates.
+Sequences and operation IDs persist; network retries reuse the same envelope.
+An acknowledged prior intent is retained while its successor is pending. An old
+network reply cannot clear a newer intent. Restart can retry committed work using
+the restored checkpoint even when the entire sources repository is unavailable.
+
+== Receiver protocol and failure handling
+
+An authenticated GET to receiver/capabilities must return v2 and the bound
+deployment before a POST to receiver/observations. No legacy fallback exists.
+The receiver independently checks principal bindings, metadata, digests, ordering,
+replay and lifecycle. Pending or reviewed unchanged acknowledgements are valid;
+neither grants publication. Withdrawal requires a withdrawn acknowledgement.
+
+Authentication, network, protocol mismatch and malformed replies retain intent
+with safe reason/attempt/next-attempt metadata. Retry backoff uses jitter, up to
+300 seconds, plus numeric Retry-After capped at one hour. Authentication/contract
+errors retry no earlier than 60 seconds, allowing credential/receiver upgrades.
+Requests have a total 20-second deadline and 16-KiB response bound; redirects are
+not followed. No raw receiver error body or credential enters diagnostics.
+
+== Management, limits and rollback
+
+GET /_looprd/discovery remains management-only. In delivery mode its delivery
+object contains state and queue summaries: component, sequence, state, attempts,
+nextAttemptAt, safe error and acknowledgedSequence. Component detail adds
+deliveryStatus. The Schedule workspace includes delivery reconciliation/retry rows.
+Diagnostic capability links do not gain discovery access.
+
+Observations and delivery each retain at most 1,000 historical keys. Each sidecar
+is bounded to 64 KiB. There is no unbounded attempt history or automatic deletion
+of application data. Bound the number of deployment identities used with one data
+volume; changing an identity does not erase its old sequence history.
+Changing receiver/deployment binding does not silently mutate the previous receiver;
+withdraw/revoke its old binding through that receiver's operator procedure.
+
+To pause sends set LOOPRD_DISCOVERY_DELIVERY=false and restart through the normal
+operator procedure. Observations/outbox remain on disk. Older observe-only code
+ignores the new table. Do not roll application databases back for this feature.
+After restoring an older outbox backup, receiver sequence high-water marks may
+reject replay as stale: reconcile identities/history with the operator rather
+than resetting sequence numbers or bypassing authentication.
+
+== Verification and remaining work
+
+Tests cover local/Git/HTTPS delivery, replay after lost acknowledgement, restart
+with unavailable sources, receiver reconnect/credential repair, sidecar updates,
+strict acknowledgements, source withdrawal, blocking, ordering and compare-and-swap.
+They use a synthetic v2 receiver fixture, not an installed Atrium implementation.
+
+Matching Atrium implementation, shared-fixture execution there, independent QA,
+operator acceptance and isolated staging deployment remain required. This pass
+does not push, deploy, claim live registration or close existing Workboard tasks.

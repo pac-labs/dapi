@@ -28,6 +28,16 @@ async def schedule(request):
         error=request.app.state.operations.error))
     if runtime.discovery:
         rows.append(task("Discovery observation", None, "running" if runtime.discovery.task and not runtime.discovery.task.done() else "waiting"))
+        delivery = runtime.discovery.delivery
+        if delivery:
+            rows.append(task("Discovery delivery reconciliation", 1, delivery.state))
+            try:
+                queue = await run_in_threadpool(delivery.outbox.summaries, runtime.settings.deployment_id)
+                for row in queue:
+                    if row["nextAttemptAt"] is not None:
+                        rows.append(task("Discovery delivery retry", None, row["state"], row["nextAttemptAt"], row["component"], error=row["error"]))
+            except Exception:
+                rows.append(task("Discovery delivery queue unavailable", None, "unavailable"))
     truncated = False
     for component, generation in list(runtime.active.items())[:100]:
         blocked = component in runtime.availability.blocked

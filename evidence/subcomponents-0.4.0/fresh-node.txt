@@ -1,0 +1,25 @@
+✔ bootstrap stages pages then replays from the captured baseline (30.6184ms)
+✔ retention gaps rebuild state without silently skipping events (1.2695ms)
+✔ expired snapshots discard staging and restart (1.325ms)
+✔ authentication failures leave saved state alone (0.8148ms)
+✔ storage failures propagate without advancing the cursor (0.635ms)
+✔ abort prevents network access (0.3447ms)
+✔ temporary server failures retry without advancing local state early (266.0201ms)
+✔ bug report filtering and details render diagnostic content as literal text (3.777ms)
+✔ review actions resolve reports and require confirmation before deletion (1.2903ms)
+✔ remembered credentials reconnect, opt out removes them, and Forget clears access (2.9465ms)
+✔ unavailable browser storage leaves the session usable and failed removal is explicit (1.9657ms)
+✔ terminal filenames remain literal POSIX shell arguments (1.8804ms)
+✔ schedule renders literal metadata, SQL due dates, filtering and API block semantics (2.7268ms)
+✔ storage distinguishes incomplete measurement, host capacity and PostgreSQL/Redis unknown values (0.9696ms)
+✔ operator controls preserve typed values, nulls and literal untrusted text (2.898ms)
+✔ reviewing the same operator intent reuses its receipt key until inputs change (1.2324ms)
+✔ busy actions restore existing disabled controls without enabling forbidden actions (1.316ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 397.367

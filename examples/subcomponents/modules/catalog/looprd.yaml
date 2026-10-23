@@ -1,0 +1,23 @@
+apiVersion: looprd/v1
+component: catalog
+release: '1'
+api: {version: v1}
+auth: {mode: database, scopes: [catalog.read, catalog.write]}
+database: {backend: sqlite}
+models:
+  Item:
+    fields:
+      id: {type: integer, primaryKey: true, generated: true}
+      title: {type: string, maxLength: 120, required: true}
+resources:
+  items:
+    model: Item
+    path: /items
+    operations: [list, get, create]
+    permissions:
+      list: [catalog.read]
+      get: [catalog.read]
+      create: [catalog.write]
+registrations:
+  - service: example-consumer
+    document: registration.yaml

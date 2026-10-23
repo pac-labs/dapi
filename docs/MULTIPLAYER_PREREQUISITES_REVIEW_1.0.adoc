@@ -1,0 +1,179 @@
+= Looprd 0.2.0 multiplayer prerequisite review
+:revnumber: 1.0.0
+:revdate: 2026-10-19
+:doctype: article
+:toc:
+
+== Conclusion and scope
+
+Governing authority: DESIGN.adoc / Specification authority (Automatic Atrium
+discovery delivery and generic platform extensions), Authentication and management,
+Generation reload and Database lifecycle. The existing DESIGN fingerprint in
+PROJECT_PLAN.adoc remains unchanged; this review does not amend platform contracts.
+
+The existing generic Looprd 0.2.0 contracts are sufficient for the requested
+same-runtime Life / Social service integration and authenticated Atrium discovery.
+No runtime patch or protocol redesign is justified by this review. This pass adds
+interoperability tests and configuration examples, not game behavior or deployment.
+The running discovery connection is NOT configured or enabled.
+
+The previously reported Atrium v1/v2 mismatch is superseded by the actual receiver
+in current Atrium source. A real DAPI transport-to-receiver test now passes; it
+does not prove production credentials, the production receiver configuration,
+Internet delivery, browser/OpenClaw play or application authorization end to end.
+
+== Evidence and source revisions
+
+[cols="1,2,2",options="header"]
+|===
+|Project |Pinned reviewed source |Observed contract
+|DAPI |0.2.0 source candidate; complete ZIP SHA-256
+93a1f78bde170c85e5a75d8e1be726f1a86637ce220aeb7d8650d21c28a00a05
+|Optional observer, durable v2 sender and generic authenticated local service calls.
+|Atrium |2137d03db431f49d5f07aaef22786941c4ca77ee
+|0.5.18, schema 6; trusted-owner/v1 policy using discovery v2 wire protocol.
+|Life |d03bd6759929e54b161c6347c50a5894aef0f5d7
+|0.5.92, schema 3; root descriptor exposes POST /session and GET /info only.
+|Social / Tavi |cf40e2a3ac4a645f46eb57295fba61a7d5653f23
+|Root component 0.3.48, schema 10; Tavi is the Social client/integration, not a
+separately located server repository. Other source package labels may differ.
+|===
+
+Credential-free node inspection on the client date above found running Looprd
+0.2.0 and HTTP health 200. Discovery observation/delivery were both false; public
+origin, deployment identity, receiver and discovery credential reference were unset.
+Its persistent checkpoint recorded the same component release/schema versions
+listed above. A checkpoint is retained activation evidence, not authenticated live
+status or proof that every application operation currently succeeds. No management
+credential was retrieved and no production mutation was performed in this review.
+
+== Requirement classification
+
+[cols="1,3,3",options="header"]
+|===
+|Requirement |Already implemented |Remaining / classification
+|1. Component discovery and trusted outbound notification
+|Source activation/reconciliation; optional sibling observer; persistent authenticated
+v2 delivery after successful activation. The sender code is in the running 0.2.0 image.
+|LIVE CONFIGURATION: enable observation/delivery and configure the approved connection.
+This is opted-in Atrium game discovery, not a broadcast for every arbitrary API change.
+The dependency inventory /_services is pull-based and describes declared dependencies.
+|2. URL-free metadata associated with its real route
+|Sibling atriumd/v1 metadata is validated against the owning component. Host public
+origin plus the active route prefix supplies runtime.apiBaseUrl. Git/local/HTTPS
+provenance is explicit; only Git carries a real SHA. Nested includes extend one component.
+|LIVE CONFIGURATION: generic public origin; trusted HTTPS source origins if needed.
+Life already provides the metadata sibling. Launch originRefs are Atrium hosting
+configuration; an API URL is not the game's browser page.
+|3. Authenticated operator-approved Atrium intake
+|DAPI v2 capabilities handshake, Bearer authentication, deployment-bound replies,
+no redirects and bounded responses. Actual Atrium 0.5.18 v2 handlers pass the new
+interoperability test, including wrong-key and wrong-deployment rejection.
+|LIVE CONFIGURATION: one Atrium apps:discover service key and one trusted deployment
+registration, receiver URL and mounted secret reference. Successful production
+registration remains UNVERIFIED. The old mismatch alone no longer blocks integration.
+|4. Service identity for redemption and events
+|Declared dependencies and typed contracts; ctx.call validates the caller's service
+subject, target authentication, scopes and handler contract. Social exposes
+tavi-game-grant-redeem/v1, tavi-game-event/v1 and tavi-game-room-roster/v1. Its actual
+verifier/call path passed a disposable integration test with a nonexistent grant.
+|APPLICATION SOURCE WORK: Life has no dependencies or ctx.call adapter in its current
+descriptor, and no deployed-contract /play handler. Social already owns grants,
+consent, notifications and roster behavior. Do not implement these in Looprd.
+|5. Keep infrastructure secrets server-side
+|Mounted secret references; outbound Authorization header; ctx.call reads secrets
+server-side. Service inventory omits credential references and values. New tests
+check the machine proof is not put in observation bodies, URLs or caller responses.
+|APPLICATION/OPERATOR RESPONSIBILITY: provision/rotate actual keys, limit scopes and
+avoid application logging/returning credentials. User sessions and short-lived
+single-use game proofs necessarily reach their own client; they are NOT machine
+keys. Transfer such proof only in protected request bodies, never URLs or another
+application's long-lived session token. A game proof is not seat authorization.
+|6. Duplicate/update/restart/outage safety
+|Durable SQLite intent/op ID/sequence, CAS acknowledgement, persistent retry and
+last-valid retention; confirmed withdrawal only. Real receiver tests prove durable
+replay, commit-before-response-loss, restart, old replay and stale conflict behavior.
+|LIVE CONFIGURATION/ACCEPTANCE: exercise the network connection and credential
+rotation on disposable staging. Life must retry its domain notification outbox
+idempotently; ctx.call itself is not a durable message queue or distributed transaction.
+|7. Independent servers and generic platform
+|Host-configured deployment identity/origin/receiver/secrets, no required publisher,
+game name or production address. The real receiver accepts two deployment identities
+and does not hide the remaining instance when the first withdraws.
+|SUPPORTED BOUNDARY: ctx.call is local to one runtime. Cross-host callers use
+explicitly authenticated HTTPS and caller/receiver-owned retry and identity policy.
+Automatic remote ctx.call routing/federation is NOT implemented and was not required
+to make the current co-located integration work. Separate-network topology is untested.
+|===
+
+== Application implementation gaps are not platform gaps
+
+Life's schema 3 contains persistent GameMatch / GameParticipant / GameInvitation /
+GameAction / GameCheckpoint / GameNotificationOutbox storage. The presence of those
+models and internal async code does not expose an authenticated play API: the actual
+looprd.yaml has no /play handler or declared Social dependency. Metadata advertising
+a multiplayer role does not prove persistent human-vs-OpenClaw gameplay works.
+
+Life must connect its own handlers to its own match logic and the existing Social
+contracts, verify identities and seat/turn permissions, and retry domain events
+after committing game state. Native ctx.emit can join its local SQL transaction;
+cross-component calls cannot. Legacy ctx.publish after commit is best effort.
+Use existing jobs/event replay/outbox primitives as appropriate; do not add game
+invitations, deadlines, turn evaluation or approval logic to Looprd.
+
+Social's configured service secret mapping establishes machine identity, not a
+user identity. Its issuer, game-caller policy and subscription checks are application
+configuration. No external identity provider is required. Neither trusted discovery
+nor a service key makes a client-supplied user ID trustworthy.
+
+Atrium's v2 metadata catalog is separate from its immutable public release catalog.
+Automatic metadata registration does not create a browser launch, player grant,
+asset approval or game seat. Those remain Atrium/Life/Social application features.
+
+== Minimal integration examples
+
+See examples/multiplayer-prerequisites-v1/README.adoc and adjacent declarative files.
+They contain placeholder origins, secret REFERENCES and synthetic account/event
+identities only. They are not full application replacements or runnable installers.
+The Life dependency fragment is specifically NOT installed in the reviewed Life
+descriptor. Provision the credential outside source and merge the fragment only
+when Life implements the corresponding calls. A call failure must not authorize play.
+
+== Verification and limits
+
+tests/test_multiplayer_interoperability.py uses explicitly selected, pinned upstream
+descriptors, generated Atrium handlers and Social verifier under the real DAPI ASGI
+runtime. It creates disposable SQLite databases and random machine keys. It does
+not fake a receiver acknowledgement or use production secrets, accounts or addresses.
+Both logical deployment identities share one local test receiver; no separate host,
+TLS termination, reverse proxy or Internet network has been exercised by that test.
+
+The test covers all three provenance kinds, wrong key/deployment, automatic reviewed
+registration, duplicate/reordered messages, lost reply after commit, sender/receiver
+restart, update and withdrawal with another deployment still available. Social proof
+redemption is intentionally a nonexistent grant: valid service authentication and
+fail-closed domain behavior are verified, not a successful player invitation flow.
+Existing discovery tests cover source changes, invalid/unavailable metadata,
+configuration failure isolation, confirmed removal and retained pending delivery.
+
+The new interoperability tests are opt-in when upstream source is supplied; they
+must visibly skip rather than silently fetch mutable repositories during normal CI.
+See the adjacent examples README for exact commands. Producer logs are recorded in
+evidence/multiplayer-prerequisites-1.0/. PostgreSQL/Redis integrations and real
+multiplayer/operator acceptance must be reported separately, not inferred from SQLite.
+
+== Follow-up ownership; no Workboard completion claims
+
+* DAPI-CONFIG-DISCOVERY: operator provisions the scoped receiver connection and
+  enables only after staging acceptance; this pass performs no configuration change.
+* LIFE-SOCIAL-ADAPTER: Life exposes its own game API and consumes the declared Social
+  proof/event contracts, with local authorization, transactions and durable retries.
+* MULTIPLAYER-E2E: application owners verify real accounts, invitation redemption,
+  persisted seats, turns, reconnect and OpenClaw play through the actual clients.
+* CROSS-HOST-TRANSPORT: needed only if those application calls span Looprd instances;
+  review actual topology before proposing a generic remote transport extension.
+
+These are follow-up descriptions, not mutations of trusted operator Workboards.
+Existing source receipts, project identity and manager/operator decisions are kept.
+No migration, credential rotation, runtime-state edit, push or deployment is authorized
+or performed. No versioned runtime patch is necessary; the runtime remains 0.2.0.

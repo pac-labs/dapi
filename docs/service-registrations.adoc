@@ -1,0 +1,130 @@
+= Generic optional service registrations — Looprd 0.3.0
+:revdate: 2026-10-22
+:doctype: article
+:toc:
+
+== Component declaration
+
+[source,yaml]
+----
+apiVersion: looprd/v1
+component: sample-game
+release: '1'
+api:
+  version: v1
+auth:
+  mode: public
+registrations:
+  - service: atrium
+    document: atriumd.yaml
+  - service: another-service
+    document: integrations/another.yaml
+----
+
+Looprd knows only a service label and file path. It does not need to understand
+Atrium, its metadata schema or any other listed consumer. Entries are optional
+interests, not dependencies. The game runs if no consumer is installed or connected.
+Actual typed API calls still use the separate dependencies contract and credentials.
+Consumer-owned documents must contain no secrets or environment-specific hosting
+addresses. Atrium can retain its existing atriumd/v1 format without changing Looprd.
+
+At most 32 unique service IDs are accepted. Documents are root-relative descendants;
+no URLs, absolute paths, dot segments, hidden segments, escapes, query or fragments.
+Nested looprd.yaml includes extend the same component; a registration declared in
+a fragment still resolves from the top-level component source directory. Duplicate
+service declarations are errors, not implicit overrides. The reference JSON Schemas
+are updated; optional required capability is registration.readers.v1.
+
+Upgrade the host to 0.3.0 before adding this field to component repositories.
+Earlier strict specification readers reject unknown registrations fields and
+retain their last working generation; declaring an optional registration does
+not make an old host understand the new contract.
+
+== Configure one reader connection per service and Looprd deployment
+
+[source,text]
+----
+LOOPRD_REGISTRATION_READERS={"atrium":"registration-readers/atrium","another-service":"registration-readers/another"}
+LOOPRD_PUBLIC_URL=https://api.example.org
+LOOPRD_DEPLOYMENT_ID=example-node
+----
+
+The operator supplies distinct random 32–512-character keys in mounted secret files.
+The JSON holds references, not key values. A consumer uses Authorization: Bearer
+with its own key. Management credentials, game/user credentials and the existing
+Atrium outbound sender token confer no reader grant. Do not reuse a key across
+services: ambiguous authorization fails closed. Rotation takes effect on the next
+request. Public component auth does not make these documents public.
+
+Each independent Looprd deployment has its own configured connection. Public URL
+and deployment identity reuse generic host configuration. When public URL is unset
+or invalid, apiBaseUrl is null and apiPath remains authoritative; the consumer uses
+its operator-configured host connection. No request Host/Origin is trusted.
+
+== Generic pull protocol
+
+. GET /_looprd/registrations with the service reader credential.
+. Read schema=looprd.registrations/v1 and service, deploymentId, complete and
+  registrations. Entries contain component, service, release, generation, apiPath,
+  optional apiBaseUrl, blocked, document, documentPath and opaque source provenance.
+. GET the relative documentPath with ?generation=<generation> and the SAME key.
+  Never send a credential to a URL found inside consumer metadata. Looprd supplies
+  only a relative documentPath on its own API origin.
+. The response schema is looprd.registration-document/v1: component, service,
+  generation, source, consistency, sha256 and content. Interpret content in the
+  consumer. The hash is of the UTF-8 text returned, including its line endings.
+
+Git documents are read at the activated source revision; Git alone has a real SHA.
+Local/ordinary HTTPS are explicitly best-effort, not fictitious immutable versions.
+The host does not return raw repository locations, local paths or source credentials.
+Document length is at most 64 KiB; four concurrent reads are allowed. No parser or
+component code is executed while reading. The consumer must validate its own schema.
+
+Poll the inventory and documents periodically, with bounded backoff and jitter.
+Service-specific file changes need not change the component generation, so do not
+skip document refresh solely because generation is unchanged. Store the returned
+document hash to deduplicate updates. Use deployment/component/service as the
+registration identity; the document hash is a version, not a new game identity.
+Do not assume one Looprd server or one publisher for the whole ecosystem.
+
+== Safe failure and removal
+
+* 401: missing/wrong/ambiguous reader credential; 403: another service's document.
+* 404: the declaration/component is no longer active; verify a complete inventory
+  before withdrawing. 409: missing/stale generation or source changed during read.
+* 429: four reads already running; back off. 503: unavailable source/document,
+  oversized content, invalid reader configuration or inventory limit.
+
+All responses are no-store. Errors never include source exception text or credentials.
+Missing/invalid documents, network timeouts, 401/403/409/429/503 and complete=false
+must preserve the last accepted registration in the consumer and remain retryable.
+No empty failed response means remove everything. complete=false is conservative
+while any component/source reconciliation error is active. Positive records may
+still be processed, but negative reconciliation must wait for a complete view.
+
+Explicit removal/disable of a component, or removal of its declaration from a
+successfully activated spec, removes it from the next complete inventory. Consumers
+then withdraw that deployment's association while retaining application data and
+other instances. A blocked API remains listed with blocked=true; it is not removal.
+Failed candidate reloads retain the old active declaration. Offline restore retains
+declarations but document reads can remain unavailable until the root is fetched.
+
+== Existing Atrium migration and remaining consumer work
+
+The existing automatic Atrium v2 push adapter remains unchanged for existing
+deployments, including implicit atriumd.yaml discovery. Adding registrations does
+not silently replace/disable that adapter or require any new service at startup.
+
+Atrium must add its own generic reader client: poll declarations with service=atrium,
+fetch and validate atriumd.yaml, associate the metadata with the supplied component
+route, and reconcile idempotently across restarts. Host/source keys stay in Looprd;
+Atrium does not need private GitHub credentials or a second list of game repositories.
+Use one authoritative reconciliation path per deployment or explicitly deduplicate
+the old push and new pull paths. Do not disable working push delivery before the
+consumer's pull implementation is installed and accepted. No consumer change or
+production configuration is installed by this source pass.
+
+Only Looprd registration declaration/reader behavior is implemented here. No
+application registration, publisher review, publication, game rule, notification
+protocol, remote RPC or consumer webhook is added to core. Consumers own their
+policies; declarations alone grant neither player identity nor application access.

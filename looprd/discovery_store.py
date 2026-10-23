@@ -37,12 +37,14 @@ class DiscoveryStore:
             last_valid = previous.get("lastValid")
             if state == "valid":
                 last_valid = {"sidecar": observation["sidecar"], "fingerprint": observation["fingerprint"],
-                    "revision": snapshot.revision, "generation": snapshot.digest, "sourceIdentity": snapshot.identity}
+                    "revision": snapshot.revision, "generation": snapshot.digest, "sourceIdentity": snapshot.identity,
+                    "source": snapshot.provenance()}
             body = {"component": component, "mode": "observe-only", "delivery": "disabled",
                 "state": state, "observedAt": now, "reason": observation.get("reason"),
                 "stale": state not in ("valid", "absent"), "lastValid": last_valid,
                 "revision": snapshot.revision if snapshot else previous.get("revision"),
                 "generation": snapshot.digest if snapshot else previous.get("generation")}
+            body["source"] = snapshot.provenance() if snapshot else previous.get("source")
             meaningful = lambda value: {key: item for key, item in value.items() if key not in ("observedAt", "changedAt")}
             body["changedAt"] = previous.get("changedAt", now) if meaningful(body) == meaningful(previous) else now
             db.execute("INSERT OR REPLACE INTO observations_v1 VALUES (?, ?)", (component, json.dumps(body)))

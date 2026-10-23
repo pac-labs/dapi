@@ -60,6 +60,7 @@ def snapshot(runtime):
         spec = value.spec
         components[key] = {
             "release": spec.release, "revision": runtime.revisions[key],
+            "parent": runtime.tree.get(key, {}).get("parent"),
             "digest": value.digest, "prefix": value.prefix,
             "schemaVersion": spec.database.schemaVersion if spec.database else None,
             "databaseBackend": spec.database.backend if spec.database else None,
@@ -89,6 +90,6 @@ def snapshot(runtime):
             "lastFinishedAt": monitor.last_finished, "lastSuccessAt": monitor.last_success,
             "retiringGenerations": len(runtime.retiring), "pythonEnabled": settings.allow_python,
             "allowedOrigins": list(settings.allowed_origins),
-            "discoveryMode": "observe-only" if runtime.discovery else "unavailable" if settings.discovery_enabled else "disabled",
+            "discoveryMode": "observe-and-deliver" if runtime.discovery and runtime.discovery.delivery else "observe-only" if runtime.discovery else "unavailable" if settings.discovery_enabled or settings.discovery_delivery_enabled else "disabled",
         },
     }

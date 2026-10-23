@@ -1,0 +1,12 @@
+apiVersion: looprd/v1
+component: sample-game
+release: '1'
+api:
+  version: v1
+auth:
+  mode: public
+registrations:
+  - service: atrium
+    document: atriumd.yaml
+  - service: another-service
+    document: integrations/another.yaml

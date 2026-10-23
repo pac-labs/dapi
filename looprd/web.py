@@ -14,16 +14,11 @@ from .admin import authorized as admin_authorized
 from .replay import replay, start_cursor, catch_up
 from .outbox import EventError
 from .cors import allowed_origins
+from .component_routes import resolve, parameters
 
 
 def find_generation(runtime, scope):
-    if "looprd.generation" in scope:
-        return scope["looprd.generation"]
-    params = scope["path_params"]
-    generation = runtime.active.get(params["component"])
-    if generation and generation.spec.api.version == params["version"]:
-        return generation
-    return None
+    return resolve(runtime, scope)
 
 
 def admin_access(request):
@@ -63,10 +58,11 @@ async def capabilities(request):
 
 async def dispatch(request):
     runtime = request.app.state.runtime
-    if request.path_params["component"] in runtime.availability.blocked:
+    generation = find_generation(runtime, request.scope)
+    request.scope["path_params"] = parameters(request.scope)
+    if parameters(request.scope).get("component") in runtime.availability.blocked:
         return JSONResponse({"error": "component API blocked by operator"}, status_code=503,
                             headers={"Cache-Control": "no-store"})
-    generation = find_generation(runtime, request.scope)
     if not generation:
         return JSONResponse({"error": "component not found"}, status_code=404)
     if generation.spec.limits.maxInFlight and generation.http_inflight >= generation.spec.limits.maxInFlight:
@@ -82,7 +78,7 @@ async def dispatch(request):
                 return JSONResponse({"error": "unauthorized"}, status_code=401)
             request.state.principal = principal
             await generation.limiter.check(peer if generation.spec.auth.mode == "public" else principal.id)
-            path = "/" + request.path_params.get("path", "").strip("/")
+            path = "/" + parameters(request.scope).get("path", "").strip("/")
             if path == "/_bugreports":
                 from .bugreport_routes import submit
                 return await submit(request, generation)
@@ -140,12 +136,13 @@ async def dispatch(request):
 
 async def websocket(socket):
     runtime = socket.app.state.runtime
-    component = socket.path_params["component"]
+    generation = find_generation(runtime, socket.scope)
+    socket.scope["path_params"] = parameters(socket.scope)
+    component = parameters(socket.scope).get("component")
     if component in runtime.availability.blocked:
         await socket.close(code=1008)
         return
-    generation = find_generation(runtime, socket.scope)
-    path = "/" + socket.path_params.get("path", "").strip("/")
+    path = "/" + parameters(socket.scope).get("path", "").strip("/")
     if not generation or not generation.spec.websocket or path != generation.spec.websocket.path.rstrip("/"):
         await socket.close(code=1008)
         return

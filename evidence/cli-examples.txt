@@ -1,0 +1,26 @@
+COMMAND: -m looprd validate examples/looprd.yaml
+Valid Specification: examples\looprd.yaml
+
+COMMAND: -m looprd validate examples/python-handler.yaml
+Valid Specification: examples\python-handler.yaml
+
+COMMAND: -m looprd validate examples/database-auth.yaml
+Valid Specification: examples\database-auth.yaml
+
+COMMAND: -m looprd validate examples/redis-events.yaml
+Valid Specification: examples\redis-events.yaml
+
+COMMAND: -m looprd validate examples/platform.yaml
+Valid Specification: examples\platform.yaml
+
+COMMAND: -m looprd validate examples/operator-accounts.yaml
+Valid Specification: examples\operator-accounts.yaml
+
+COMMAND: -m looprd validate examples/nested/looprd.yaml
+Valid Specification: examples\nested\looprd.yaml
+
+COMMAND: -m looprd validate examples/push-sync.yaml
+Valid Specification: examples\push-sync.yaml
+
+COMMAND: -m looprd validate --sources examples/sources.yaml
+Valid Sources: examples\sources.yaml

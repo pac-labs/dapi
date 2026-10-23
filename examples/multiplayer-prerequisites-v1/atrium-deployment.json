@@ -1,0 +1,10 @@
+{
+  "operation": "register",
+  "payload": {
+    "deploymentId": "node-a",
+    "callerSubject": "sender-node-a",
+    "publisherId": "sample-publisher",
+    "apiOrigin": "https://api.node-a.example",
+    "launchOrigins": {}
+  }
+}

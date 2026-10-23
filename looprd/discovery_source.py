@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
@@ -22,7 +23,18 @@ class SourceSnapshot:
 
     @property
     def identity(self):
-        return hashlib.sha256(self.location.encode()).hexdigest()
+        url = urlsplit(self.location)
+        location = self.location
+        if url.scheme == "github" or url.hostname == "api.github.com" and "/contents/" in url.path:
+            location = urlunsplit(url._replace(query="", fragment=""))
+        return hashlib.sha256(location.encode()).hexdigest()
+
+    def provenance(self):
+        url = urlsplit(self.location)
+        git = bool(re.fullmatch(r"[0-9a-f]{40}", self.revision)) and (url.scheme == "github" or url.hostname == "api.github.com" and "/contents/" in url.path)
+        return {"kind": "git" if git else "https" if url.scheme == "https" else "local",
+            "identity": self.identity, "specificationDigest": self.digest,
+            "revision": self.revision if git else None}
 
 
 def origin(value):
@@ -72,8 +84,12 @@ async def observe(reader, snapshot, component, settings):
         except FileNotFoundError:
             return {"state": "absent"}
         except httpx.HTTPStatusError as error:
+            if error.response.status_code == 410 and directory is None:
+                return {"state": "absent"}  # Explicit Gone from an approved HTTPS source.
             if error.response.status_code != 404:
                 raise
+            if directory is None:
+                return {"state": "unavailable", "reason": "absence_unconfirmed"}
             if directory and not await confirmed_missing(reader, directory):
                 return {"state": "unavailable", "reason": "absence_unconfirmed"}
             return {"state": "absent"}

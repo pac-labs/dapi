@@ -1,0 +1,14 @@
+= Tavi connection check evidence
+:revdate: 2026-10-19
+
+* Running native Tavi 0.3.58 confirmed through process/version metadata.
+* Live Social guest capabilities and exact Windows WebView CORS preflight: 200.
+* Signed-in Atrium discovery rejects a guest with an application error envelope.
+* Social's Atrium backend/read-key and browser-base configuration are unset.
+* Life gateway backend and signing-key mounted references absent; /play/info 503.
+* 54 focused actual local Social source tests passed (23.872s).
+* 10 focused Tavi client tests passed; no source changes in the Social project.
+* Windows UI control was unavailable; no signed-in UI or stored credentials used.
+* No real conversations, account permissions, production settings, deployments or
+  Workboards changed. No production test accounts or outgoing messages created.
+* Full application test suite / real Life match / native UI acceptance not claimed.

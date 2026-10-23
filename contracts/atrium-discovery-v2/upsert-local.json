@@ -1,0 +1,44 @@
+{
+  "schema": "atrium.discovery-observation/v2",
+  "deploymentId": "node-test",
+  "component": "demo",
+  "operation": "upsert",
+  "source": {
+    "kind": "local",
+    "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "specificationDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "revision": null
+  },
+  "runtime": {
+    "apiBaseUrl": "https://api.example.com/looprd/demo/v1"
+  },
+  "sidecar": {
+    "schema": "atriumd/v1",
+    "component": "demo",
+    "game": {
+      "id": "sample.game",
+      "publisher": "sample-publisher",
+      "title": "Sample game",
+      "kind": "game",
+      "platforms": [
+        {
+          "runtime": "web",
+          "formFactors": [
+            "phone",
+            "desktop"
+          ],
+          "installMode": "none"
+        }
+      ],
+      "launch": {
+        "mode": "hosted-web",
+        "originRef": "game-web",
+        "entrypoint": "index.html"
+      }
+    }
+  },
+  "reason": null,
+  "operationId": "22222222222222222222222222222222",
+  "sequence": 2,
+  "fingerprint": "af573490b4e46856594966c420a765c80bd6efe12bfc18befd60da08b554f581"
+}

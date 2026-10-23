@@ -1,0 +1,10 @@
+Operator-authorized live activation verified, 2026-10-19:
+- Atrium 0.5.21 acknowledged the-life-loop durably.
+- Trusted metadata catalog includes the registered component instance.
+- Observer and sender flags enabled in the running Looprd process.
+- Discovery credential scope: apps:discover only; operator access rejected (403).
+- Temporary provisioning API key revoked; management-key input file removed.
+- Stored machine secret mode 600; public HTTPS health 200; service active.
+- Existing management-key hash preserved; 14 other containers unchanged.
+- Configuration backup retained privately; browser hosting origins unconfigured.
+No Git push, image publication, application migration or gameplay acceptance.

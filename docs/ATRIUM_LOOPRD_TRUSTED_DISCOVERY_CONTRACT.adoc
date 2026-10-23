@@ -1,0 +1,314 @@
+= Looprd / Atrium trusted discovery contract
+:revnumber: 1.0-draft
+:revdate: 2026-10-19
+:doctype: article
+:toc:
+
+== Purpose and implementation status
+
+This is the proposed shared agreement for the owner's trusted game ecosystem.
+The behavioral profile is `trusted-owner/v1`; its wire protocol is
+`atrium.discovery-observation/v2`. The profile name is documentation/configuration,
+not an extra JSON field or a new API version.
+
+Looprd 0.2.0 already implements this v2 sender format. Atrium 0.5.16 implements a
+different v1 receiver. They are NOT interoperable yet. This proposal does not
+claim that automatic registration, credentials or receiver changes are installed.
+It replaces the earlier per-game review recommendation for this trusted setup.
+
+== Integration rule
+
+Every participating application MUST have a valid `looprd.yaml` component contract.
+Only games that opt into Atrium discovery need a sibling `atriumd.yaml`. Ordinary
+Looprd APIs remain ordinary APIs. Missing or invalid game metadata MUST NOT stop
+the Looprd component from activating.
+
+The existing sibling `atriumd/v1` format remains the game metadata contract.
+Do not introduce inline game metadata into `looprd.yaml` in this release: it would
+require a separately versioned Looprd schema change. Together, the component
+contract and its optional sibling describe the integration without deployment URLs.
+
+A developer supplies a stable component ID, portable game metadata and relative
+launch entrypoint. The developer does not supply service credentials, hostnames,
+deployment IDs, API base URLs, delivery sequence numbers or source hashes.
+
+== Configure trust once
+
+The operator adds repositories/files/HTTPS sources to Looprd's existing trusted
+sources configuration. That is the application's admission step. Do not create a
+second list of approved games or require manual registration of every component.
+
+The operator configures ONE deployment identity, ONE scoped machine credential
+and ONE Atrium receiver base URL for the Looprd instance. Atrium binds that
+credential server-side to that deployment and the owner's namespace/publisher.
+All components discovered by this trusted deployment are eligible by default.
+There is no mandatory per-component source-identity binding or delivery epoch.
+Optional restrictions may exist for other installations but are not prerequisites.
+
+Use an Atrium service principal with `kind=service`, `realm=component-services`
+and `apps:discover`. It may submit upserts and withdrawals for its bound deployment.
+It must not carry `apps:approve`. The receiver derives the bound deployment from
+the credential and rejects a conflicting body deployment ID. No OIDC provider,
+player identity, publisher approval key or Looprd management key is required.
+
+Credentials stay in mounted secrets. Use HTTPS and do not follow redirects.
+Revocation/rotation is deployment configuration, not a change to game metadata.
+
+== Responsibilities
+
+Looprd activates APIs, reads metadata from the successfully activated source,
+resolves the runtime API location, records observations and delivers durable intents.
+It remains the sole authority for whether its component is active/removed.
+
+Atrium owns the game catalog and registration state. An accepted trusted upsert
+automatically registers or updates the game; no manual candidate/publisher review
+is required for each game. If candidate tables remain internally, mark trusted
+metadata `reviewed` automatically. The acknowledgement reports `reviewed`.
+
+Atrium may expose registered metadata in its catalog automatically according to
+this deployment-level trust policy. This does not manufacture an immutable binary,
+asset package, hosted-web release or player authorization. Applications continue
+to own accounts, game state and application-specific permissions.
+
+Existing v1/manual workflows may remain for other clients. They must not become
+a mandatory detour for this trusted integration.
+
+== API location and launch location
+
+Looprd supplies `runtime.apiBaseUrl` from its configured public origin plus the
+activated component's actual route prefix. Do not infer it from request Host,
+Origin or forwarded headers and do not repeat it in `atriumd.yaml`.
+
+A game's browser launch address is different from its API address. Atrium resolves
+`game.launch.originRef` using trusted deployment configuration, then appends the
+validated relative `entrypoint`. Reuse existing hosting configuration if available;
+otherwise configure the origin reference once for the relevant hosting namespace.
+A shared deployment mapping or template may resolve several games. A per-game
+origin mapping is needed only when hosting actually differs, not as an approval step.
+
+If no launch origin can be resolved, register the game with launch unavailable and
+a machine-readable reason. Do not invent a hostname, use the API URL as the game
+page or block the API's activation. No external launch URL is accepted from YAML.
+
+== Transport endpoints
+
+Under a configured receiver base such as
+`https://catalog.example.com/looprd/atrium/v1/registry/discovery/v2`:
+
+* `GET /capabilities`: authenticated deployment-bound capabilities.
+* `POST /observations`: authenticated upsert or withdrawal, JSON, at most 128 KiB.
+
+Both use `Authorization: Bearer <deployment-service-credential>`.
+The credential's server-side binding applies to both endpoints. Capabilities must
+return its actual bound deployment, not echo an unchecked client parameter.
+Looprd checks capabilities before sending observations. A v1-only receiver must
+fail clearly; the sender must not silently downgrade or substitute an admin key.
+
+[source,json]
+----
+{
+  "schema": "atrium.discovery-capabilities/v2",
+  "deploymentId": "node-test",
+  "operations": [
+    "upsert",
+    "withdraw"
+  ],
+  "provenanceKinds": [
+    "git",
+    "local",
+    "https"
+  ]
+}
+----
+
+== Observation envelope
+
+Fields are exact; unsupported fields/schema versions fail validation.
+The following is a complete, synthetic, correctly fingerprinted upsert example.
+The repeated source hashes are fixture values, not actual repository provenance.
+
+[source,json]
+----
+{
+  "schema": "atrium.discovery-observation/v2",
+  "deploymentId": "node-test",
+  "component": "demo",
+  "operation": "upsert",
+  "source": {
+    "kind": "git",
+    "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "specificationDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "revision": "cccccccccccccccccccccccccccccccccccccccc"
+  },
+  "runtime": {
+    "apiBaseUrl": "https://api.example.com/looprd/demo/v1"
+  },
+  "sidecar": {
+    "schema": "atriumd/v1",
+    "component": "demo",
+    "game": {
+      "id": "sample.game",
+      "publisher": "sample-publisher",
+      "title": "Sample game",
+      "kind": "game",
+      "platforms": [
+        {
+          "runtime": "web",
+          "formFactors": [
+            "phone",
+            "desktop"
+          ],
+          "installMode": "none"
+        }
+      ],
+      "launch": {
+        "mode": "hosted-web",
+        "originRef": "game-web",
+        "entrypoint": "index.html"
+      }
+    }
+  },
+  "reason": null,
+  "operationId": "11111111111111111111111111111111",
+  "sequence": 1,
+  "fingerprint": "717c121ca2eeb5b41b1329f0a1aee47312f324b3035dea4f0e6e2d8dc41db036"
+}
+----
+
+* `deploymentId`: stable operator-assigned deployment identity.
+* `component`: the activated `looprd.yaml` component ID; sidecar must match.
+* `operationId`: persistent random 32-character lowercase hex operation ID.
+* `sequence`: positive signed-64-bit integer, strictly increasing per deployment/component.
+* `operation`: `upsert` or `withdraw`.
+* `source.kind`: `git`, `local` or `https`.
+* `source.identity`: opaque SHA-256 source identity produced by Looprd; not a URL.
+* `source.specificationDigest`: SHA-256 of the activated flattened component specification,
+  using Looprd's existing digest. It is NOT a hash of raw repository/file bytes.
+* `source.revision`: real resolved 40-character Git SHA for Git; explicitly null
+  for local-file and ordinary HTTPS sources. Never fabricate a Git commit.
+* `runtime`: API location for upsert; null for withdrawal.
+* `sidecar`: validated `atriumd/v1` metadata for upsert; null for withdrawal.
+* `reason`: null for upsert; `sidecar_removed`, `component_removed` or
+  `component_disabled` for withdrawal.
+
+`fingerprint` is lowercase SHA-256 of UTF-8 JSON over the complete envelope after
+removing `operationId`, `sequence` and `fingerprint`. Sort object keys recursively,
+use compact separators, retain non-ASCII characters and include explicit nulls.
+Metadata fields here contain strings, integers and booleans; do not add floats.
+Do not hash a reformatted JSON string, the sidecar alone or an acknowledgement.
+
+Source identity is provenance supplied by the trusted deployment, not a per-game
+approval requirement. Source changes update provenance automatically within the
+same component identity. Git ref changes do not create a different game.
+
+== Durable delivery and receiver transaction
+
+Looprd persists desired intent, operation ID, sequence and retry state before
+sending. A timeout/disconnect retries the SAME operation ID, sequence, fingerprint
+and JSON values. Exact whitespace/key-order identity is not required on the wire.
+Do not derive sequence from time, reset it on restart or advance it merely to
+escape a 409. A later desired update may supersede undelivered older work.
+
+Atrium must atomically persist accepted operation identity/digest, per-component
+sequence high-water mark and the resulting registration or tombstone.
+
+* An exact replay returns success without duplicate catalog rows.
+* A replay after another accepted update remains successful for the original
+  operation and must not restore its old state. Persist enough replay metadata.
+* Reused operation IDs with changed content, equal sequences with changed intent
+  or unknown older operations return 409 without changing state.
+* High-water marks survive restarts and game withdrawal. A stale upsert cannot
+  resurrect a withdrawn component. A later valid upsert can restore it automatically.
+* Deleting sender/receiver delivery state requires explicit reconciliation or a
+  new deployment identity. Rotating a credential alone does not reset sequence.
+
+Atrium keys deployment registrations by `(deploymentId, component)` and associates
+them with `game.id`. Repeated observations are updates, not new games. Several
+deployments may advertise one game as separate runtime instances; removing one
+must not hide a game that still has another available instance. Conflicting game
+IDs across owner namespaces must fail clearly rather than overwrite another owner.
+If a component changes its game ID, detach the old association and reconcile the
+new one atomically so the old game does not retain a phantom runtime instance.
+
+== Acknowledgement
+
+Return HTTP 200, 201 or 202 only AFTER durable acceptance; it is not sufficient to
+put an uncommitted request in memory. All identity fields must match the request.
+For automatic trusted registration, use `status=reviewed`; withdrawal uses
+`status=withdrawn`. `change` is `created`, `updated`, `unchanged` or `withdrawn`.
+
+[source,json]
+----
+{
+  "schema": "atrium.discovery-ack/v2",
+  "deploymentId": "node-test",
+  "component": "demo",
+  "operationId": "11111111111111111111111111111111",
+  "sequence": 1,
+  "fingerprint": "717c121ca2eeb5b41b1329f0a1aee47312f324b3035dea4f0e6e2d8dc41db036",
+  "status": "reviewed",
+  "change": "created"
+}
+----
+
+The underlying v2 schema also permits `pending` for deployments that deliberately
+enable manual review. That is not the required flow for this trusted-owner profile.
+Receiver reconciliation/acknowledgement is not a player session or asset receipt.
+
+Failures: 401/403 authentication/binding; 409 ordering/identity conflict;
+413 oversized input; 422 invalid contract; 429/503 transient capacity/outage.
+Transient responses may include numeric `Retry-After` bounded to 3600 seconds.
+Return safe JSON error codes without secrets, SQL or raw source locations.
+Looprd keeps failed intent for persistent, bounded-backoff retry and operator
+visibility. An auth/contract failure must not unload components or erase data.
+
+== Updates, withdrawal and outages
+
+A valid updated sidecar produces an upsert even when the component specification
+is unchanged. Observe it from the same trusted source/revision as the active API.
+Temporary fetch failure, invalid sidecar, or unreachable sources list preserves
+the last accepted registration; these conditions do not emit withdrawal.
+
+Confirmed sidecar removal emits `sidecar_removed`. Explicit removal from the
+successfully read authoritative sources list emits `component_removed`; explicit
+source disable emits `component_disabled`. Initial absence creates no game.
+A source-identity change alone does not remove and recreate a game.
+
+A game-level withdrawal removes that deployment/component's advertised availability.
+Retain application data and delivery tombstones. Do not delete game databases,
+assets, player sessions or unrelated deployments. A deliberate operator API block
+is not source removal; it pauses new upserts under the current sender policy.
+Temporary API reachability is health information, not an authoritative deletion.
+
+After either service restarts, recover persisted sequence/intent/acknowledgements
+and reconcile. Redis, WebSockets and ntfy are optional notifications, never the
+authoritative discovery queue or registration store. No new container is required.
+
+== Required acceptance before enabling
+
+. Real Looprd sender against real Atrium receiver: capabilities and all three source kinds.
+. Wrong credential/deployment cannot mutate registrations; ordinary clients cannot submit.
+. Repeated update, lost response, reconnect, restart, delayed old operation and withdrawal replay.
+. Sidecar-only update, source change, component game-ID change and multiple deployments.
+. Invalid/unavailable metadata and unreachable sources list keep last registration.
+. Confirmed removal withdraws only that instance; reappearance registers automatically.
+. New game from an already trusted Looprd source needs no additional binding/review.
+. API location derives from Looprd config; launch resolution derives from hosting config.
+. Receiver failure never prevents successful Looprd component activation.
+
+== Implementation handoff to Atrium
+
+Add v2 endpoints alongside the existing v1 routes. Reuse existing SQL registration,
+service-principal and binding infrastructure, replacing mandatory per-game approval,
+per-game source binding and epoch requirements with one trusted deployment policy.
+Keep legacy v1 behavior unchanged for its existing clients.
+
+Use the existing DAPI `contracts/atrium-discovery-v2/*.schema.json` for wire shapes
+and examples; the trust/automatic-registration behavior in THIS proposal supersedes
+the older requirement to create manual review work for each trusted game. Do not
+add fields to v2 responses; a future incompatible format needs a new schema version.
+
+DAPI work: exercise the real receiver with the shared fixtures, confirm automatic
+trusted registration and provision the one scoped deployment connection. Neither
+side should silently adapt to the other's v1/v2 shape. Enable production delivery
+only after this common contract is implemented and verified end to end.

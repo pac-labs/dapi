@@ -1,0 +1,10 @@
+{
+  "schema": "atrium.discovery-ack/v2",
+  "deploymentId": "node-test",
+  "component": "demo",
+  "operationId": "44444444444444444444444444444444",
+  "sequence": 4,
+  "fingerprint": "4014e5deba3a070dca8860e9dec944e164d7693892c5eb8320d97ab0eb39ae9d",
+  "status": "withdrawn",
+  "change": "withdrawn"
+}

@@ -31,6 +31,7 @@ class Runtime:
         self.errors = {}
         self.sources_error = None
         self.sources = {}
+        self.tree = {}
         self.monitor = Monitor()
         self.buses = {}
         self.event_hub = EventHub(settings, self.buses)
@@ -88,12 +89,16 @@ class Runtime:
             state = json.loads(self.checkpoint.read_text(encoding="utf-8"))
             if state["version"] != 1:
                 raise ValueError("unsupported state version")
+            from .tree_state import validate_tree
+            self.tree = validate_tree(state.get("subcomponents", {}), state["components"])
             for component, value in state["components"].items():
                 try:
                     spec = Specification.model_validate(value["specification"])
                     if component != spec.component:
                         raise ValueError("cached identity mismatch")
                     generation = await self.build(spec)
+                    from .component_tree import prefix
+                    generation.prefix = prefix(component, spec, self.tree)
                     self.active[component] = generation
                     self.revisions[component] = value["revision"]
                 except Exception as error:
@@ -151,21 +156,30 @@ class Runtime:
         self.sources = {entry.id: {"enabled": entry.enabled, "repository": entry.repository,
                                    "ref": entry.ref if entry.repository else None}
                         for entry in sources.components}
-        desired = {entry.id: entry for entry in sources.components if entry.enabled}
+        from .component_tree import collect, prefix
+        desired, source_revisions, tree, source_errors = await collect(self, sources)
+        for component, metadata in tree.items():
+            owner = self.sources[metadata["owner"]]
+            self.sources[component] = {**owner, "parent": metadata["parent"]}
         candidates, revisions, loaded = {}, dict(self.revisions), set()
-        for component, entry in desired.items():
+        for component, spec in desired.items():
             try:
-                spec, revision = await self.reader.component(entry)
-                loaded.add(component)
+                revision = source_revisions[component]
+                mount = prefix(component, spec, tree)
+                if component not in source_errors:
+                    loaded.add(component)
                 current = self.active.get(component)
-                if current and current.spec == spec:
+                if current and current.spec == spec and current.prefix == mount:
                     revisions[component] = revision
                 else:
                     candidates[component] = await self.build(spec)
+                    candidates[component].prefix = mount
                     revisions[component] = revision
                 self.errors.pop(component, None)
             except Exception as error:
                 self.report(component, "load", error)
+        for component, error in source_errors.items():
+            self.report(component, "load", error)
         from .services import dependency_errors
         prospective = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
         prospective.update(candidates)
@@ -194,9 +208,19 @@ class Runtime:
             self.report_dependency(component)
         next_active = {key: candidates.get(key, value) for key, value in self.active.items() if key in desired}
         next_active.update(candidates)
+        # A newly discovered child cannot be mounted without its ancestor generations.
+        for component, metadata in sorted(tree.items(), key=lambda item: len(item[1]["namespace"])):
+            if any(parent not in next_active for parent in metadata["namespace"][:-1]):
+                candidate = candidates.pop(component, None)
+                if candidate:
+                    await candidate.shutdown()
+                    await self.event_hub.release(candidate.bus)
+                next_active.pop(component, None)
+                self.errors[component] = "load: parent component unavailable"
+        tree = {key: value for key, value in tree.items() if key in next_active}
         revisions = {key: revisions[key] for key in next_active}
         try:
-            await asyncio.to_thread(self.save, next_active, revisions)
+            await asyncio.to_thread(self.save_tree, next_active, revisions, tree)
         except Exception as error:
             self.sources_error = f"state persistence failed: {type(error).__name__}"
             self.report_sources("checkpoint", error)
@@ -206,7 +230,7 @@ class Runtime:
             return False
         # No awaits between dispatcher replacement and marking old generations for retirement.
         old = self.active
-        self.active, self.revisions = next_active, revisions
+        self.active, self.revisions, self.tree = next_active, revisions, tree
         for generation in self.active.values():
             generation.start()
         for key, generation in old.items():
@@ -214,7 +238,7 @@ class Runtime:
                 task = asyncio.create_task(self.retire(generation))
                 self.retiring.add(task)
                 task.add_done_callback(self.retiring.discard)
-        self.errors = {k: v for k, v in self.errors.items() if k in desired}
+        self.errors = {k: v for k, v in self.errors.items() if k in desired or k in source_errors}
         if self.discovery:
             try:
                 self.discovery.schedule(loaded - self.errors.keys())
@@ -231,12 +255,22 @@ class Runtime:
             key: {"specification": specification(value), "revision": revisions[key]}
             for key, value in active.items()
         }}
+        tree = getattr(self, "saving_tree", self.tree)
+        if tree:
+            state["subcomponents"] = tree
         temporary = self.checkpoint.with_suffix(".tmp")
         with temporary.open("w", encoding="utf-8") as file:
             json.dump(state, file)
             file.flush()
             os.fsync(file.fileno())
         temporary.replace(self.checkpoint)
+
+    def save_tree(self, active, revisions, tree):
+        self.saving_tree = tree
+        try:
+            self.save(active, revisions)
+        finally:
+            del self.saving_tree
 
     async def retire(self, generation):
         try:
@@ -277,6 +311,8 @@ class Runtime:
         self.guard.acquire()
         try:
             await self.restore()
+            if self.discovery:
+                self.discovery.start_delivery()
             await self.reconcile()
             self.poll_task = asyncio.create_task(self.poll())
         except BaseException:

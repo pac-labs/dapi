@@ -1,0 +1,11 @@
+apiVersion: looprd/v1
+component: platform
+release: '1'
+api: {version: v1}
+auth: {mode: public}
+requires: [spec.subcomponents]
+handlers:
+  - path: /info
+    response: {service: platform}
+subcomponents:
+  - source: modules/catalog/looprd.yaml

@@ -1,0 +1,64 @@
+= Tavi desktop / Looprd connection check
+:revnumber: 1.0.0
+:revdate: 2026-10-19
+:doctype: article
+
+== Authorized scope and access
+
+The operator provided C:/Users/dorbi/source/looprd-social and authorized interaction
+with the running Tavi app and server for testing. The local project is readable;
+no folder attachment is needed. Process/file-version inspection confirmed the
+running native Tavi binary is the local 0.3.58 build.
+
+Windows UI automation was unavailable through the supplied computer-use runtime.
+No logged-in screen, saved account session or private conversation was inspected.
+The tests below use the existing project source, unauthenticated/public protocol
+operations and disposable server-side test fixtures, not desktop session extraction.
+
+== Live findings
+
+[cols="2,3",options="header"]
+|===
+|Boundary |Observed result
+|Windows WebView connectivity |The http://tauri.localhost preflight returns 200
+and its exact Access-Control-Allow-Origin. This is not the earlier CORS rejection.
+|Social capabilities |Public guest capability discovery returns 200; account,
+messaging, room and push capabilities are advertised. Atrium browser URL is null.
+|Guest authorization |atrium_discovery returns ok=false / Sign in to Social first.
+This is the application's rejection envelope, not an HTTP authentication assertion.
+|Social to Atrium |The backend origin/discovery URL and apps:read token are unset.
+The approved Atrium browser base setting is also unset. Source supports this
+connection, but the current server cannot project Atrium games into signed-in Tavi.
+|Looprd to Atrium |Separate connection: enabled and durably acknowledged Life's
+reviewed registration. It does not supply Social with an apps:read credential.
+|Life backend |The live /play/info route returns 503. Both mounted secret references
+life/play-backend and life/play-gateway-key are absent. No working authoritative
+play backend or Social-to-Life game credential exchange is established by this check.
+|===
+
+== Meaning and next ownership
+
+The desktop app need not be rebuilt simply to configure Social's existing Atrium
+reader. That requires one private server-side apps:read credential and the approved
+backend origin. Browser launch additionally needs its real reviewed hosting address;
+do not invent one from the API origin or make discovery metadata authorize play.
+
+Life still requires a provisioned private backend, signing configuration and a
+real game-credential verifier before its public /play route can support users.
+That identity exchange and game authorization belong to Life/Social, not Looprd core.
+
+No source edits in the Social project, user messages, challenges, account privilege
+changes, production test accounts, secrets, server configuration, deployments or
+Workboard decisions were changed by these tests. Client unit checks do not prove
+a signed-in native UI journey. Evidence is in evidence/tavi-live-check-20261019/.
+
+== Focused test results
+
+The actual local Social source passed 54 selected unittest cases for catalog
+projection, invitation/grant redemption, game events, challenges and match rooms.
+The local Tavi source passed 10 Node client cases for Atrium discovery/launch and
+challenge/event/room SDK behavior. Server fixtures use disposable databases and
+test accounts; network/catalog responses in unit cases are synthetic. These are
+focused compatibility tests, not the entire Social project suite or live gameplay.
+The initial restricted runner stalled on Windows event-loop socket access; a
+corrected test context/import path completed the final run successfully.

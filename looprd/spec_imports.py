@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlsplit
 
 from .spec import parse_document
 
-IDENTITY = {"apiVersion", "component", "release", "api", "auth", "database", "realtime"}
+IDENTITY = {"apiVersion", "component", "release", "api", "auth", "database", "realtime", "subcomponents"}
 
 
 def child_location(parent, relative):

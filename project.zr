@@ -1,0 +1,48 @@
+{
+  "schema": "ziprunner.zr/v1",
+  "project_key": "Looprd-DAPI",
+  "label": "Looprd / DAPI complete source",
+  "match": [
+    "Looprd-DAPI-*-ziprunner.zip"
+  ],
+  "command_subdir": ".",
+  "stop": [],
+  "stop_ports": [],
+  "build": [
+    "npm ci --ignore-scripts",
+    "npm run build:ui",
+    "python -m pip install -r requirements.lock -e .[test]",
+    "python -m pytest -q",
+    "npm run test:ui",
+    "npm run test:clients",
+    "python scripts/validate_delivery.py"
+  ],
+  "start": [],
+  "build_window": "hidden",
+  "start_window": "managed",
+  "delete_missing": false,
+  "strip_single_root": false,
+  "protected_paths": [
+    ".git/**",
+    ".local/**",
+    ".env",
+    ".env.*",
+    "secrets/**",
+    "state/**",
+    "dist/**",
+    "logs/**",
+    "__pycache__/**",
+    "*.pyc",
+    "ziprunner.config.json",
+    "ziprunner.project-state.json"
+  ],
+  "mechanisms_require_build_success": true,
+  "post_build_mechanisms": [],
+  "handoff": {
+    "notes": [
+      "Complete runtime source, not the earlier publishing blueprint.",
+      "Existing project currently points to a planning scaffold: review recipe/build commands and use a clean source destination while retaining project key/workboard.",
+      "No automatic push, deployment, application migration or receiver installation."
+    ]
+  }
+}

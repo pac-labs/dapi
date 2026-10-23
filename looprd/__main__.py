@@ -32,7 +32,16 @@ def main():
             async def validate_component():
                 reader = SourceReader(str(args.file.resolve()))
                 try:
-                    contract.model_validate(await compose(reader, str(args.file.resolve())))
+                    spec = contract.model_validate(await compose(reader, str(args.file.resolve())))
+                    if spec.subcomponents:
+                        from types import SimpleNamespace
+                        from .component_tree import collect
+                        from .spec import Source
+                        context = SimpleNamespace(reader=reader, tree={}, active={}, revisions={})
+                        result = await collect(context, Sources(apiVersion="looprd/v1", components=[
+                            Source(id=spec.component, specification=str(args.file.resolve()))]))
+                        if result[3]:
+                            raise ValueError("invalid or unavailable subcomponent tree")
                 finally:
                     await reader.close()
 

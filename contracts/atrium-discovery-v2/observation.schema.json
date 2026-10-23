@@ -1,0 +1,464 @@
+{
+  "$defs": {
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "git",
+            "local",
+            "https"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "identity": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Identity",
+          "type": "string"
+        },
+        "specificationDigest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Specificationdigest",
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Revision"
+        }
+      },
+      "required": [
+        "kind",
+        "identity",
+        "specificationDigest",
+        "revision"
+      ],
+      "title": "Provenance",
+      "type": "object",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "git"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "revision": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "revision": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "apiBaseUrl": {
+          "maxLength": 2048,
+          "pattern": "^https://",
+          "title": "Apibaseurl",
+          "type": "string"
+        }
+      },
+      "required": [
+        "apiBaseUrl"
+      ],
+      "title": "RuntimeLocation",
+      "type": "object"
+    },
+    "Game": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9.-]{2,119}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "publisher": {
+          "pattern": "^[a-z][a-z0-9-]{0,63}$",
+          "title": "Publisher",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary"
+        },
+        "kind": {
+          "const": "game",
+          "title": "Kind",
+          "type": "string"
+        },
+        "platforms": {
+          "items": {
+            "$ref": "#/$defs/Platform"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Platforms",
+          "type": "array"
+        },
+        "launch": {
+          "$ref": "#/$defs/Launch"
+        },
+        "services": {
+          "items": {
+            "$ref": "#/$defs/Service"
+          },
+          "maxItems": 12,
+          "title": "Services",
+          "type": "array"
+        },
+        "integration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Integration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "publisher",
+        "title",
+        "kind",
+        "platforms",
+        "launch"
+      ],
+      "title": "Game",
+      "type": "object"
+    },
+    "Integration": {
+      "additionalProperties": false,
+      "properties": {
+        "atriumOptional": {
+          "const": true,
+          "title": "Atriumoptional",
+          "type": "boolean"
+        },
+        "sessions": {
+          "const": "game-owned",
+          "title": "Sessions",
+          "type": "string"
+        },
+        "state": {
+          "const": "game-owned",
+          "title": "State",
+          "type": "string"
+        },
+        "identity": {
+          "const": "game-owned",
+          "title": "Identity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "atriumOptional",
+        "sessions",
+        "state",
+        "identity"
+      ],
+      "title": "Integration",
+      "type": "object"
+    },
+    "Launch": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "const": "hosted-web",
+          "title": "Mode",
+          "type": "string"
+        },
+        "originRef": {
+          "pattern": "^[a-z][a-z0-9-]{0,63}$",
+          "title": "Originref",
+          "type": "string"
+        },
+        "entrypoint": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]{0,200}$",
+          "title": "Entrypoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "originRef",
+        "entrypoint"
+      ],
+      "title": "Launch",
+      "type": "object"
+    },
+    "Platform": {
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {
+          "enum": [
+            "web",
+            "windows",
+            "linux",
+            "macos",
+            "android",
+            "ios"
+          ],
+          "title": "Runtime",
+          "type": "string"
+        },
+        "formFactors": {
+          "items": {
+            "enum": [
+              "desktop",
+              "tablet",
+              "phone"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Formfactors",
+          "type": "array"
+        },
+        "installMode": {
+          "enum": [
+            "none",
+            "pwa",
+            "offline-web",
+            "native"
+          ],
+          "title": "Installmode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "runtime",
+        "formFactors",
+        "installMode"
+      ],
+      "title": "Platform",
+      "type": "object"
+    },
+    "Service": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Component",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "multiplayer",
+            "activity",
+            "achievements",
+            "content"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "role"
+      ],
+      "title": "Service",
+      "type": "object"
+    },
+    "AtriumSidecar": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "atriumd/v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "component": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Component",
+          "type": "string"
+        },
+        "game": {
+          "$ref": "#/$defs/Game"
+        }
+      },
+      "required": [
+        "schema",
+        "component",
+        "game"
+      ],
+      "title": "Sidecar",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "atrium.discovery-observation/v2",
+      "title": "Schema",
+      "type": "string"
+    },
+    "deploymentId": {
+      "pattern": "^[a-z][a-z0-9-]{2,95}$",
+      "title": "Deploymentid",
+      "type": "string"
+    },
+    "component": {
+      "pattern": "^[a-z][a-z0-9-]{0,47}$",
+      "title": "Component",
+      "type": "string"
+    },
+    "operationId": {
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Operationid",
+      "type": "string"
+    },
+    "sequence": {
+      "maximum": 9223372036854775807,
+      "minimum": 1,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Fingerprint",
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "upsert",
+        "withdraw"
+      ],
+      "title": "Operation",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "runtime": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RuntimeLocation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sidecar": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AtriumSidecar"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "enum": [
+            "sidecar_removed",
+            "component_removed",
+            "component_disabled"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason"
+    }
+  },
+  "required": [
+    "schema",
+    "deploymentId",
+    "component",
+    "operationId",
+    "sequence",
+    "fingerprint",
+    "operation",
+    "source",
+    "runtime",
+    "sidecar",
+    "reason"
+  ],
+  "title": "Observation",
+  "type": "object",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operation": {
+            "const": "upsert"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "runtime": {
+            "$ref": "#/$defs/RuntimeLocation"
+          },
+          "sidecar": {
+            "$ref": "#/$defs/AtriumSidecar"
+          },
+          "reason": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "runtime": {
+            "type": "null"
+          },
+          "sidecar": {
+            "type": "null"
+          },
+          "reason": {
+            "enum": [
+              "sidecar_removed",
+              "component_removed",
+              "component_disabled"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

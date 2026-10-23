@@ -1,0 +1,60 @@
+= Atrium discovery receiver compatibility gate
+:revnumber: 1.0.0
+:revdate: 2026-10-19
+:doctype: article
+
+== Technical gate: passed
+
+The receiver compatibility blocker is cleared for Looprd 0.2.0 and Atrium 0.5.21
+at b97a073764f64cdd481007109433517902a199c7. The earlier statement that a matching
+Atrium v2 receiver still needs implementation is now historical, not an active
+source compatibility blocker. The v1/v2 protocols have not been redesigned.
+
+Thirty targeted tests passed, with one existing Starlette deprecation warning.
+They include the actual Atrium generated v2 handlers, automatic trusted registration,
+credential/deployment rejection, Git/local/HTTPS provenance, response loss after
+commit, sender/receiver restart, supersession, replay and independent deployments.
+Tests ran on disposable local SQLite and ASGI; no production secrets were used.
+Receiver modules are unchanged since the prior pinned 0.5.18 integration review;
+the latest root 0.5.21 descriptor was loaded for this verification.
+
+Evidence: evidence/atrium-compatibility-gate-20261019/targeted-tests.txt.
+
+== Operational enablement is separate
+
+The operator subsequently requested live discovery enablement. At the preflight,
+the node's checkpoint recorded Atrium 0.5.21, but observation/delivery were disabled
+and the approved connection and credential were not configured. Provision through
+the normal management/application APIs using a deliberately supplied protected
+management credential. Never obtain a token from service logs or bypass API auth.
+
+The scope is one deployment-bound apps:discover service key, one trusted Atrium
+deployment registration, public API origin and receiver/secret references in
+private node configuration. This does not grant apps:approve to the sender or
+change application accounts, schemas, game rules or publisher release policy.
+
+Record live activation/registration separately after observation and receiver
+acknowledgements succeed. A passed source gate is not a claim of a live connection,
+successful player invitation, game launch or OpenClaw multiplayer acceptance.
+Existing operator Workboard decisions and the immutable original source ZIP remain
+unchanged; this file records technical evidence, not an automatic Done transition.
+
+== Subsequent operator-authorized live activation: passed
+
+The operator supplied their management credential in a designated protected file.
+Supported APIs provisioned one deployment-bound apps:discover-only service key
+and one trusted deployment registration. Private node configuration now enables
+the observer and durable sender. Only Looprd restarted; all 14 other containers
+retained their IDs/start times. Management-key storage was preserved.
+
+Atrium 0.5.21 durably acknowledged the-life-loop, and its trusted metadata catalog
+contained the registered instance. The sender's attempt to access Atrium operator
+configuration correctly returned 403. The temporary operator API key was revoked,
+and the supplied management-key input file was removed after provisioning.
+The discovery key is stored server-side with mode 600 and a one-year lifetime.
+Configuration backup and rollback information remain in private node records.
+
+No hosting originRef mapping was invented: browser launch remains unavailable
+until its real hosting is configured. This does not block metadata registration.
+No game, player-seat, application migration, Git push or image publication is part
+of this activation. Live registration does not establish end-to-end gameplay.

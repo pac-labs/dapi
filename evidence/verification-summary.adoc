@@ -1,0 +1,35 @@
+= DAPI 0.2.0 producer verification
+:doctype: article
+
+== Executed
+
+* Source suite: 286 passed, six skipped; see source-python.txt.
+* UI/client suite: 17 passed; see node-tests.txt.
+* Nine CLI examples validated; see cli-examples.txt.
+* UI Sass build passed; 0.2.0 wheel built and new modules/assets verified.
+* Focused sender/schema/lifecycle fixtures passed.
+* Existing Workboard card/criteria/status and manager-review-needed decision preserved.
+* ZipRunner-spec 2.3.0 pinned at 341005206094862853435ad68801be7ff28c4490.
+
+== Package verification
+
+Clean source ZIP extraction: 286 Python tests passed, six optional integrations
+skipped, one existing warning (42.10 seconds); see fresh-package-python.txt.
+All 17 UI/client tests passed from that extraction; see fresh-package-node.txt.
+Offline complete-source identity and DESIGN fingerprint checks also passed.
+The ZipRunner 2.3 package validator passed with required verification plan.
+Runtime/test files are unchanged after this clean-extraction run; only producer
+verification metadata/evidence is finalized before regenerating the ZIP.
+The complete-source inventory records hashes for all other archive files.
+
+== Not executed / not claimed
+
+Six optional PostgreSQL/Redis integrations were skipped: disposable service URLs
+are unset. Tests use a synthetic Atrium v2 receiver, not the reviewed legacy
+Atrium release. Real receiver/staging, target ARM64 image and operator acceptance
+are not verified. No push, image publication, deployment or production change.
+One existing Starlette TestClient deprecation warning remains.
+
+Source baseline is 13b99a80a1a7e08de547adb70b33ddf39e9199bd with uncommitted candidate
+changes. The external ZIP SHA-256 identifies the delivered bytes.
+Producer reports are not consumer-owned verification or a Done transition.

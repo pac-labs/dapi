@@ -1,0 +1,47 @@
+{
+  "reviewVersion": "1.0.0",
+  "date": "2026-10-19",
+  "repositories": {
+    "TheBigTreeInc/atrium": "2137d03db431f49d5f07aaef22786941c4ca77ee",
+    "TheBigTreeInc/life": "d03bd6759929e54b161c6347c50a5894aef0f5d7",
+    "TheBigTreeInc/social": "cf40e2a3ac4a645f46eb57295fba61a7d5653f23"
+  },
+  "reviewedFiles": [
+    {
+      "path": "atrium/looprd.yaml",
+      "sha256": "d20db6e0deb9031a91732ad1d055a4b8ee8d7877ebdf10d14fd4d2511ec711c6"
+    },
+    {
+      "path": "atrium/modules/registry/looprd.yaml",
+      "sha256": "92d53701891533101868bb894b4f8f2d8306065e12170cba43f9b7b17dad9b0f"
+    },
+    {
+      "path": "atrium/modules/arcade/looprd.yaml",
+      "sha256": "98a1c08e613f321b825bd532f8225b91f7aa9d1bf877a3e7334aec3a183f77d3"
+    },
+    {
+      "path": "atrium/modules/games/checkers/looprd.yaml",
+      "sha256": "3b51da97e6ca3dcb55756e72ef5c2662145840e588ca48a643b8c799f4906522"
+    },
+    {
+      "path": "atrium/src/discovery_v2.py",
+      "sha256": "cfb5fb25de4bdadf403db1f9948c3a586e9a8ed0f2f2980f41dccd1f12a8869e"
+    },
+    {
+      "path": "social/looprd.yaml",
+      "sha256": "3e0ead7134c32c75257cc5361cc25b2aeadf16584d4f5f7fe5c8d2dc8c5c56f0"
+    },
+    {
+      "path": "social/server/looprd_verifier.py",
+      "sha256": "9747ce7f2087785e57dff63d6468d3ed79a0ea8079a935267cfda4874adc9436"
+    },
+    {
+      "path": "life/looprd.yaml",
+      "sha256": "a8583577020076f25466d4235418a59b274807b94b11ce5ac45f1a9f0322d278"
+    },
+    {
+      "path": "life/atriumd.yaml",
+      "sha256": "25286f1ac7acf621340d1cfcd9d912b0788a74faa3cd4d930bf87efd8a842a96"
+    }
+  ]
+}

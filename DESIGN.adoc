@@ -1,7 +1,78 @@
 = Looprd: specification-driven companion server
 :doctype: article
 :toc:
-:revnumber: 0.1.0
+:revnumber: 0.4.0
+
+== Independent subcomponents
+
+Version 0.4.0 adds optional subcomponents: [{source: modules/catalog/looprd.yaml}]
+to complete component roots, separately from same-component includes. Each child
+is a complete looprd/v1 specification, with its own stable globally unique ID,
+SQLAlchemy database, authentication, migrations, jobs, events and operator gates.
+There is no inherited data access, credential or trust. Shared capabilities use
+explicit dependencies and verified caller-bound service credentials. Child API
+prefixes are /looprd/<ancestor IDs>/<child ID>/<own version>, with /dapi aliases.
+OpenAPI, service calls and discovery use actual mounted locations. Version-like
+child IDs and collisions with any configured root or another child are rejected.
+
+The existing source watcher expands descendant files at the root's immutable Git
+revision, or best-effort local/HTTPS provenance. Includes resolve independently
+within each complete component. Child registration documents use that child's
+root. Child validation/fetch/migration failures retain its prior branch and allow
+healthy siblings/parent to update. A failed parent source retains the previous
+tree; only successfully read explicit declaration removal or root disable/removal
+stops descendants, retaining data. Blocking remains per component. New children
+require active ancestors. Active reparenting or child ID changes require explicit removal first.
+
+Expansion is bounded to 32 immediate children, 64 components and eight levels per
+root, with an additional shared child-read budget of 256 documents/4 MiB beyond
+the root composition budget. Paths stay under each declaring directory with no
+cross-repository/URL imports or symlink escape. Existing flattened checkpoints
+add optional validated ancestry for offline restoration. Failed checkpoint writes
+preserve the dispatcher/tree together. Legacy empty serialization is unchanged.
+Older runtimes do not understand ancestry: child deployments require a reviewed
+checkpoint/source migration before downgrade. Consumer registration/publishing
+stays outside core. See docs/subcomponents.adoc for rollout and matching adapters.
+
+== Generic optional service registrations
+
+Optional registrations entries contain only service and document: a consumer ID
+and a plain root-relative descendant document path. At most 32 unique service IDs
+may be declared; labels have no hardcoded host semantics. Registrations express
+interest, never required API dependencies, authentication grants or runtime startup
+requirements. Consumer metadata is opaque UTF-8 text, not compiled or schema-validated
+by Looprd. A missing/invalid document or unavailable consumer cannot block activation.
+Empty registrations serialize identically to legacy specifications. Nested fragments
+merge registrations into the same component; paths remain relative to its root.
+
+GET /_looprd/registrations projects the current active generations, filtered to
+the authenticated service reader. Host LOOPRD_REGISTRATION_READERS maps service IDs
+to mounted secret references, never destination URLs or secret values. Unique
+32–512-character reader proofs are separate from management/application credentials,
+are checked on each request and grant read-only access only to that service's data.
+Missing/broken reader configuration affects the reader, not component startup.
+Inventories are capped at 1000 entries; overflow returns 503 rather than a partial
+complete result. No persistent duplicate component registry is introduced.
+
+GET /_looprd/registrations/{component}/{service}/document requires the inventory's
+generation query parameter. It resolves only the declared file under the active
+root snapshot, retains pinned Git revisions and existing private-source credentials,
+and returns bounded text, SHA-256 and opaque source provenance. Git is immutable;
+local/ordinary HTTPS are labelled best-effort. Stale snapshots or an in-flight source
+change fail safely with 409/503. At most four reads run concurrently and at most
+64 KiB of UTF-8 content is returned. No source URL/path or repository key is exposed.
+Metadata authors must not place secrets in explicitly shared documents. Consumer
+keys never appear in URLs, specs or returned data; responses are no-store.
+
+Consumers poll the complete service-filtered view and fetch documents through the
+same reader connection; document bytes may change without a spec generation change.
+They own schema validation, durable reconciliation/retries, registration lifecycle
+and application policy. complete=false during source/reconciliation errors prevents
+outages from being misread as removal. Explicit disappearance from a successful
+complete inventory can withdraw a registration. No webhook or new container is
+required. Atrium/Social and future consumers are adapters, not core dependencies.
+Existing opt-in Atrium push/implicit sibling behavior remains compatible and is
+not silently switched off. See docs/service-registrations.adoc for reader migration.
 
 == Agent diagnostics and failure history
 
@@ -149,10 +220,9 @@ active generation/revision under the runtime lock. A separate private versioned
 SQLite store retains at most 1,000 component records, including last valid
 metadata/fingerprint. Management-only JSON lists status and exposes full metadata
 only on explicit detail reads. No diagnostics capability grants metadata access.
-This build is observe-only: no sender, approval key, public listing, launch URL
-binding, withdrawal delivery or acknowledgement protocol is invented. Atrium's
-receiver-owned machine trust/provenance/lifecycle changes remain prerequisites
-for automatic delivery. Observation removal never deletes application data.
+Observation alone remains the default; optional delivery is specified below.
+No approval key, public listing or launch-domain binding is introduced.
+Observation removal never deletes application data.
 
 Declared service dependencies gain `optional: true`, default false. Missing or
 incompatible optional consumers do not reject producer activation or upgrades;
@@ -168,6 +238,61 @@ Only a bounded numeric Retry-After is retained for 429/503. Unsupported exceptio
 statuses fail closed as 500. Existing EventError behavior remains available for
 explicit application-defined responses. See docs/discovery-observation.adoc and
 docs/ARCHITECTURE_DIFFERENCES_GAME_DISCOVERY.adoc for delivered scope and gaps.
+
+=== Automatic Atrium discovery delivery
+
+Version 0.2.0 adds opt-in authenticated delivery to a host-configured v2 receiver.
+LOOPRD_DEPLOYMENT_ID and LOOPRD_PUBLIC_URL are generic deployment metadata; the
+public API origin must match the operator's existing reverse-proxy deployment.
+Runtime API locations are derived from that origin and the active generation's
+canonical prefix. No developer repeats URLs in atriumd.yaml. Launch originRef
+still requires Atrium's vetted launch binding; an API origin is not a web-game URL.
+
+The same private discovery.sqlite3 retains observations and a versioned bounded
+outbox (at most 1,000 deployment/component rows). One current desired intent and
+last acknowledgement per key suffice; no second game registry or publication
+database is added. Monotonic sequences/operation IDs survive restarts and retries;
+superseding intents retain the sequence history. Compare-and-swap completion
+prevents old replies acknowledging newer work. SQLite updates are transactional;
+network delivery is outside activation/checkpoint locks and never gates loading.
+
+Only a successfully observed valid sidecar creates an upsert. Confirmed local or
+GitHub absence creates withdrawal; ordinary HTTPS 404 remains unavailable, while
+explicit HTTPS 410 is a tombstone. Authoritative sources-list removal/disable may
+withdraw; failed root fetch, invalid metadata, blocked APIs, filter exclusion and
+failed activation never imply removal. Unknown reads preserve existing intent.
+An invalid reappearance cannot resurrect withdrawn metadata. Checkpoint restore
+can retry an already committed intent even if the sources repository is offline.
+
+Provenance discriminates git/local/https; only Git carries a real 40-hex commit.
+All kinds carry the activated flattened-specification digest and opaque stable
+source identity. Raw local paths and signed HTTPS query strings are not forwarded.
+This is DAPI's authenticated source assertion, not independent publisher ownership
+or a claim that non-Git reads form an atomic repository snapshot.
+
+LOOPRD_DISCOVERY_DELIVERY is default false and requires observation enabled.
+The operator supplies a fixed HTTPS receiver base and mounted secret reference.
+The client verifies a deployment-bound v2 capabilities response before any POST;
+there is no fallback to legacy apps:approve intake. The receiver must authenticate
+the machine, bind it to the deployment/component/source policy, validate metadata
+independently, reject stale sequences and implement durable idempotency/tombstones.
+Acknowledgements match identity, operation, sequence and fingerprint; pending or
+reviewed unchanged responses are accepted. Registration never approves/publishes.
+
+Attempts persist bounded exponential backoff/jitter (up to 300 seconds, bounded
+Retry-After up to 3,600). Authentication/contract failures remain visible and retry
+no earlier than 60 seconds; mounted credentials are reread for rotation. Requests
+have a total 20-second deadline, no redirects, and 16-KiB response limit. Intent
+payloads are bounded by the existing 64-KiB metadata limit. No credentials or raw
+receiver error bodies enter status/diagnostics. The protected discovery API shows
+queue state, attempts, safe reasons, due time and acknowledged sequence.
+
+The current reviewed Atrium 264a109681e3c8a24039c3356d9f7fb556197fed has legacy
+operator-only intake. A matching Atrium release must implement the shared v2
+contract and fixtures before delivery can succeed. This pass ships DAPI code,
+schemas, receiver acceptance fixtures and a complete ZipRunner source package;
+it neither installs receiver code nor pushes/deploys. See
+docs/automatic-atrium-discovery.adoc and contracts/atrium-discovery-v2/README.adoc.
 
 === Background push and HTTP synchronization
 

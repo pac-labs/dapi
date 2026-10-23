@@ -1,0 +1,115 @@
+= Independent Looprd subcomponents
+:revnumber: 0.4.0
+
+== Contract
+
+`includes` continues to merge fragments into one component. `subcomponents`
+declares complete independent components in descendant files. Register only the
+parent in the existing sources manifest; there is no second registry.
+
+[source,yaml]
+----
+apiVersion: looprd/v1
+component: atrium
+release: '1'
+api: {version: v1}
+auth: {mode: public}
+requires: [spec.subcomponents]
+subcomponents:
+  - source: games/market-grove/looprd.yaml
+----
+
+The child is a complete specification, for example:
+
+[source,yaml]
+----
+apiVersion: looprd/v1
+component: market-grove
+release: '1'
+api: {version: v1}
+auth: {mode: database, scopes: [play]}
+database: {backend: sqlite}
+registrations:
+  - service: atrium
+    document: atriumd.yaml
+----
+
+This mounts `/looprd/atrium/market-grove/v1` and its `/dapi` alias. The parent
+remains `/looprd/atrium/v1`. There is no additional flat child alias. Further
+children extend the namespace before their own version segment. Parent API
+versions are not part of child paths. OpenAPI, local service discovery and optional
+outbound discovery use the actual mounted prefix. Existing Traefik PathPrefix
+rules cover nested routes without stripping prefixes.
+
+== Identity and isolation
+
+IDs remain globally unique within a deployment, identifying databases, management
+controls, service credentials, jobs, event channels and Python trust entries. A
+child cannot reuse a root/disabled-root/sibling/ancestor ID. Version-like child
+IDs (`v1`, `v2`, ...) are rejected to avoid ambiguity with parent routes. Separate
+deployments may use identical IDs independently. Reparenting an active child is
+rejected; remove it successfully before declaring it under another namespace.
+Changing an active child's ID also requires removal first. An ID rename creates
+a new storage/auth identity and needs an explicit data migration if data must follow.
+
+Each child declares its own auth, optional database, migrations, CORS, limits,
+realtime, jobs, registrations and dependencies. No infrastructure or permissions
+are inherited. Shared capabilities use existing explicit dependencies and scoped,
+caller-bound service credentials. Verified identity realms do not grant database
+access. Host Python trust lists name each trusted child explicitly.
+
+SQLite retains one file per child. PostgreSQL uses each child's explicit
+connectionSecret; operators must supply isolated databases and grants, as for
+ordinary components. Looprd does not automatically create PostgreSQL databases or
+grant a parent's connection. No new containers or external identity system are required.
+
+== Sources and lifecycle
+
+`source` is relative to the declaring component's root file, in that directory
+or a descendant. No URLs, traversal, encoded paths, queries, fragments, backslashes
+or escaping symlinks. Declarations belong in complete roots, not includes fragments.
+Each child may have includes. Registration documents resolve from that child's root.
+Git children/includes use the parent's resolved immutable commit. Local and ordinary
+HTTPS reads are best-effort; no Git revisions are fabricated.
+
+Every poll reads children/includes. Child-only changes reload only that child;
+parent changes do not rebuild unchanged children. Existing migration checks,
+draining, authentication and HTTP/WebSocket gates apply independently. A failed
+child validation/migration retains its previous generation without blocking healthy
+parent/sibling updates. Initially discovered children require active ancestors.
+Protected status exposes parent identity and existing failure diagnostics.
+
+An unreadable/invalid parent retains its entire previous subtree. An unreadable
+child retains the prior subtree for that exact parent/source declaration. An
+initially unreadable child has no API and is retried; its parent reports the failure.
+Failures never imply withdrawal. Explicit removal from a successfully read manifest
+stops that subtree; removing/disabling the root source stops all descendants.
+Data, keys and audits remain. Operator API blocking is per component; blocking a
+parent does not implicitly block children. Disable the root source to stop the tree.
+Identity collisions reject the affected tree(s), preserving existing generations.
+
+Checkpoints retain flattened specifications and validated ancestry for offline
+restart. A failed checkpoint leaves the live tree unchanged. Source snapshots
+must be reacquired before reading registration documents after restart.
+
+== Bounds and rollout
+
+Limits: 32 immediate children, 64 components per root tree, eight child levels.
+Existing include limits apply independently per component. Child roots/includes
+additionally share 256 reads and 4 MiB of UTF-8 content per root poll, beyond the
+root's existing 1 MiB composition budget. No directory scanning or package installs.
+
+Upgrade Looprd to 0.4.0 before adding declarations. Empty/absent subcomponents
+preserve legacy serialization and includes behavior. Older versions may ignore
+checkpoint ancestry and restore children at flat routes: do not downgrade an active
+child checkpoint. Stop the tree and prepare a reviewed flat-source/checkpoint
+migration before downgrading.
+
+Atrium owns registration/review/publication. Its generic reader adapter receives
+the child ID, child-side atriumd.yaml and actual runtime URL. Consumers must use the
+supplied location rather than constructing `/looprd/<component>/v1`. The previously
+reviewed Atrium 0.5.21 push receiver enforces flat paths in src/discovery_v2.py;
+that receiver needs a matching update to authenticate nested component locations.
+Do not weaken deployment binding or flatten the child URL as a workaround.
+Verify matching adapters before enabling child discovery. This update does not modify/install Atrium,
+games or credentials. See examples/subcomponents and tests/test_subcomponents.py.

@@ -1,0 +1,67 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "atrium.discovery-ack/v2",
+      "title": "Schema",
+      "type": "string"
+    },
+    "deploymentId": {
+      "maxLength": 96,
+      "title": "Deploymentid",
+      "type": "string"
+    },
+    "component": {
+      "pattern": "^[a-z][a-z0-9-]{0,47}$",
+      "title": "Component",
+      "type": "string"
+    },
+    "operationId": {
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Operationid",
+      "type": "string"
+    },
+    "sequence": {
+      "minimum": 1,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "fingerprint": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Fingerprint",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "reviewed",
+        "withdrawn"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "change": {
+      "enum": [
+        "created",
+        "updated",
+        "unchanged",
+        "withdrawn"
+      ],
+      "title": "Change",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "deploymentId",
+    "component",
+    "operationId",
+    "sequence",
+    "fingerprint",
+    "status",
+    "change"
+  ],
+  "title": "Acknowledgement",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -1182,6 +1182,28 @@
       "title": "Reference",
       "type": "object"
     },
+    "Registration": {
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "pattern": "^[a-z][a-z0-9-]{0,47}$",
+          "title": "Service",
+          "type": "string"
+        },
+        "document": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Document",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service",
+        "document"
+      ],
+      "title": "Registration",
+      "type": "object"
+    },
     "Resource": {
       "additionalProperties": false,
       "properties": {
@@ -1329,6 +1351,22 @@
       "title": "ServiceContract",
       "type": "object"
     },
+    "Subcomponent": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "Subcomponent",
+      "type": "object"
+    },
     "Verifier": {
       "additionalProperties": false,
       "properties": {
@@ -1392,6 +1430,14 @@
   },
   "additionalProperties": false,
   "properties": {
+    "subcomponents": {
+      "items": {
+        "$ref": "#/$defs/Subcomponent"
+      },
+      "maxItems": 32,
+      "title": "Subcomponents",
+      "type": "array"
+    },
     "includes": {
       "items": {
         "maxLength": 512,
@@ -1523,6 +1569,14 @@
       },
       "maxItems": 64,
       "title": "Dependencies",
+      "type": "array"
+    },
+    "registrations": {
+      "items": {
+        "$ref": "#/$defs/Registration"
+      },
+      "maxItems": 32,
+      "title": "Registrations",
       "type": "array"
     },
     "limits": {

@@ -1,0 +1,13 @@
+{
+  "schema": "atrium.discovery-capabilities/v2",
+  "deploymentId": "node-test",
+  "operations": [
+    "upsert",
+    "withdraw"
+  ],
+  "provenanceKinds": [
+    "git",
+    "local",
+    "https"
+  ]
+}

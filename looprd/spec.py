@@ -4,13 +4,15 @@ import re
 from typing import Any, Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator, model_serializer
 
 from .contract import Name, Symbol, PathName, Scope, Strict
 from .platform_spec import Reference, Index, Query, ServiceContract, Dependency, Limits, Job
 from .cors_spec import Cors
 from .administration_spec import Management, check_management
 from .push_spec import Push, check_push
+from .registration_spec import Registration
+from .subcomponent_spec import Subcomponent
 
 
 class Verifier(Strict):
@@ -184,6 +186,7 @@ class Realtime(Strict):
 
 
 class Specification(Strict):
+    subcomponents: list[Subcomponent] = Field(default_factory=list, max_length=32)
     includes: list[Annotated[str, StringConstraints(min_length=1, max_length=512, pattern=r"^[^\\:%?#\s]+$")]] = Field(default_factory=list, max_length=32)
     apiVersion: Literal["looprd/v1"]
     component: Name
@@ -201,11 +204,25 @@ class Specification(Strict):
     realtime: Realtime = Field(default_factory=Realtime)
     requires: list[Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9.:-]{0,95}$")]] = Field(default_factory=list, max_length=64)
     dependencies: list[Dependency] = Field(default_factory=list, max_length=64)
+    registrations: list[Registration] = Field(default_factory=list, max_length=32)
     limits: Limits = Field(default_factory=Limits)
     jobs: dict[Name, Job] = Field(default_factory=dict, max_length=64)
 
+    @model_serializer(mode="wrap")
+    def stable_optional_registration(self, handler):
+        value = handler(self)
+        if not self.registrations:
+            value.pop("registrations", None)
+        if not self.subcomponents:
+            value.pop("subcomponents", None)
+        return value
+
     @model_validator(mode="after")
     def references(self):
+        if len({item.source for item in self.subcomponents}) != len(self.subcomponents):
+            raise ValueError("duplicate subcomponent source")
+        if len({item.service for item in self.registrations}) != len(self.registrations):
+            raise ValueError("duplicate registration service")
         if self.includes:
             raise ValueError("resolve includes through the specification loader before validation")
         from .spec_data_checks import data_contracts

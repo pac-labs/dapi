@@ -1,0 +1,12 @@
+{
+  "schema": "tavi.game-event/v1",
+  "eventId": "example-turn-event-0001",
+  "kind": "turn.ready",
+  "gameId": "life.loop",
+  "matchId": "example-match-0001",
+  "turnIndex": 1,
+  "recipient": {
+    "issuer": "example-social-installation",
+    "subject": "acct_example"
+  }
+}

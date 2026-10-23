@@ -107,7 +107,8 @@ class OperationsMiddleware:
             app = scope.get("app")
             operations = getattr(app.state, "operations", None) if app else None
             if operations:
-                params = scope.get("path_params", {})
+                from .component_routes import parameters
+                params = parameters(scope)
                 runtime = app.state.runtime
                 component = params.get("component")
                 component = component if component in runtime.active else "runtime"

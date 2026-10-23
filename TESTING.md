@@ -1,5 +1,24 @@
 # Looprd validation
 
+`tests/test_subcomponents.py` covers DESIGN / Independent subcomponents: nested
+HTTP/OpenAPI/WebSocket routes, CORS and database isolation, explicit service identity,
+child reload and migration failure, root/subtree removal and offline restart,
+identity collisions, reader paths and pinned Git/HTTPS provenance. Validate the
+complete example with `python -m looprd validate examples/subcomponents/looprd.yaml`.
+
+`tests/test_registrations.py` covers DESIGN / Generic optional service registrations:
+opaque declarations, relative paths, unique consumers, legacy serialization, scoped
+reader authentication, local/Git/HTTPS provenance, stale generations, read bounds,
+restart/offline retention, complete inventory removal and failure isolation.
+
+`tests/test_multiplayer_interoperability.py` adds opt-in, source-pinned checks of
+the actual Atrium v2 receiver and Social verifier through the DAPI ASGI runtime.
+Set `LOOPRD_INTEGRATION_SOURCES` to reviewed local upstream sources containing
+`atrium/looprd.yaml` (and includes) and `social/looprd.yaml`. No test downloads code
+or uses live services/credentials. Without that variable, these two tests visibly
+skip. See `docs/MULTIPLAYER_PREREQUISITES_REVIEW_1.0.adoc` and
+`examples/multiplayer-prerequisites-v1/README.adoc` for revisions and limitations.
+
 `tests/test_push.py`, `tests/test_sync.py` and `tests/test_push_postgresql.py` cover
 DESIGN.adoc / Specification authority / Background push and HTTP synchronization:
 endpoint possession, identity/scope isolation, expiry, atomic rollback, coalescing,
@@ -147,3 +166,20 @@ tests/test_operator_observation.py and tests/ui/observation.test.mjs: timer/SQL
 metadata, unavailable workers, blocking semantics, private payload/path exclusion,
 bounded scans, links, cache, disk pressure and allowlisted PostgreSQL/Redis sizes.
 Browser checks use synthetic data and verify contained scrolling at desktop/390px.
+
+## Automatic Atrium discovery delivery
+
+Authority: DESIGN.adoc / Specification authority / Automatic Atrium discovery
+delivery. Focused checks: tests/test_discovery.py, tests/test_discovery_delivery.py,
+tests/test_discovery_delivery_safety.py and tests/test_discovery_contract.py.
+They exercise actual runtime lifespan integration against a synthetic v2 receiver,
+not a deployed Atrium server. Shared schema/examples live in
+contracts/atrium-discovery-v2. The jsonschema test-only dependency checks published
+DTO compatibility; it is maintained upstream and adds no runtime dependency.
+
+Run the full Python suite, UI/client Node tests, CLI example validation and the
+ZipRunner-spec package validator. Repeat the suite from a clean extraction and
+record results separately in evidence/verification-summary.adoc. Real receiver,
+hardware/container and PostgreSQL/Redis tests require their own environment and
+must be reported as skipped/not run when unavailable. No production operations
+are authorized by the verification plan or import recipe.

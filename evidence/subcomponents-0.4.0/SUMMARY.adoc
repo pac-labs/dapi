@@ -1,0 +1,22 @@
+= Subcomponents 0.4.0 verification
+
+Producer-reported source candidate; independent acceptance remains open.
+No push, publication, receiver change or production deployment.
+
+* Final full source Python suite: 338 passed, six optional service skips, one
+  existing Starlette test-client deprecation warning (44.02 seconds).
+* Source-pinned Atrium/Social interoperability included; those tests exercise
+  existing flat components, not a nested production Atrium receiver.
+* UI/client Node suite: 17 passed; Carbon assets rebuilt.
+* CLI examples: legacy includes, generic registrations and independent children pass.
+* ZipRunner v2.3 verification plan and source identity/design fingerprint pass.
+* Clean complete-source extraction: 338 Python passed, six optional skips, one
+  existing warning (45.30 seconds); 17 UI/client tests passed.
+* Source and clean-extraction runtime/test/schema bytes match the final artifact.
+* Complete wheel includes child modules and rebuilt Carbon assets.
+* No real PostgreSQL/Redis services, ARM image, browser journey or live deployment
+  was verified in this pass. Six optional service tests skipped without endpoints.
+* Reviewed Atrium 0.5.21 still binds pushed APIs to flat URLs. Nested push requires
+  a matching receiver change; generic consumer pull adapters remain separate work.
+* Original Workboard cards, criteria and manager-review-needed decision are retained.
+* New modules remain under 400 lines; existing Runtime/spec integration reviewed.

@@ -1,0 +1,8 @@
+...............................                                          [100%]
+============================== warnings summary ===============================
+tests\test_services.py:4
+  <workspace>\tests\test_services.py:4: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+31 passed, 1 warning in 13.51s

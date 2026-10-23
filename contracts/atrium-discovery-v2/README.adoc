@@ -1,0 +1,100 @@
+= DAPI / Atrium discovery v2 receiver contract
+:doctype: article
+:toc:
+
+== Coordination status
+
+Update 2026-10-19: the compatibility gate has passed against the actual Atrium
+0.5.21 v2 receiver. See docs/ATRIUM_COMPATIBILITY_GATE_20261019.adoc. The original
+delivery-time assessment below is historical; live configuration is a separate step.
+
+This is the exact receiver interface used by DAPI 0.2.0. It is not installed Atrium
+code. The reviewed receiver at 264a109681e3c8a24039c3356d9f7fb556197fed supports only
+legacy operator-attested, Git-only candidate intake. Preserve that interface for
+its existing clients. A matching release must add these separate v2 endpoints.
+No public/game code or broad approval token may impersonate the DAPI deployment.
+
+Shared JSON Schemas and request fixtures are supplied beside this document.
+tests/discovery_receiver_fixture.py is a synthetic acceptance fixture only; it
+does not replace Atrium's database, principal checks or candidate implementation.
+Run the same fixtures against the actual receiver before enabling delivery.
+
+== Endpoints and machine binding
+
+Under the operator-configured receiver base:
+
+* GET /capabilities: authenticated machine capabilities.
+* POST /observations: authenticated upsert or withdrawal; JSON, maximum 128 KiB.
+
+Use HTTPS, no redirects. Provision a machine principal bound server-side to a
+deployment ID and eligible component/source policy. Require discovery:submit for
+upsert and discovery:withdraw for withdrawal; neither grants apps:approve.
+An OIDC provider is not required. Capabilities returns the principal's actual bound
+deploymentId, both operations and supported provenance kinds. Merely echoing an
+unverified caller-provided identity is forbidden.
+
+The receiver must authenticate before reading/changing candidates, reject body
+deployment/component/source outside that principal's binding, and validate metadata
+independently. Source identities are stable opaque DAPI assertions, not cryptographic
+publisher attestation. Publisher ownership and launch-domain admission stay in
+Atrium's review/publication process. No automatic approval or publication follows.
+
+== Envelope
+
+schema is atrium.discovery-observation/v2. Required fields: deploymentId, component,
+operationId, sequence, fingerprint, operation, source, runtime, sidecar and reason.
+Fields are exact: reject unknown properties, invalid bounds or invalid metadata.
+
+source.kind is git/local/https. Only git carries a real 40-hex revision; the other
+kinds explicitly carry null. All carry identity and specificationDigest (64-hex
+SHA-256). specificationDigest hashes the activated flattened specification, not
+arbitrary source bytes. identity hashes the root location; Git removes ref/query
+to remain stable across commits. No local path or signed HTTPS URL is forwarded.
+
+upsert requires sidecar metadata and runtime.apiBaseUrl; reason is null.
+withdraw requires sidecar/runtime null and an explicit reason: sidecar_removed,
+component_removed or component_disabled. Runtime API locations come from trusted
+DAPI deployment metadata, not game YAML. They do not establish a web launch binding.
+
+Fingerprint: SHA-256 of UTF-8 JSON with sorted keys, ensure_ascii=false and compact
+separators, over the envelope excluding operationId, sequence and fingerprint.
+operationId is a persistent random 32-hex value. Sequence increases per deployment/
+component, including withdrawals and re-additions. Retry uses identical intent.
+
+== Atomic receiver behavior and acknowledgement
+
+Atomically persist the accepted operation ID/request digest, sequence high-water
+mark and candidate/tombstone changes. Identical replay succeeds; reused IDs with
+different content, equal sequences with different intent, and older unknown
+sequences are conflicts. Retain high-water history through receiver restarts and
+candidate removal. Do not permit an older request to resurrect a tombstone.
+
+New/changed metadata enters review-pending state. Unchanged replay may report the
+candidate as pending or already reviewed. It must not reopen approval or publish.
+Withdrawal retains a tombstone and withdraws discovery eligibility. Effects on
+already published catalog entries and active sessions must be defined and tested
+by Atrium; DAPI does not silently delete those application records.
+
+Return 200/201/202 with schema atrium.discovery-ack/v2, matching deploymentId,
+component, operationId, sequence and fingerprint. status is pending/reviewed for
+upsert or withdrawn for withdrawal. change is created/updated/unchanged/withdrawn.
+Replay after review may return reviewed/unchanged and must remain a successful
+acknowledgement. Acknowledgement means candidate reconciliation, not publication.
+
+Reject unauthorized requests with 401/403, stale/conflicting work with 409, invalid
+envelopes with 422, and oversized bodies with 413. Use 429/503 plus bounded numeric
+Retry-After for transient capacity/outage. Never reflect SQL, keys or raw source.
+
+== Required receiver acceptance
+
+. Correct machine can submit local, HTTPS and Git provenance without fabricated SHAs.
+. Wrong credentials/deployment/component/source/scope cannot mutate candidates.
+. Duplicate, lost-response, reviewed replay and reordered requests remain idempotent.
+. State, high-water marks and tombstones survive receiver restart.
+. Changing metadata creates review work without publishing or overriding launch policy.
+. Withdrawal, re-addition and publisher conflicts obey Atrium-owned lifecycle policy.
+. Unavailable/invalid source observations from DAPI do not trigger withdrawal.
+
+The tests here demonstrate the DAPI side against this contract. Receiver owners
+must add equivalent tests over their real principal/storage/candidate code and
+publish the matching capability before production activation.

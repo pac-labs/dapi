@@ -5,9 +5,39 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `c0946368eddd2e56d2590e1cbf62bd5617640aca51803a8ec6c8f223ae35de5e`.
+Design SHA-256 (UTF-8/LF): `b13eb566710b2118bc1dde0742d11d66c5e3ead10f7a9dd433cb6b92acf30e2a`.
 
 == Implemented candidate
+
+* 0.4.0: Independent descendant subcomponents with nested mounts, isolated
+  infrastructure and retained failure/removal semantics. Governing design:
+  Independent subcomponents. Workboard decisions preserved; independent review
+  and matching consumer acceptance remain open. No push or deployment.
+  Verification: full source and clean extraction each 338 passed, six optional
+  service skips; both Node suites 17 passed. Versioned package and plan validate.
+
+* 0.3.0: Generic optional service registrations and scoped opaque-document reader.
+  Governing design: Generic optional service registrations. Unknown consumers do
+  not become runtime dependencies. No consumer implementation, push or deployment.
+  Existing Workboard decisions retained; registration-readers-v1 awaits review.
+  Validation: source and fresh source-ZIP extraction each 307 passed, six optional
+  PostgreSQL/Redis skips; both Node UI/client runs 17 passed. Wheel assets, legacy
+  serialization identity and ZipRunner 2.3 package validation passed. No deployment.
+
+
+* DAPI 0.2.0 optional automatic Atrium v2 delivery: typed Git/local/HTTPS
+  provenance, host-derived API location, bounded durable intent/acknowledgement
+  state, idempotency/CAS, retries and restart reconciliation. Governing design:
+  Specification authority / Automatic Atrium discovery delivery.
+  See docs/automatic-atrium-discovery.adoc. Current Atrium remains legacy v1;
+  matching receiver release, independent QA and staging/operator acceptance remain.
+  Source delivery only: no push/deploy and no automatic task closure.
+  Existing define-next-pass Workboard decision and manager review state retained.
+  Verification: source and clean ZIP extraction each 286 passed / six optional
+  PostgreSQL/Redis skips; both UI/client runs 17 passed. Nine CLI examples,
+  Sass build, 0.2.0 wheel contents and ZipRunner 2.3 static package checks passed.
+  Real Atrium v2, staging and target ARM64 image remain unverified.
+
 
 * Read-only Schedule and Storage Carbon workspaces with local due/lease times,
   periodic/queued jobs, maintenance cadence, bounded cached data-volume accounting,

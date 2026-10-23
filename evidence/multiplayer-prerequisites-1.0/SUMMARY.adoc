@@ -1,0 +1,27 @@
+= Multiplayer prerequisite review 1.0.0 verification
+:revdate: 2026-10-19
+
+* Focused integration/discovery/service suite: 31 passed, one existing warning.
+* Full suite with explicitly configured reviewed upstream source: 288 passed,
+  six optional PostgreSQL/Redis integrations skipped, one existing warning; 47.29s.
+* Node UI/client tests: 17 passed.
+* Actual Atrium 0.5.18 generated handlers activated with DAPI on disposable SQLite;
+  actual Social 0.3.48 verifier activated under DAPI; no fake receiver fixture in
+  the new two interoperability cases.
+* New examples: existing Looprd/v1 validates Life's merged dependency fragment;
+  all three contracts exist in Social; game-event JSON validates against its schema.
+* All looprd/ runtime files remain byte-identical to the delivered 0.2.0 source ZIP.
+* Root source receipt, project state, manifest and recipe remain byte-identical
+  to that ZIP. No trusted operator Workboard or runtime state was edited.
+* Credential-free node observation: Looprd 0.2.0, HTTP health 200; discovery flags
+  false; deployment/origin/receiver/credential-reference configuration unset.
+  Checkpoint versions: Life 0.5.92/schema3, Social 0.3.48/schema10,
+  Atrium 0.5.18/schema6. This is not authenticated live component status.
+
+Limitations: local ASGI transport, disposable SQLite, no actual network/TLS or
+proxy path, no production credential/configuration, no successful player grant,
+invitation acceptance, seat assignment, OpenClaw turn or cross-host RPC exercised.
+The six PostgreSQL/Redis cases skipped because disposable service URLs are unset.
+No UI code changed. No build/publication/migration/deployment/push in this review.
+Runtime remains 0.2.0: no runtime patch or replacement source ZIP is required.
+The prior ZIP remains immutable and does not contain this later review/test pass.

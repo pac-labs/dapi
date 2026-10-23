@@ -1,0 +1,79 @@
+{
+  "schema": "ziprunner.workboard-update.v1",
+  "project": "Looprd-DAPI",
+  "version": "0.4.0",
+  "summary": "Complete Looprd 0.4.0 source with independent subcomponents; prior decisions preserved; no deployment.",
+  "implemented": [
+    {
+      "id": "discovery-observer-provenance",
+      "title": "Source-aware discovery lifecycle",
+      "summary": "Extend existing observation with stable Git/local/HTTPS provenance, explicit withdrawal and temporary-failure safety.",
+      "operator_checks": [
+        "Run Git/local/HTTPS fixture tests and verify only Git has a real commit revision.",
+        "Confirm invalid/unreachable sidecars retain last valid intent; explicit removal withdraws."
+      ]
+    },
+    {
+      "id": "discovery-durable-delivery",
+      "title": "Durable deployment-bound sender",
+      "summary": "Persistent intent, sequence/CAS, retry/restart reconciliation and strict authenticated v2 exchange.",
+      "operator_checks": [
+        "Run lost-ack/restart/supersession tests; the same retry operation is reused.",
+        "Confirm wrong credentials/binding/acknowledgement cannot clear pending work or prevent API activation."
+      ]
+    },
+    {
+      "id": "discovery-contract-v2",
+      "title": "Shared Atrium v2 handoff",
+      "summary": "Versioned schemas, fixtures and explicit matching-release acceptance; no claim that receiver is installed.",
+      "operator_checks": [
+        "Validate shared schemas/examples and review receiver requirements against the matching Atrium release.",
+        "Confirm this ZIP neither deploys nor claims legacy apps:approve intake supports v2."
+      ]
+    },
+    {
+      "id": "registration-readers-v1",
+      "title": "Generic optional service registrations and scoped reader",
+      "summary": "Opaque service interests, bounded scoped reader and compatible root-relative source resolution.",
+      "operator_checks": [
+        "Declare any service without installing a consumer; verify API activation remains independent.",
+        "Read only the authenticated service declarations/documents and verify root-relative pinning, safe outage retention and restart/removal behavior."
+      ]
+    },
+    {
+      "id": "subcomponents-v1",
+      "title": "Independent nested components",
+      "summary": "Producer-reported source implementation; independent acceptance pending.",
+      "operator_checks": [
+        "Verify isolated child data/authentication and explicitly bound service calls.",
+        "Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations.",
+        "Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads."
+      ]
+    }
+  ],
+  "remaining": [
+    {
+      "id": "define-next-pass",
+      "title": "Define the next bounded implementation pass",
+      "summary": "Collect the latest project state and convert it into one reviewable implementation slice.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-receiver-release",
+      "title": "Matching Atrium v2 release",
+      "summary": "Atrium owner must implement machine binding, real candidate transactions, replay/tombstones and shared fixture conformance.",
+      "priority": "high"
+    },
+    {
+      "id": "discovery-staging-acceptance",
+      "title": "Independent staging and operator acceptance",
+      "summary": "After receiver release, provision scoped credentials and generic deployment metadata; test live staging without modifying production in this pass.",
+      "priority": "high"
+    },
+    {
+      "id": "registration-consumer-adapter",
+      "title": "Consumer-owned generic registration reader integration",
+      "summary": "Atrium/other service owners implement their own scoped polling, metadata validation and durable reconciliation before replacing legacy delivery."
+    }
+  ]
+}
