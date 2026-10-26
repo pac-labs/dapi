@@ -1,8 +1,8 @@
 {
   "schema": "ziprunner.workboard-update.v1",
   "project": "Looprd-DAPI",
-  "version": "0.4.0",
-  "summary": "Complete Looprd 0.4.0 source with independent subcomponents; prior decisions preserved; no deployment.",
+  "version": "0.5.0",
+  "summary": "Complete 0.5.0 source candidate with opt-in anonymous reads; prior decisions preserved; no deployment.",
   "implemented": [
     {
       "id": "discovery-observer-provenance",
@@ -49,6 +49,16 @@
         "Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations.",
         "Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads."
       ]
+    },
+    {
+      "id": "anonymous-read-handler-v1",
+      "title": "Explicit anonymous GET projections within database-auth components",
+      "summary": "Producer-reported source and test implementation; independent acceptance pending.",
+      "operator_checks": [
+        "Verify exact GET opt-in, anonymous identity and real component storage without weakening private routes.",
+        "Verify CORS, JSON bounds, safe failures, limits and lifecycle behavior on aliases and child mounts.",
+        "Review matching Atrium/TaviX rollout and live TLS acceptance separately; no deployment or push."
+      ]
     }
   ],
   "remaining": [
@@ -74,6 +84,12 @@
       "id": "registration-consumer-adapter",
       "title": "Consumer-owned generic registration reader integration",
       "summary": "Atrium/other service owners implement their own scoped polling, metadata validation and durable reconciliation before replacing legacy delivery."
+    },
+    {
+      "id": "anonymous-catalog-integration",
+      "title": "Matching application and live catalog acceptance",
+      "summary": "Review matching Atrium/TaviX rollout and live TLS acceptance separately; no deployment or push.",
+      "priority": "high"
     }
   ]
 }

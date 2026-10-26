@@ -24,7 +24,7 @@ def router_host(content):
     return hosts[0]
 
 
-def check_proxy(engine, command, looprd_name, directory, root):
+def check_proxy(engine, command, looprd_name, directory, root, anonymous=False):
     network, proxy = looprd_name + "-proxy-net", looprd_name + "-traefik"
     dynamic = Path(directory) / "dynamic"
     dynamic.mkdir(mode=0o755)
@@ -70,6 +70,12 @@ def check_proxy(engine, command, looprd_name, directory, root):
         assert status("/") == 404
         direct = "http://" + command("port", looprd_name, "8080/tcp").splitlines()[0]
         smoke_files(direct, "http://" + address, configured_host)
+        if anonymous:
+            if __package__:
+                from .anonymous_smoke import check_anonymous
+            else:
+                from anonymous_smoke import check_anonymous
+            check_anonymous("http://" + address, configured_host)
         print("Traefik smoke passed: host/path routing, prefix preservation, management exclusion")
     except BaseException:
         subprocess.run([engine, "logs", proxy], check=False)

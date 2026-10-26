@@ -148,6 +148,7 @@ class WebSocket(Strict):
 
 
 class Handler(Strict):
+    access: Literal["component", "anonymous"] = "component"
     path: PathName
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"] = "GET"
     kind: Literal["response", "python"] = "response"
@@ -159,6 +160,13 @@ class Handler(Strict):
     execution: Literal["inline", "process"] = "inline"
     timeoutSeconds: int | None = Field(default=None, ge=1, le=60)
     secrets: list[str] = Field(default_factory=list, max_length=16)
+
+    @model_serializer(mode="wrap")
+    def legacy_access(self, handler):
+        value = handler(self)
+        if self.access == "component":
+            value.pop("access", None)
+        return value
 
     @model_validator(mode="after")
     def code(self):
@@ -242,6 +250,8 @@ class Specification(Strict):
         if self.realtime.delivery == "durable" and (not self.database or not self.websocket):
             raise ValueError("durable events require database and WebSocket resources")
         self.check_permissions()
+        from .anonymous_spec import check_anonymous
+        check_anonymous(self)
         check_management(self)
         check_push(self)
         if (self.models or self.resources) and not self.database:
@@ -307,6 +317,8 @@ class Specification(Strict):
                 raise ValueError("WebSocket permissions must cover exactly its resources in scoped authentication modes")
             requirements.extend(self.websocket.permissions.values())
         for handler in self.handlers:
+            if handler.access == "anonymous":
+                continue  # Validated separately; no implicit component permission grant.
             if bool(handler.scopes) != database_auth:
                 raise ValueError("database and verified handlers require scopes")
             if handler.scopes:

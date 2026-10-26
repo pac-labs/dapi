@@ -1,0 +1,13 @@
+........................................................................ [ 19%]
+........................................................................ [ 38%]
+..........................................................s..ss......... [ 57%]
+...............s.....s.................................................. [ 76%]
+..................................s..................................... [ 95%]
+................                                                         [100%]
+============================== warnings summary ===============================
+tests\test_admin.py:6
+  C:\Users\dorbi\source\ziprunner\dapi\tests\test_admin.py:6: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+370 passed, 6 skipped, 1 warning in 48.84s

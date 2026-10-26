@@ -65,12 +65,21 @@ async def dispatch(request):
                             headers={"Cache-Control": "no-store"})
     if not generation:
         return JSONResponse({"error": "component not found"}, status_code=404)
+    anonymous = request.scope.get("looprd.anonymous_handler")
+    if any(handler.access == "anonymous" for handler in generation.spec.handlers):
+        from .anonymous_read import known_route, failure
+        raw_path = "/" + parameters(request.scope).get("path", "")
+        if not known_route(generation, request.method, raw_path):
+            return failure("component route not found", 404)
     if generation.spec.limits.maxInFlight and generation.http_inflight >= generation.spec.limits.maxInFlight:
         return JSONResponse({"error": "component concurrency limit reached"}, status_code=429, headers={"Retry-After": "1"})
     generation.http_inflight += 1
     generation.active_requests += 1
     try:
         async with asyncio.timeout(runtime.settings.request_seconds):
+            if anonymous is not None:
+                from .anonymous_read import execute
+                return await execute(generation, request, anonymous)
             peer = request.client.host if request.client else "unknown"
             await generation.limiter.check(peer, authentication=True)
             principal = await generation.authenticate(request.headers.get("authorization"))
@@ -116,7 +125,11 @@ async def dispatch(request):
                 from .push_routes import dispatch as push_dispatch
                 return await push_dispatch(request, generation, path, body)
             return await generation.handle(request, path, body)
-    except TimeoutError:
+    except TimeoutError as error:
+        if anonymous is not None:
+            from .anonymous_read import failure
+            runtime.record_failure(generation.spec.component, "anonymous read", error)
+            return failure()
         return JSONResponse({"error": "request deadline exceeded"}, status_code=504)
     except EventError as error:
         return JSONResponse({"error": error.message}, status_code=error.status,
@@ -127,6 +140,10 @@ async def dispatch(request):
         from .application_errors import response
         return response(error)
     except Exception as error:
+        if anonymous is not None:
+            from .anonymous_read import failure
+            runtime.record_failure(generation.spec.component, "anonymous read", error)
+            return failure()
         runtime.report(generation.spec.component, "request", error)
         return JSONResponse({"error": "component request failed"}, status_code=500)
     finally:

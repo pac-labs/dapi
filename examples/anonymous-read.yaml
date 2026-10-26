@@ -1,0 +1,22 @@
+apiVersion: looprd/v1
+component: public-read
+release: '1'
+api:
+  version: v1
+requires: [auth.anonymous-read-handler.v1]
+auth:
+  mode: database
+  scopes: [catalog:read]
+database:
+  backend: sqlite
+  schemaVersion: 1
+handlers:
+  - path: /catalog
+    method: GET
+    access: anonymous
+    kind: response
+    response: {items: []}
+  - path: /private
+    method: GET
+    scopes: [catalog:read]
+    response: {private: true}

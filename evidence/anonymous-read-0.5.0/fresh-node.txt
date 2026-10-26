@@ -1,0 +1,52 @@
+
+added 36 packages, and audited 37 packages in 29s
+
+5 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> build:ui
+> sass --quiet-deps --no-source-map --style=compressed --load-path=node_modules ui/panel.scss looprd/panel_assets/panel.css
+
+
+> test:ui
+> node --test tests/ui/*.test.mjs
+
+✔ bug report filtering and details render diagnostic content as literal text (3.3462ms)
+✔ review actions resolve reports and require confirmation before deletion (0.9067ms)
+✔ remembered credentials reconnect, opt out removes them, and Forget clears access (2.8558ms)
+✔ unavailable browser storage leaves the session usable and failed removal is explicit (1.7347ms)
+✔ terminal filenames remain literal POSIX shell arguments (1.2189ms)
+✔ schedule renders literal metadata, SQL due dates, filtering and API block semantics (2.3618ms)
+✔ storage distinguishes incomplete measurement, host capacity and PostgreSQL/Redis unknown values (1.2541ms)
+✔ operator controls preserve typed values, nulls and literal untrusted text (2.8001ms)
+✔ reviewing the same operator intent reuses its receipt key until inputs change (1.2577ms)
+✔ busy actions restore existing disabled controls without enabling forbidden actions (1.0417ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 183.4583
+
+> test:clients
+> node --test tests/clients/*.test.mjs
+
+✔ bootstrap stages pages then replays from the captured baseline (21.1421ms)
+✔ retention gaps rebuild state without silently skipping events (0.8145ms)
+✔ expired snapshots discard staging and restart (1.1145ms)
+✔ authentication failures leave saved state alone (0.8845ms)
+✔ storage failures propagate without advancing the cursor (0.6593ms)
+✔ abort prevents network access (0.3417ms)
+✔ temporary server failures retry without advancing local state early (259.0616ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 373.19

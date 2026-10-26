@@ -41,6 +41,11 @@ def document(generation):
         }
         if spec.auth.mode in ("database", "verified"):
             paths[handler.path][handler.method.lower()]["x-looprd-required-scopes"] = handler.scopes
+        if handler.access == "anonymous":
+            entry = paths[handler.path][handler.method.lower()]
+            entry.update({"security": [], "x-looprd-access": "anonymous", "x-looprd-max-response-bytes": 262144})
+            entry["responses"]["200"]["content"] = {"application/json": {"schema": {}}}
+            entry["responses"]["503"] = {"description": "Anonymous read unavailable; no cached result"}
         if handler.contract:
             entry = paths[handler.path][handler.method.lower()]
             entry["x-looprd-service-contract"] = handler.contract.model_dump()

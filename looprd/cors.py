@@ -25,6 +25,15 @@ class ComponentCorsMiddleware:
         from .component_routes import resolve
         generation = resolve(self.runtime, scope)
         if generation:
+            from .anonymous_read import declared, private_method, route
+            handler = declared(generation, scope)
+            method = scope["method"]
+            if method == "OPTIONS":
+                from starlette.datastructures import Headers
+                method = Headers(scope=scope).get("access-control-request-method", "GET")
+            if handler and not private_method(generation, handler, method):
+                return await route(self.app, self.runtime, generation, handler, scope, receive, send)
+        if generation:
             # Dispatch and response headers must refer to the same generation.
             origins = allowed_origins(settings, generation.spec)
             enabled = enabled or generation.spec.cors is not None or settings.origin_restrictions is not None

@@ -5,6 +5,7 @@ CAPABILITIES = frozenset({
     "database.migrations.additive", "events.memory", "events.redis", "events.replay",
     "events.transactional", "http.crud", "websocket.resources",
     "auth.verified",
+    "auth.anonymous-read-handler.v1",
     "authorization.owner", "authorization.membership",
     "database.constraints", "query.filters", "query.keyset", "query.projections", "http.revisions",
     "service.contracts", "service.calls",

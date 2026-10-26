@@ -8,6 +8,8 @@ from .shapes import validate as validate_shape
 async def dispatch_handler(self, request, path, body):
     for handler in self.spec.handlers:
         if path == (handler.path.rstrip("/") or "/") and request.method == handler.method:
+            if handler.access == "anonymous" and request.scope.get("looprd.anonymous_handler") is not handler:
+                return JSONResponse({"error": "component route not found"}, status_code=404)
             if not self.permits(request.state.principal, handler.scopes):
                 return JSONResponse({"error": "insufficient scope"}, status_code=403)
             if handler.contract:
@@ -48,5 +50,8 @@ async def dispatch_handler(self, request, path, body):
                     validate_shape(result, handler.contract.response)
                 except ValueError:
                     return JSONResponse({"error": "response violates service contract"}, status_code=500)
+            if handler.access == "anonymous":
+                from .anonymous_read import bounded_json
+                return bounded_json(result)
             return JSONResponse(result, status_code=handler.status)
     return None

@@ -1,0 +1,41 @@
+
+> test:ui
+> node --test tests/ui/*.test.mjs
+
+✔ bug report filtering and details render diagnostic content as literal text (2.8772ms)
+✔ review actions resolve reports and require confirmation before deletion (1.2922ms)
+✔ remembered credentials reconnect, opt out removes them, and Forget clears access (2.9048ms)
+✔ unavailable browser storage leaves the session usable and failed removal is explicit (1.7209ms)
+✔ terminal filenames remain literal POSIX shell arguments (1.4129ms)
+✔ schedule renders literal metadata, SQL due dates, filtering and API block semantics (1.8374ms)
+✔ storage distinguishes incomplete measurement, host capacity and PostgreSQL/Redis unknown values (2.3293ms)
+✔ operator controls preserve typed values, nulls and literal untrusted text (1.985ms)
+✔ reviewing the same operator intent reuses its receipt key until inputs change (1.1746ms)
+✔ busy actions restore existing disabled controls without enabling forbidden actions (0.9338ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.2865
+
+> test:clients
+> node --test tests/clients/*.test.mjs
+
+✔ bootstrap stages pages then replays from the captured baseline (21.3012ms)
+✔ retention gaps rebuild state without silently skipping events (0.8552ms)
+✔ expired snapshots discard staging and restart (0.9298ms)
+✔ authentication failures leave saved state alone (0.5496ms)
+✔ storage failures propagate without advancing the cursor (0.469ms)
+✔ abort prevents network access (0.2489ms)
+✔ temporary server failures retry without advancing local state early (257.8031ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 367.9858

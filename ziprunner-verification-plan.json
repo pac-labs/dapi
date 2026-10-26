@@ -1,7 +1,7 @@
 {
   "schema": "ziprunner.verification-plan/v1",
   "project": "Looprd-DAPI",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "tasks": [
     {
       "id": "discovery-observer-provenance",
@@ -107,6 +107,27 @@
           ]
         }
       ]
+    },
+    {
+      "id": "anonymous-read-handler-v1",
+      "criteria": [
+        {
+          "id": "anonymous-read-handler-v1-code",
+          "description": "Verify exact GET opt-in, anonymous identity and real component storage without weakening private routes. Verify CORS, JSON bounds, safe failures, limits and lifecycle behavior on aliases and child mounts.",
+          "mode": "automated",
+          "checks": [
+            "anonymous-read-handler-v1-automated"
+          ]
+        },
+        {
+          "id": "anonymous-read-handler-v1-review",
+          "description": "Review matching Atrium/TaviX rollout and live TLS acceptance separately; no deployment or push.",
+          "mode": "manual",
+          "checks": [
+            "anonymous-read-handler-v1-manual"
+          ]
+        }
+      ]
     }
   ],
   "checks": [
@@ -206,6 +227,25 @@
       "stage": "acceptance",
       "description": "Consumer and operator acceptance",
       "instructions": "Review docs/subcomponents.adoc and verify matching receiver adapters use supplied nested URLs before deployment."
+    },
+    {
+      "id": "anonymous-read-handler-v1-automated",
+      "kind": "automated",
+      "stage": "functional",
+      "description": "Explicit anonymous GET projections within database-auth components",
+      "runner_ref": "dapi-source-pytest",
+      "test_ref": "tests/test_anonymous_read.py",
+      "assertions": [
+        "Verify exact GET opt-in, anonymous identity and real component storage without weakening private routes.",
+        "Verify CORS, JSON bounds, safe failures, limits and lifecycle behavior on aliases and child mounts."
+      ]
+    },
+    {
+      "id": "anonymous-read-handler-v1-manual",
+      "kind": "manual",
+      "stage": "acceptance",
+      "description": "Application and TLS acceptance",
+      "instructions": "Review docs/anonymous-read-handlers.adoc and tests/test_anonymous_lifecycle.py; run image/proxy smoke and actual HTTPS only after authorized rollout. Preserve private auth and publication gates."
     }
   ]
 }

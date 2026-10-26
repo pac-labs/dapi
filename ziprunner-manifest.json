@@ -3,14 +3,14 @@
   "spec_version": "1.0.0",
   "project": {
     "key": "Looprd-DAPI",
-    "version": "0.4.0",
-    "base_version": "0.3.0"
+    "version": "0.5.0",
+    "base_version": "0.4.0"
   },
   "update": {
-    "id": "DAPI-20261023-SUBCOMPONENTS-001",
+    "id": "DAPI-20261026-ANONYMOUS-READ-001",
     "kind": "source_update",
-    "created_at": "2026-10-23T12:00:00+02:00",
-    "summary": "Complete 0.4.0 source candidate with independent subcomponents; no deployment."
+    "created_at": "2026-10-26T18:00:00+01:00",
+    "summary": "Complete 0.5.0 source candidate: explicit anonymous GET projections; no deployment."
   },
   "planned_work": [
     {
@@ -65,6 +65,12 @@
       "id": "subcomponents-v1",
       "title": "Independent nested components",
       "acceptance_criteria": "Verify isolated child data/authentication and explicitly bound service calls. Verify nested HTTP/WebSocket/OpenAPI/CORS and registration document locations. Verify failure retention, restart, explicit subtree removal, identity collisions and bounded source reads.",
+      "priority": "high"
+    },
+    {
+      "id": "anonymous-read-handler-v1",
+      "title": "Explicit anonymous GET projections within database-auth components",
+      "acceptance_criteria": "Verify exact GET opt-in, anonymous identity and real component storage without weakening private routes. Verify CORS, JSON bounds, safe failures, limits and lifecycle behavior on aliases and child mounts. Review matching Atrium/TaviX rollout and live TLS acceptance separately; no deployment or push.",
       "priority": "high"
     }
   ],
@@ -165,6 +171,11 @@
       "id": "subcomponents-v1",
       "status": "planned",
       "next_action": "Independently review source regressions, rollout and matching consumer URL handling."
+    },
+    {
+      "id": "anonymous-read-handler-v1",
+      "status": "planned",
+      "next_action": "Independent security and matching application review; actual container/TLS acceptance remains separate."
     }
   ],
   "validation": {
@@ -187,11 +198,17 @@
         "description": "Clean complete source: 338 Python passed, six optional skips; 17 UI/client passed",
         "status": "passed",
         "evidence_ref": "evidence/subcomponents-0.4.0/fresh-python.txt"
+      },
+      {
+        "id": "ANONYMOUS-SOURCE",
+        "description": "See versioned evidence for source/fresh tests and unavailable optional services",
+        "status": "passed",
+        "evidence_ref": "evidence/anonymous-read-0.5.0/verification.adoc"
       }
     ]
   },
   "handover": {
-    "next_pass": "Receiver owner implements the shared v2 contract, then independent staging/QA/operator acceptance.",
+    "next_pass": "Atrium opts in against this capability, then separately authorized image/proxy/TLS acceptance and TaviX publication.",
     "risks": [
       "Legacy Atrium v1 intake cannot accept this sender.",
       "Current project destination is the prior planning scaffold; review complete-source recipe and clean destination."
@@ -203,7 +220,8 @@
       "define-next-pass and existing manager-review-needed state preserved.",
       "No claim of independent QA, operator approval or production readiness.",
       "Uncommitted source candidate based on 13b99a80a1a7e08de547adb70b33ddf39e9199bd; the ZIP checksum identifies delivered bytes.",
-      "0.3.0 adds optional generic reader; existing immutable 0.2.0 ZIP and operator decisions are retained. Atrium pull consumer implementation is separate work."
+      "0.3.0 adds optional generic reader; existing immutable 0.2.0 ZIP and operator decisions are retained. Atrium pull consumer implementation is separate work.",
+      "0.5.0 source candidate based on c2b486bc7f526e71d8c26d77cb56bff9270d3347; prior notes/cards are historical and unchanged. No push or deployment authorized."
     ]
   },
   "operator_actions": [

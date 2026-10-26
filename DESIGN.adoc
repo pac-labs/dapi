@@ -783,6 +783,26 @@ only through authenticated management. Operational guarantees and rollback limit
 in docs/platform-reference.md; production components opt in independently.
 
 
+== Anonymous read handlers
+
+Database-authenticated components may explicitly require
+`auth.anonymous-read-handler.v1` and opt an exact custom inline GET/200 handler
+into `access: anonymous`. Default handlers retain component authentication and
+legacy normalized serialization. Anonymous handlers have empty scopes, no service
+contract, no verified subject and no incoming credential/cookie headers. Trusted
+Python still uses the operator execution gate and owning real storage; applications
+own safe, read-only public projections. This is not a SQL sandbox or seat grant.
+
+Only exact declared routes bypass authentication, including canonical child mounts
+and existing aliases. Private methods, CRUD, jobs, sockets, readers and management
+remain protected. Ambiguous path prefixes, wildcards and reserved/resource overlaps
+are rejected. Bounded side-effect-free GET preflights use wildcard CORS without
+credentials; private methods retain exact-origin CORS. JSON output is capped at
+256 KiB, never cached, nosniff and credential-free. Storage/handler/encoding/deadline
+failures return sanitized 503 without stale snapshots. Existing request limits,
+blocking and generation lifecycle remain authoritative. OpenAPI marks only the
+anonymous operation with empty security. See docs/anonymous-read-handlers.adoc.
+
 == Host container metrics
 
 An optional host-owned sampler observes only the fixed Looprd/PostgreSQL/Redis/ntfy

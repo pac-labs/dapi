@@ -55,6 +55,7 @@ jobs:
       - run: python -m looprd validate --sources examples/sources.yaml
       - run: python -m looprd validate examples/python-handler.yaml
       - run: python -m looprd validate examples/database-auth.yaml
+      - run: python -m looprd validate examples/anonymous-read.yaml
       - run: python -m looprd validate examples/redis-events.yaml
       - run: python -m looprd validate examples/platform.yaml
       - run: python -m looprd validate examples/operator-accounts.yaml

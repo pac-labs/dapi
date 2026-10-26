@@ -1,0 +1,42 @@
+= Looprd 0.5.0 anonymous read verification
+:revdate: 2026-10-26
+
+Source candidate based on `c2b486bc7f526e71d8c26d77cb56bff9270d3347`.
+Producer-reported verification only; no independent acceptance, push or deployment.
+
+* Source Python: 370 passed, six optional PostgreSQL/Redis skips, one existing
+  Starlette TestClient deprecation warning. See source-python.txt.
+* UI and synchronization clients: 17 passed. See node-tests.txt.
+* Focused anonymous tests: 32 cases within the full run, including smoke assertion
+  execution against actual ASGI routing. No production data or credentials used.
+* Wheel: version 0.5.0 built successfully, with anonymous modules and built panel
+  assets. Root and fragment schemas contain the access contract; legacy handler
+  normalized serialization remains unchanged. Example validates via CLI.
+  Four complete legacy example normalizations were compared with the immutable
+  0.4.0 ZIP and match byte-for-byte. That runtime rejects the new declaration.
+  All eleven documented CLI component/source validations passed.
+* Complete source identity, design UTF-8/LF fingerprint and ZipRunner 2.3
+  verification-plan checks pass. Prior Workboard entries and manager state retained;
+  the new implementation is awaiting review, not self-promoted to Done.
+* Fresh complete source extraction: results in fresh-python.txt and fresh-node.txt.
+  Python: 370 passed, six optional skips. UI/client: 17 passed.
+  Packaged implementation, tests, schemas and built assets match the fresh run.
+
+The installed Windows Podman CLI cannot connect to its engine. No local image,
+actual Traefik process, ARM64, PostgreSQL/Redis integration or live HTTPS run is
+claimed for this candidate. The existing image workflow invokes the extended
+container/proxy smoke; it has not run for these unpushed changes. Its proxy fixture
+uses a public constant response; real SQLAlchemy reads and database failures are
+covered by the focused ASGI tests. Existing optional source-pinned Atrium/Social
+interop fixtures were enabled; these are not matching live-release acceptance.
+
+No added runtime module exceeds 400 lines. Existing specification and HTTP modules
+remain below 500 lines. Anonymous dispatch/validation are cohesive separate modules.
+No SQL read-only sandbox is claimed: trusted application code owns safe projections.
+An unavailable database does not produce a cached catalog. Generation rollback
+still retains the last valid specification as documented by the platform.
+
+Atrium must independently enable the capability on its hosted catalog handler and
+update its reviewed Looprd pin. Operator runtime origins, actual TLS/public catalog
+acceptance and TaviX publication require separate authorized work. Private review,
+discovery, management and game-seat authorization remain separate contracts.

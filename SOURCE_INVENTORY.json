@@ -1,8 +1,8 @@
 {
   "schema": "looprd.complete-source/v1",
   "project": "Looprd-DAPI",
-  "version": "0.4.0",
-  "baseline": "13b99a80a1a7e08de547adb70b33ddf39e9199bd",
+  "version": "0.5.0",
+  "baseline": "c2b486bc7f526e71d8c26d77cb56bff9270d3347",
   "candidateCommit": null,
   "excludedUnrelatedUntracked": [
     "docs/minimal-publishing-options.adoc"
@@ -20,8 +20,8 @@
     },
     {
       "path": ".github/workflows/images.yml",
-      "size": 4208,
-      "sha256": "6c403960beca749ca34452426fd5786f0df25621286ae3a0a0b8d7d0289fff77"
+      "size": 4157,
+      "sha256": "44d9792afbc3c6f21e2d22352fe720bf02cc4012815db6639f11987899f6c7a8"
     },
     {
       "path": ".gitignore",
@@ -30,8 +30,8 @@
     },
     {
       "path": ".ziprunner-workboard-update.json",
-      "size": 3833,
-      "sha256": "a87b03bffa90de5869830bde73a727e264b0ec2c31442753227a49ef2255cd05"
+      "size": 4708,
+      "sha256": "e10c0c65a2fe5df11b724ebef7726f34aa49926ee0e9e63df203256479ff806d"
     },
     {
       "path": "AGENTS.md",
@@ -45,8 +45,8 @@
     },
     {
       "path": "DESIGN.adoc",
-      "size": 57308,
-      "sha256": "b13eb566710b2118bc1dde0742d11d66c5e3ead10f7a9dd433cb6b92acf30e2a"
+      "size": 58617,
+      "sha256": "393625a040e059a1ef51d442a5d8ff618a20d07605998d20eb814df01cd8ab15"
     },
     {
       "path": "LICENSE",
@@ -55,18 +55,18 @@
     },
     {
       "path": "PROJECT_PLAN.adoc",
-      "size": 19871,
-      "sha256": "e3fa713c26565d7a5628185795f8f637f1765373a19e6c3b0ae356a0523ab96d"
+      "size": 20267,
+      "sha256": "0e8f5b120577914d59cd501295fc785c13c3c5cebcc06a2ad25a9411221df5d8"
     },
     {
       "path": "README.md",
-      "size": 7167,
-      "sha256": "7f1235e1fea55324a4cede89cbba2ef7f1f5f5719b244fb40b49971cf7b910b3"
+      "size": 7350,
+      "sha256": "973b4e5c2453d0582673f45159d24f8e35a79541d32c14882db3d308d2c9c8c2"
     },
     {
       "path": "TESTING.md",
-      "size": 12140,
-      "sha256": "994ee94be9f798aeb20c75f2102f91b6e8ba53e906745175c36ff0264c2e15e6"
+      "size": 12531,
+      "sha256": "cb173936afdbea6efcdb4d1ce7ba0e5cbc30972f720eaaf17a8fbff954920d88"
     },
     {
       "path": "ZIPRUNNER_HANDOFF.md",
@@ -274,6 +274,11 @@
       "sha256": "21f7900694e7e9b168c562b44c7d556fb29e8a2fc5af0b9878ec841586ab36de"
     },
     {
+      "path": "docs/anonymous-read-handlers.adoc",
+      "size": 4617,
+      "sha256": "5760e08152e1e83513214c678b05131a059f9df8eaddf51869f73b1120bb4ade"
+    },
+    {
       "path": "docs/authentication.md",
       "size": 5098,
       "sha256": "6654c80f00725d46f393016b65efadb7482349f64089316d8a0433f533da6b38"
@@ -402,6 +407,31 @@
       "path": "docs/traefik.md",
       "size": 5172,
       "sha256": "3b62da3429607ad27f6fdd11b417d784d519159460de517220ef675ec7b4cafe"
+    },
+    {
+      "path": "evidence/anonymous-read-0.5.0/fresh-node.txt",
+      "size": 2073,
+      "sha256": "dec227e37685369191ffcc89ba2213c13627dda093ccc75a1b93d757619afbe8"
+    },
+    {
+      "path": "evidence/anonymous-read-0.5.0/fresh-python.txt",
+      "size": 1058,
+      "sha256": "925fbe828125e798f25d8482224dfbe683fd1226bc012169fda4c60ebe299058"
+    },
+    {
+      "path": "evidence/anonymous-read-0.5.0/node-tests.txt",
+      "size": 1784,
+      "sha256": "30ff0ba7b088a4417f6d912a0ce076735071970d95d28786c083164e73f602cd"
+    },
+    {
+      "path": "evidence/anonymous-read-0.5.0/source-python.txt",
+      "size": 933,
+      "sha256": "21e7fff7bafff37f3e8c61722d4972fd7617b1a6f87ec12f1f39444c416cc0d4"
+    },
+    {
+      "path": "evidence/anonymous-read-0.5.0/verification.adoc",
+      "size": 2809,
+      "sha256": "5d59427beeb65213794fbd4ba610f63acba12568ecace8be1ab40e8d93d0d455"
     },
     {
       "path": "evidence/atrium-compatibility-gate-20261019/live-activation.txt",
@@ -539,6 +569,11 @@
       "sha256": "ed6f86db84e40e4d0c62fcc20c039b96e9be8fc7bef45159565bfa2477762d6a"
     },
     {
+      "path": "examples/anonymous-read.yaml",
+      "size": 419,
+      "sha256": "2188c7ab0144cb31b229903def5fede783d0538a12d5a29bee24685ef772ddc9"
+    },
+    {
       "path": "examples/database-auth.yaml",
       "size": 886,
       "sha256": "c2ab5124d5b85ea3a653e071f66fdc4796e9719195a2720b1b3bf4d3b8012f67"
@@ -641,7 +676,7 @@
     {
       "path": "looprd/__init__.py",
       "size": 89,
-      "sha256": "398199cd44dd89f93f4a0f8744178a882cc79ecaf65d3a3bd145213ae091b519"
+      "sha256": "126df1550f184ddb9e27d281f7e950c3dc53b96f57c0cd9501dc2134582eac62"
     },
     {
       "path": "looprd/__main__.py",
@@ -672,6 +707,16 @@
       "path": "looprd/administration_spec.py",
       "size": 5243,
       "sha256": "720cef328b4b0b212438bbcc6ec10ac8c92ef823c27b981872159a5f003cb94a"
+    },
+    {
+      "path": "looprd/anonymous_read.py",
+      "size": 5298,
+      "sha256": "c41d86e1db13b16a4ac8be0d83052ec4895fed85b912945537afd18b9f906189"
+    },
+    {
+      "path": "looprd/anonymous_spec.py",
+      "size": 1352,
+      "sha256": "74358324bf467add2a7ab6ebe50afc4a6bf9f1d3adf817cc1d81e41090b8cd10"
     },
     {
       "path": "looprd/app.py",
@@ -715,8 +760,8 @@
     },
     {
       "path": "looprd/capabilities.py",
-      "size": 1250,
-      "sha256": "7e5c015042aa7633b750f21a46501a85c278759de5daf3e7c11fd630fb673589"
+      "size": 1288,
+      "sha256": "3bb2adc48a57e4de8f72605b62746e77d125e51823ef1a45bf9c9c021aa99d4b"
     },
     {
       "path": "looprd/component.py",
@@ -755,8 +800,8 @@
     },
     {
       "path": "looprd/cors.py",
-      "size": 1571,
-      "sha256": "616924fd8be7225451f13e2ba904fa3db310269041728ac3c7687df4bf8303b8"
+      "size": 2118,
+      "sha256": "105fc498e1fd8506cb9a5012e9f6099897dd0d0d66432b3818e3881484db9869"
     },
     {
       "path": "looprd/cors_spec.py",
@@ -865,8 +910,8 @@
     },
     {
       "path": "looprd/handler_routes.py",
-      "size": 3377,
-      "sha256": "7e3d554702845d411f8f8cc1ef44e211170b4af917d620c30c2571f2964cf3fa"
+      "size": 3676,
+      "sha256": "dc9e4bbe3ed70bf1eb63c2e82d4907b3703609808b9977c23b0e094e2ed88adb"
     },
     {
       "path": "looprd/job_routes.py",
@@ -900,8 +945,8 @@
     },
     {
       "path": "looprd/openapi.py",
-      "size": 8135,
-      "sha256": "5719f2d03a142be9904eba0d65266f0a16947f7782d7b1c0546d0085072fe6c5"
+      "size": 8421,
+      "sha256": "fa4f6dfa0d06b4fe603040b412fb4ba0c2817f394b3d30ecd98f09e3dea446ac"
     },
     {
       "path": "looprd/operations.py",
@@ -1100,8 +1145,8 @@
     },
     {
       "path": "looprd/spec.py",
-      "size": 17022,
-      "sha256": "474fdfcee295cbda2fa6e30f652d20d0a7599ce321548c296a42d09e83b7bc71"
+      "size": 17134,
+      "sha256": "b9c2010471f7a4f8dd38f0309540d1e582c4f6cd9f35927f2c50c36583923401"
     },
     {
       "path": "looprd/spec_data_checks.py",
@@ -1145,8 +1190,8 @@
     },
     {
       "path": "looprd/web.py",
-      "size": 12691,
-      "sha256": "dada04c2229ba138fbe2bf0e536567720fb12d27cdfe7e1e56e1f529cbefd499"
+      "size": 13651,
+      "sha256": "2c5ab840b97f2efb60b36b151d8cf34bed75f6fac255b5a3816dddefa81c1723"
     },
     {
       "path": "looprd/worker.py",
@@ -1176,7 +1221,7 @@
     {
       "path": "pyproject.toml",
       "size": 880,
-      "sha256": "0c7a5fb933ede65e86abadee850ea4fb2a728e81e8e8aa933dcace3e493cce31"
+      "sha256": "9c0124f3a82250390d0c679670db2b9e1292d2910e054013c423badd81eeba42"
     },
     {
       "path": "requirements.lock",
@@ -1195,13 +1240,13 @@
     },
     {
       "path": "schemas/looprd-fragment.schema.json",
-      "size": 34991,
-      "sha256": "17d0c8ac5b219ab2c97d7117121db222829ab2fd809ec66d7cdd81104eec7e4f"
+      "size": 35194,
+      "sha256": "4ddfb8cc50006bd35d4e1af490a6e4329ffd5fd7ea380de4d548380df3ee6d88"
     },
     {
       "path": "schemas/looprd.schema.json",
-      "size": 35925,
-      "sha256": "7580b7574bb59c76e20f073032db07eb7d04590d89f64f2771ba66c1dd3a2193"
+      "size": 36128,
+      "sha256": "15d3d88a6cdab543a11646109952afdcf2ea12d6807c0949968528e8b093a7a9"
     },
     {
       "path": "schemas/operator-write.schema.json",
@@ -1214,9 +1259,14 @@
       "sha256": "7e709ef9bced0ec443676606f8c3ccde8c5a64894d5b1e2ecc0459a6a96cde1c"
     },
     {
+      "path": "scripts/anonymous_smoke.py",
+      "size": 1664,
+      "sha256": "3f9813ebf2ab1ed2b4caa8319cd2e8c7c258cbdf58445be5fbea4bc363ee367d"
+    },
+    {
       "path": "scripts/container_smoke.py",
-      "size": 4672,
-      "sha256": "b67afcdd011b4d3bc8e0520d60371319f7c5b7757391c25142b99d09ce90bdab"
+      "size": 5072,
+      "sha256": "08fbcbda60242ed6cc9ac2bcc03dc133d2f922dc8b914d42b320dcf8c53f09ae"
     },
     {
       "path": "scripts/files_smoke.py",
@@ -1235,8 +1285,8 @@
     },
     {
       "path": "scripts/traefik_smoke.py",
-      "size": 3685,
-      "sha256": "3628b8bc3394a6fdca92797be18a745e3967502270cd76fd8cfa2cac3260673d"
+      "size": 3957,
+      "sha256": "71339b17de17579b8b7cb181d094171b8653c9a24c2966250bd7761b65eae640"
     },
     {
       "path": "scripts/validate_delivery.py",
@@ -1272,6 +1322,21 @@
       "path": "tests/test_administration.py",
       "size": 18056,
       "sha256": "64ed07b39dd67f2fdd3e9256455c16208ecf4b07118cffc1d314f6d2b0a10d5c"
+    },
+    {
+      "path": "tests/test_anonymous_lifecycle.py",
+      "size": 5691,
+      "sha256": "8ef736a110eb3a7de9e3b3e8a94b5e52cda0948e2c94d10cebb1a905fbdef671"
+    },
+    {
+      "path": "tests/test_anonymous_read.py",
+      "size": 8281,
+      "sha256": "72dc87e17520111c16caf203b24bbf376d2c258c6cc34bfc4e37c13ea20f43ad"
+    },
+    {
+      "path": "tests/test_anonymous_smoke.py",
+      "size": 1617,
+      "sha256": "097691b801549f4499bdc83900739f34e4519e0cb7dd23c1bf23f68752b1ef6d"
     },
     {
       "path": "tests/test_application_errors.py",
@@ -1525,18 +1590,18 @@
     },
     {
       "path": "ziprunner-manifest.json",
-      "size": 9633,
-      "sha256": "f340d4726cf8b4d93108f1ba39eeac8abb1430b151f156795119635a5754966b"
+      "size": 10786,
+      "sha256": "2f21306d3ef8656373437907a701049f311df00e642e85b5ae198fc6d2735e63"
     },
     {
       "path": "ziprunner-verification-plan.json",
-      "size": 7948,
-      "sha256": "b887ef1402c9210dfe0763a525fcd03f5e04bb04b98eb914d37039233c366e11"
+      "size": 9701,
+      "sha256": "ee2e41cb9f532ef533fb3de23a5c88a7c30fb542afdee701d073d9b2f7490b12"
     },
     {
       "path": "ziprunner.project-state.json",
-      "size": 5452,
-      "sha256": "c9d5b48157e5822f2a2c3508ba8571f5be68ced148b9b31f0869414643849130"
+      "size": 6133,
+      "sha256": "d10d09aaf0a89014d7c4d7b4cef798367d3579ad0237e11c6ee4c5591795e397"
     }
   ]
 }

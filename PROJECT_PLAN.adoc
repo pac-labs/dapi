@@ -5,9 +5,15 @@
 
 Architecture authority: DESIGN.adoc, especially Sources and shutdown semantics,
 Generation reload, Database lifecycle, Authentication and management, and Container delivery and Podman.
-Design SHA-256 (UTF-8/LF): `b13eb566710b2118bc1dde0742d11d66c5e3ead10f7a9dd433cb6b92acf30e2a`.
+Design SHA-256 (UTF-8/LF): `393625a040e059a1ef51d442a5d8ff618a20d07605998d20eb814df01cd8ab15`.
 
 == Implemented candidate
+
+* 0.5.0: Explicit anonymous GET projections within database-auth components.
+  Governing design: Anonymous read handlers. Real storage, empty anonymous
+  identity, exact routing, bounded JSON and safe failures; private access retained.
+  Source and tests only. Matching Atrium/TaviX and live acceptance remain separate.
+  See evidence/anonymous-read-0.5.0/verification.adoc. No push/deployment.
 
 * 0.4.0: Independent descendant subcomponents with nested mounts, isolated
   infrastructure and retained failure/removal semantics. Governing design:

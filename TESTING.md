@@ -1,5 +1,13 @@
 # Looprd validation
 
+`tests/test_anonymous_read.py` and `tests/test_anonymous_lifecycle.py` cover DESIGN /
+Anonymous read handlers: strict opt-in validation, real storage and anonymous
+identity, private writes/management/WebSockets, CORS/method boundaries, UTF-8 JSON
+bounds, sanitized failures, deadlines, limits, blocking, rollback, restart, removal,
+opt-out and child mounts. `scripts/anonymous_smoke.py` adds public GET/OPTIONS and
+private-route checks to the existing built-image Traefik smoke. The proxy smoke
+uses internal HTTP; live TLS and matching Atrium/TaviX acceptance are separate.
+
 `tests/test_subcomponents.py` covers DESIGN / Independent subcomponents: nested
 HTTP/OpenAPI/WebSocket routes, CORS and database isolation, explicit service identity,
 child reload and migration failure, root/subtree removal and offline restart,

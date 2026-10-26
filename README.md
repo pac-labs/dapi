@@ -1,5 +1,8 @@
 # Looprd
 
+Looprd 0.5.0 adds [explicit anonymous JSON GET handlers](docs/anonymous-read-handlers.adoc)
+within database-authenticated components. Private routes retain component authentication.
+
 Independent nested components are available in the [0.4.0 subcomponents contract](docs/subcomponents.adoc).
 Each child owns its authentication, database, jobs and lifecycle. Existing `includes`
 continues to compose fragments of one component.

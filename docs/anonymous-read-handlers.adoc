@@ -1,0 +1,89 @@
+= Opt-in anonymous JSON reads (Looprd 0.5.0)
+
+== Contract
+
+Database-authenticated components may explicitly expose an exact custom GET
+handler using `access: anonymous`, with `requires: [auth.anonymous-read-handler.v1]`.
+All other handlers inherit component authentication (`access: component`, the
+default, omitted from normalized legacy specifications). Existing public, bearer,
+database and verified authentication behavior remains unchanged without opt-in.
+
+[source,yaml]
+----
+requires: [auth.anonymous-read-handler.v1]
+auth:
+  mode: database
+  scopes: [catalog:read]
+database:
+  backend: sqlite
+  schemaVersion: 1
+handlers:
+  - path: /catalog/hosted-items
+    method: GET
+    kind: python
+    access: anonymous
+    source: |
+      import sqlalchemy as sa
+      async def handle(ctx):
+          with ctx.session_factory() as session:
+              rows = session.execute(sa.text('SELECT title FROM "PublishedItem"')).scalars().all()
+          return {"items": rows}
+----
+
+The owning application must define the referenced model and choose a safe public
+projection. Trusted Python still requires the existing operator execution gate.
+It is trusted application code with the owning component's real SQLAlchemy session
+factory, not a SQL read-only sandbox. Applications must keep this projection free
+of mutations, secrets, internal identifiers and private records.
+
+Anonymous handlers must be inline GET/200, without scopes or service contracts.
+Named exact paths only: no root, wildcard, trailing slash, reserved/resource
+overlap or handler/WebSocket prefix overlap. A scoped POST on the identical path
+is allowed and retains normal authentication. No CRUD, jobs, WebSocket tickets,
+management or registration-reader access becomes public. Unknown HTTP routes in
+opting-in components return 404 before authentication. Existing components retain
+their prior routing behavior.
+
+The handler receives `principal.kind == anonymous`, empty scopes and no verified
+subject. Authorization, Cookie and Proxy-Authorization request headers are removed;
+valid or invalid bearer credentials never turn this public read into a privileged
+request. No key is minted or looked up. This is unrelated to game-seat authorization.
+
+== HTTP and lifecycle
+
+Success is UTF-8 JSON, limited to 262144 encoded bytes. Invalid/non-JSON values,
+oversized results, missing storage, database/handler failures and timeouts return
+sanitized JSON 503 without a cached snapshot. Limits and operator blocking still
+apply. Responses carry `Cache-Control: no-store, max-age=0`,
+`X-Content-Type-Options: nosniff` and `Access-Control-Allow-Origin: *`, with no
+Allow-Credentials or Set-Cookie. Anonymous access is intentionally origin-independent;
+private routes retain their exact configured CORS allowlist.
+
+OPTIONS for the public GET never executes application code or reads storage. It
+accepts GET and bounded Accept/Content-Type/Authorization header requests; invalid
+preflights return JSON 400. A preflight for a declared private method uses private
+CORS instead. HEAD and undeclared methods do not run the public handler.
+
+Both `/looprd` and `/dapi` aliases and canonical nested child mounts work. There
+is no extra top-level child alias. Last-good generation rollback, removal, retained
+databases and persistent operator blocking use existing lifecycle mechanisms.
+Removing anonymous access restores authentication immediately after activation.
+The component OpenAPI document remains protected; the public GET operation alone
+has `security: []` and an explicit encoded response limit extension.
+
+== Atrium handoff and acceptance
+
+Atrium must require this capability and opt its existing hosted catalog GET into
+anonymous access in a matching application release, retaining its safe publication
+projection. Its other scopes, discovery intake, review and approval remain private.
+Update reviewed Looprd version/image pins only during a separately authorized
+rollout. TaviX must publish a matching catalog configuration using the operator's
+actual runtime origin; portable manifests contain no production hostname or token.
+
+This source delivery does not modify Atrium, publish TaviX, deploy Looprd or claim
+live TLS acceptance. Run the focused regressions and full suite. On a disposable
+container engine, build the image and run
+`python scripts/container_smoke.py podman looprd:smoke --traefik` to check proxy
+prefix preservation, public GET/OPTIONS headers and private-route denial using
+the shipped router. This smoke uses internal HTTP; actual HTTPS must be verified
+after an authorized deployment without sending operator credentials to clients.

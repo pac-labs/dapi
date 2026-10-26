@@ -33,6 +33,12 @@ def main():
         root = Path(__file__).resolve().parents[1]
         shutil.copy(root / "examples/looprd.yaml", config / "looprd.yaml")
         sources_content = (root / "examples/sources.yaml").read_text()
+        if "--traefik" in sys.argv[3:]:
+            shutil.copy(root / "examples/anonymous-read.yaml", config / "anonymous-read.yaml")
+            sources_content = json.dumps({"apiVersion": "looprd/v1", "components": [
+                {"id": "roboscope", "specification": "looprd.yaml"},
+                {"id": "public-read", "specification": "anonymous-read.yaml"},
+            ]})
         sources = config / "sources.yaml"
         sources.write_text(sources_content)
         command("volume", "create", volume)
@@ -90,7 +96,7 @@ def main():
             print("Container smoke passed: serving, unreachable sources, removal, re-addition, restart, retained data")
             if "--traefik" in sys.argv[3:]:
                 from traefik_smoke import check_proxy
-                check_proxy(engine, command, name, directory, root)
+                check_proxy(engine, command, name, directory, root, anonymous=True)
         except BaseException:
             subprocess.run([engine, "logs", name], check=False)
             raise

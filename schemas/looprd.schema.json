@@ -369,6 +369,15 @@
     "Handler": {
       "additionalProperties": false,
       "properties": {
+        "access": {
+          "default": "component",
+          "enum": [
+            "component",
+            "anonymous"
+          ],
+          "title": "Access",
+          "type": "string"
+        },
         "path": {
           "pattern": "^/(?:[a-zA-Z0-9_-]+/?)*$",
           "title": "Path",
